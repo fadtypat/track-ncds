@@ -1,0 +1,169 @@
+<!DOCTYPE html>
+<html lang="th">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>NCDs History &amp; Risk — Prototype v1 — หน้ารวม</title>
+<link rel="stylesheet" href="style.css">
+</head>
+<body>
+
+<nav class="proto-bar">
+  <div class="proto-bar-inner">
+    <div class="proto-bar-top">
+      <span class="proto-bar-title">NCDS CLINIC · PROTOTYPE v1 · หน้ารวม</span>
+      <div class="proto-bar-nav">
+        <a href="index.html" class="current">หน้ารวม</a>
+        <a href="patient-list.html">ค้นหา/รายชื่อผู้ป่วย</a>
+        <a href="patient-detail-risk-found.html">ประวัติ+ความเสี่ยง (พบ)</a>
+        <a href="patient-detail-no-risk.html">ประวัติ+ความเสี่ยง (ไม่พบ)</a>
+        <a href="access-denied.html">ปฏิเสธการเข้าถึง</a>
+        <a href="pdpa-data-subject-request.html">PDPA คำขอใช้สิทธิ</a>
+        <a href="pdpa-audit-trail.html">PDPA audit trail</a>
+      </div>
+    </div>
+    <div class="proto-bar-codes">
+      <span class="proto-code">ภาพรวม Journey ทั้งหมด</span>
+    </div>
+  </div>
+</nav>
+
+<div class="app-bg">
+<div class="container stack gap-section">
+
+  <header class="stack" style="gap:8px;">
+    <span class="type-eyebrow">NCDS CLINIC · HOSXP INTEGRATION DEMO — CLICKABLE PROTOTYPE</span>
+    <h1 class="type-page-title">ประวัติโรค NCD ผลตรวจ Lab และการวิเคราะห์ความเสี่ยงโรคแทรกซ้อน</h1>
+    <p class="type-body" style="max-width:720px;">
+      Prototype เวอร์ชัน v1 ของฟีเจอร์ตาม
+      <span class="type-code">20260917-01-patient-ncd-history-lab-complication-risk</span> และ
+      <span class="type-code">20260921-01-pdpa-data-protection-compliance</span>
+      ครอบคลุมทั้ง 4 ฟีเจอร์ Must have ใน feature-list.md สำหรับผู้ใช้บทบาทเดียว:
+      <strong>แพทย์/พยาบาลผู้ดูแลผู้ป่วย NCD</strong>
+    </p>
+    <span class="chip chip-neutral" style="align-self:flex-start;">บทบาทผู้ใช้: แพทย์/พยาบาลผู้ดูแลผู้ป่วย NCD (NFR-02)</span>
+  </header>
+
+  <section class="section-card">
+    <div class="section-head">
+      <h2 class="type-section-title">Journey ที่ 1 — routine การดูแลผู้ป่วย (ฟีเจอร์ 1–3)</h2>
+      <span class="type-caption">อ้างอิง user-journey.md — ลำดับ: ตรวจสิทธิ์ → ค้นหา/เลือกผู้ป่วย → ดูประวัติ+lab → วิเคราะห์ความเสี่ยง</span>
+    </div>
+    <ol class="stack" style="gap:12px; padding-left:0;">
+      <li class="dx-item" style="border-color:var(--border-default);">
+        <div class="dx-item-main">
+          <span class="dx-item-name">1. ระบบตรวจสอบสิทธิ์การเข้าถึง</span>
+          <span class="dx-item-meta">ถ้าไม่มีสิทธิ์ หรือผู้ป่วยไม่ได้อยู่ในความดูแล → ปฏิเสธการเข้าถึง</span>
+        </div>
+        <a class="btn btn-secondary btn-sm" href="access-denied.html">เปิดหน้าปฏิเสธการเข้าถึง <span class="proto-code" style="margin-left:6px;">NFR-02</span></a>
+      </li>
+      <li class="dx-item" style="border-color:var(--border-default);">
+        <div class="dx-item-main">
+          <span class="dx-item-name">2. ค้นหา/เลือกผู้ป่วยในความดูแล</span>
+          <span class="dx-item-meta">ค้นหาด้วยเลข HN 7 หลัก หรือเรียกดูรายชื่อทั้งหมดที่อยู่ในความดูแล</span>
+        </div>
+        <a class="btn btn-primary btn-sm" href="patient-list.html">เปิดหน้ารายชื่อผู้ป่วย <span class="proto-code" style="margin-left:6px;">FR-05·FR-06</span></a>
+      </li>
+      <li class="dx-item" style="border-color:var(--border-default);">
+        <div class="dx-item-main">
+          <span class="dx-item-name">3. ดูประวัติวินิจฉัย + ผลตรวจ lab ย้อนหลัง + ผลวิเคราะห์ความเสี่ยง (พบความเสี่ยง)</span>
+          <span class="dx-item-meta">ตัวอย่างผู้ป่วยที่ระบบ flag ความเสี่ยงโรคแทรกซ้อนสูง/สูงมาก</span>
+        </div>
+        <a class="btn btn-primary btn-sm" href="patient-detail-risk-found.html">เปิดตัวอย่าง (พบความเสี่ยง) <span class="proto-code" style="margin-left:6px;">FR-01·FR-02·FR-03·FR-04</span></a>
+      </li>
+      <li class="dx-item" style="border-color:var(--border-default);">
+        <div class="dx-item-main">
+          <span class="dx-item-name">3b. ดูประวัติวินิจฉัย + ผลตรวจ lab ย้อนหลัง + ผลวิเคราะห์ความเสี่ยง (ไม่พบความเสี่ยง)</span>
+          <span class="dx-item-meta">ตัวอย่างผู้ป่วยที่ไม่พบความเสี่ยงเกิน threshold — แขนง "ไม่พบ" ของ FR-04</span>
+        </div>
+        <a class="btn btn-secondary btn-sm" href="patient-detail-no-risk.html">เปิดตัวอย่าง (ไม่พบความเสี่ยง) <span class="proto-code" style="margin-left:6px;">FR-01·FR-02·FR-03·FR-04</span></a>
+      </li>
+    </ol>
+  </section>
+
+  <section class="section-card">
+    <div class="section-head">
+      <h2 class="type-section-title">Journey ที่ 2 — คำขอใช้สิทธิของเจ้าของข้อมูล และสนับสนุนการสืบสวนข้อมูลรั่วไหล (PDPA, ฟีเจอร์ 4)</h2>
+      <span class="type-caption">Trigger จากเหตุการณ์ภายนอก (ไม่ใช่ routine การดูแลผู้ป่วย) — แยก 2 เส้นทางตามประเภทเหตุการณ์</span>
+    </div>
+    <ol class="stack" style="gap:12px; padding-left:0;">
+      <li class="dx-item" style="border-color:var(--border-default);">
+        <div class="dx-item-main">
+          <span class="dx-item-name">2ก. ได้รับคำขอใช้สิทธิของเจ้าของข้อมูล (ผู้ป่วย)</span>
+          <span class="dx-item-meta">ค้นหาผู้ป่วยด้วย HN (Operation 0, ใช้หน้าค้นหา/รายชื่อผู้ป่วยร่วมกัน) → เลือกประเภทคำขอ (เข้าถึง/สำเนา/แก้ไข/ลบ/คัดค้าน) → ดำเนินการ</span>
+        </div>
+        <a class="btn btn-primary btn-sm" href="pdpa-data-subject-request.html">เปิดหน้าคำขอใช้สิทธิ PDPA <span class="proto-code" style="margin-left:6px;">NFR-03·NFR-05·NFR-06·NFR-07</span></a>
+      </li>
+      <li class="dx-item" style="border-color:var(--border-default);">
+        <div class="dx-item-main">
+          <span class="dx-item-name">2ข. สงสัยว่ามีเหตุข้อมูลส่วนบุคคลรั่วไหล</span>
+          <span class="dx-item-meta">สืบค้น audit log (ระบุผู้ป่วย/ช่วงเวลา/ผู้ใช้ — ไม่บังคับ) เพื่อสนับสนุนการสืบสวน/แจ้งเหตุละเมิด</span>
+        </div>
+        <a class="btn btn-primary btn-sm" href="pdpa-audit-trail.html">เปิดหน้าสืบค้น audit trail <span class="proto-code" style="margin-left:6px;">NFR-02·NFR-06·NFR-08</span></a>
+      </li>
+    </ol>
+  </section>
+
+  <section class="section-card">
+    <div class="section-head">
+      <h2 class="type-section-title">แผนที่หน้าจอ ↔ ฟีเจอร์ ↔ รหัส FR/NFR</h2>
+      <span class="type-caption">รายละเอียดเพิ่มเติมดูที่ prototype.md ในโฟลเดอร์นี้</span>
+    </div>
+    <div class="trend-table-wrap">
+      <table class="trend-table" style="min-width:520px;">
+        <thead>
+          <tr>
+            <th>ไฟล์</th>
+            <th>ฟีเจอร์ (feature-list.md)</th>
+            <th>รหัส FR/NFR</th>
+          </tr>
+        </thead>
+        <tbody>
+          <tr>
+            <td class="param-name"><a href="patient-list.html">patient-list.html</a></td>
+            <td style="font-family:var(--font-sans); font-size:14px;">3. ค้นหา/เลือกผู้ป่วยในความดูแล</td>
+            <td>FR-05, FR-06, NFR-02</td>
+          </tr>
+          <tr>
+            <td class="param-name"><a href="patient-detail-risk-found.html">patient-detail-risk-found.html</a></td>
+            <td style="font-family:var(--font-sans); font-size:14px;">1. ดูประวัติวินิจฉัย/ผล lab · 2. วิเคราะห์และแจ้งเตือนความเสี่ยง</td>
+            <td>FR-01, FR-02, FR-03, FR-04, NFR-01</td>
+          </tr>
+          <tr>
+            <td class="param-name"><a href="patient-detail-no-risk.html">patient-detail-no-risk.html</a></td>
+            <td style="font-family:var(--font-sans); font-size:14px;">1. ดูประวัติวินิจฉัย/ผล lab · 2. วิเคราะห์และแจ้งเตือนความเสี่ยง</td>
+            <td>FR-01, FR-02, FR-03, FR-04, NFR-01</td>
+          </tr>
+          <tr>
+            <td class="param-name"><a href="access-denied.html">access-denied.html</a></td>
+            <td style="font-family:var(--font-sans); font-size:14px;">ทุกฟีเจอร์ (guard ก่อนเข้าถึงข้อมูล)</td>
+            <td>NFR-02</td>
+          </tr>
+          <tr>
+            <td class="param-name"><a href="pdpa-data-subject-request.html">pdpa-data-subject-request.html</a></td>
+            <td style="font-family:var(--font-sans); font-size:14px;">4. คุ้มครองข้อมูลส่วนบุคคลของผู้ป่วยตาม PDPA (เส้นทางคำขอใช้สิทธิ)</td>
+            <td>NFR-03, NFR-05, NFR-06, NFR-07</td>
+          </tr>
+          <tr>
+            <td class="param-name"><a href="pdpa-audit-trail.html">pdpa-audit-trail.html</a></td>
+            <td style="font-family:var(--font-sans); font-size:14px;">4. คุ้มครองข้อมูลส่วนบุคคลของผู้ป่วยตาม PDPA (เส้นทางสืบสวนข้อมูลรั่วไหล)</td>
+            <td>NFR-02, NFR-06, NFR-08</td>
+          </tr>
+        </tbody>
+      </table>
+    </div>
+  </section>
+
+  <section class="callout info">
+    <span class="callout-title">หมายเหตุ (Rule-based ไม่ใช่ AI)</span>
+    <p class="type-body" style="color:inherit;">
+      ผลวิเคราะห์ความเสี่ยงโรคแทรกซ้อนในหน้า "ประวัติ+ความเสี่ยง" ทั้งสองตัวอย่างเป็นข้อมูล mockup
+      (ตาม NFR-01) threshold ตัวเลขจริงยังไม่ยืนยันจากผู้เชี่ยวชาญ (ดู DESIGN.md §2.3) — Prototype นี้
+      แสดงเฉพาะรูปแบบการนำเสนอ (สี/badge/progress bar/callout) ไม่ใช่ค่าที่ใช้จริงในระบบ
+    </p>
+  </section>
+
+</div>
+</div>
+</body>
+</html>

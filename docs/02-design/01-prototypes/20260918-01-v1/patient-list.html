@@ -1,0 +1,252 @@
+<!DOCTYPE html>
+<html lang="th">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>NCDs History &amp; Risk — Prototype v1 — รายชื่อผู้ป่วย</title>
+<link rel="stylesheet" href="style.css">
+</head>
+<body>
+
+<nav class="proto-bar">
+  <div class="proto-bar-inner">
+    <div class="proto-bar-top">
+      <span class="proto-bar-title">NCDS CLINIC · PROTOTYPE v1 · ค้นหา/เลือกผู้ป่วย</span>
+      <div class="proto-bar-nav">
+        <a href="index.html">หน้ารวม</a>
+        <a href="patient-list.html" class="current">ค้นหา/รายชื่อผู้ป่วย</a>
+        <a href="patient-detail-risk-found.html">ประวัติ+ความเสี่ยง (พบ)</a>
+        <a href="patient-detail-no-risk.html">ประวัติ+ความเสี่ยง (ไม่พบ)</a>
+        <a href="access-denied.html">ปฏิเสธการเข้าถึง</a>
+        <a href="pdpa-data-subject-request.html">PDPA คำขอใช้สิทธิ</a>
+        <a href="pdpa-audit-trail.html">PDPA audit trail</a>
+      </div>
+    </div>
+    <div class="proto-bar-codes">
+      <span class="proto-code">FR-05</span>
+      <span class="proto-code">FR-06</span>
+      <span class="proto-code">NFR-02</span>
+    </div>
+  </div>
+</nav>
+
+<div class="app-bg">
+<div class="container stack gap-section">
+
+  <header class="stack" style="gap:8px;">
+    <span class="type-eyebrow">ผู้ใช้งาน: พญ. อรุณี ศรีสุข · แพทย์ผู้ดูแลผู้ป่วย NCD</span>
+    <h1 class="type-page-title">ผู้ป่วย NCD ในความดูแลของฉัน</h1>
+    <p class="type-body" style="max-width:640px;">
+      รายชื่อนี้แสดงเฉพาะผู้ป่วยที่ถูก assign ให้อยู่ในความดูแลของท่านเท่านั้น (NFR-02) — ค้นหาด้วยเลข
+      ประจำตัวผู้ป่วย (HN) ตัวเลขล้วน 7 หลักเท่านั้น (ไม่รองรับการค้นหาด้วยชื่ออีกต่อไป, FR-06) หรือเลื่อนดู
+      รายการทั้งหมดได้โดยไม่ต้องค้นหาก่อน (FR-05)
+    </p>
+  </header>
+
+  <section class="stat-grid">
+    <div class="stat-tile sky">
+      <span class="stat-label">ผู้ป่วย NCDS ในความดูแลทั้งหมด</span>
+      <span class="stat-value">4 คน</span>
+    </div>
+    <div class="stat-tile rose">
+      <span class="stat-label">พบความเสี่ยงโรคแทรกซ้อนระดับสูง/สูงมาก</span>
+      <span class="stat-value">2 คน</span>
+    </div>
+    <div class="stat-tile purple">
+      <span class="stat-label">อยู่ในระยะ CKD ที่ต้องเฝ้าระวัง</span>
+      <span class="stat-value">1 คน</span>
+    </div>
+  </section>
+
+  <section class="section-card">
+    <div class="section-head">
+      <h2 class="type-section-title">ค้นหาด้วยเลข HN (FR-06)</h2>
+      <span class="type-caption">
+        กรอกเลขประจำตัวผู้ป่วย (HN) ตัวเลขล้วน 7 หลัก แล้วกดปุ่ม "ค้นหา" — ระบบตรวจสอบความถูกต้องหลังกด
+        ค้นหาเท่านั้น ไม่ใช่แบบ real-time ระหว่างพิมพ์ ไม่บังคับต้องค้นหาก่อน เลื่อนดูรายชื่อทั้งหมดด้านล่าง
+        ได้ทันที (FR-05)
+      </span>
+    </div>
+
+    <form id="hn-search-form" class="search-field" style="max-width:none;" novalidate>
+      <label for="patient-search">เลขประจำตัวผู้ป่วย (HN)</label>
+      <div style="display:flex; gap:var(--space-2); flex-wrap:wrap; align-items:center;">
+        <input id="patient-search" class="search-input" style="max-width:220px;" type="text"
+               inputmode="numeric" pattern="[0-9]*" maxlength="7"
+               placeholder="เช่น 6500123" autocomplete="off" />
+        <button type="submit" class="btn btn-primary">ค้นหา</button>
+      </div>
+      <span class="type-caption">รองรับเฉพาะตัวเลขล้วน 7 หลักเท่านั้น (ไม่รองรับการค้นหาด้วยชื่ออีกต่อไป)</span>
+    </form>
+
+    <div id="hn-search-result" hidden></div>
+  </section>
+
+  <section class="stack" style="gap:12px;">
+    <div class="flex-between">
+      <h2 class="type-section-title">รายชื่อผู้ป่วยทั้งหมดในความดูแล (4 คน)</h2>
+    </div>
+
+    <div class="patient-grid">
+
+      <article class="patient-card">
+        <div class="patient-card-top">
+          <div>
+            <div class="patient-card-name">นายสมชาย ใจกล้า</div>
+            <div class="patient-card-meta">HN-6500123 · ชาย · 58 ปี</div>
+          </div>
+          <span class="risk-badge veryhigh">เสี่ยง สูงมาก</span>
+        </div>
+        <div class="patient-card-chips">
+          <span class="chip chip-chronic">เบาหวาน (E11)</span>
+          <span class="chip chip-chronic">ความดันโลหิตสูง (I10)</span>
+          <span class="chip chip-ckd">CKD stage 3</span>
+        </div>
+        <div class="patient-card-action">
+          <a class="btn btn-primary btn-sm" href="patient-detail-risk-found.html">เปิดประวัติ</a>
+        </div>
+      </article>
+
+      <article class="patient-card">
+        <div class="patient-card-top">
+          <div>
+            <div class="patient-card-name">นางสมหญิง พูนสุข</div>
+            <div class="patient-card-meta">HN-6500089 · หญิง · 62 ปี</div>
+          </div>
+          <span class="risk-badge veryhigh">เสี่ยง สูงมาก</span>
+        </div>
+        <div class="patient-card-chips">
+          <span class="chip chip-chronic">เบาหวาน (E11)</span>
+          <span class="chip chip-ckd">CKD stage 3</span>
+        </div>
+        <div class="patient-card-action">
+          <a class="btn btn-primary btn-sm" href="patient-detail-risk-found.html">เปิดประวัติ</a>
+        </div>
+      </article>
+
+      <article class="patient-card">
+        <div class="patient-card-top">
+          <div>
+            <div class="patient-card-name">นายวิชัย ถุงลมดี</div>
+            <div class="patient-card-meta">HN-6500201 · ชาย · 65 ปี</div>
+          </div>
+          <span class="risk-badge low">เสี่ยง ต่ำ</span>
+        </div>
+        <div class="patient-card-chips">
+          <span class="chip chip-chronic">ถุงลมโป่งพอง (J44)</span>
+        </div>
+        <div class="patient-card-action">
+          <a class="btn btn-primary btn-sm" href="patient-detail-no-risk.html">เปิดประวัติ</a>
+        </div>
+      </article>
+
+      <article class="patient-card">
+        <div class="patient-card-top">
+          <div>
+            <div class="patient-card-name">นางสาวปราณี สุขใจ</div>
+            <div class="patient-card-meta">HN-6500345 · หญิง · 50 ปี</div>
+          </div>
+          <span class="risk-badge low">เสี่ยง ต่ำ</span>
+        </div>
+        <div class="patient-card-chips">
+          <span class="chip chip-chronic">ความดันโลหิตสูง (I10)</span>
+        </div>
+        <div class="patient-card-action">
+          <a class="btn btn-primary btn-sm" href="patient-detail-no-risk.html">เปิดประวัติ</a>
+        </div>
+      </article>
+
+    </div>
+
+    <p class="type-caption">
+      หมายเหตุ prototype: การ์ดผู้ป่วย 2 คู่ข้างต้นเชื่อมไปยังหน้าตัวอย่างเดียวกัน (patient-detail-risk-found.html /
+      patient-detail-no-risk.html) เพราะเวอร์ชันนี้ทำ 2 ตัวอย่างข้อมูลเพื่อครอบคลุมทั้งสองแขนงของ FR-04
+      (พบ/ไม่พบความเสี่ยง) — ระบบจริงจะมีข้อมูลรายบุคคลของแต่ละคนแยกกัน
+    </p>
+  </section>
+
+</div>
+</div>
+
+<script>
+(function () {
+  // Mock ผู้ป่วยในความดูแล — ใช้ค่า HN 7 หลัก (ไม่มี "HN-" prefix) ตรงกับ FR-06
+  // การ์ดแสดงผลด้านบนใช้รูปแบบ "HN-xxxxxxx" เป็น label เพื่ออ่านง่าย แต่ค่าที่ใช้ค้นหาจริงคือเลขล้วน 7 หลัก
+  var patients = [
+    { hn: "6500123", name: "นายสมชาย ใจกล้า", meta: "ชาย · 58 ปี", risk: "veryhigh", riskLabel: "เสี่ยง สูงมาก",
+      chips: [["เบาหวาน (E11)", "chip-chronic"], ["ความดันโลหิตสูง (I10)", "chip-chronic"], ["CKD stage 3", "chip-ckd"]],
+      href: "patient-detail-risk-found.html" },
+    { hn: "6500089", name: "นางสมหญิง พูนสุข", meta: "หญิง · 62 ปี", risk: "veryhigh", riskLabel: "เสี่ยง สูงมาก",
+      chips: [["เบาหวาน (E11)", "chip-chronic"], ["CKD stage 3", "chip-ckd"]],
+      href: "patient-detail-risk-found.html" },
+    { hn: "6500201", name: "นายวิชัย ถุงลมดี", meta: "ชาย · 65 ปี", risk: "low", riskLabel: "เสี่ยง ต่ำ",
+      chips: [["ถุงลมโป่งพอง (J44)", "chip-chronic"]],
+      href: "patient-detail-no-risk.html" },
+    { hn: "6500345", name: "นางสาวปราณี สุขใจ", meta: "หญิง · 50 ปี", risk: "low", riskLabel: "เสี่ยง ต่ำ",
+      chips: [["ความดันโลหิตสูง (I10)", "chip-chronic"]],
+      href: "patient-detail-no-risk.html" }
+  ];
+
+  var form = document.getElementById("hn-search-form");
+  var input = document.getElementById("patient-search");
+  var resultBox = document.getElementById("hn-search-result");
+
+  function escapeHtml(str) {
+    return String(str).replace(/[&<>"']/g, function (c) {
+      return { "&": "&amp;", "<": "&lt;", ">": "&gt;", '"': "&quot;", "'": "&#39;" }[c];
+    });
+  }
+
+  function renderNote(message) {
+    resultBox.hidden = false;
+    resultBox.innerHTML =
+      '<div class="callout note" role="alert" style="margin-top:var(--space-2);">' +
+        '<span class="callout-title">ผลการค้นหา</span>' +
+        '<p class="type-body" style="color:inherit;">' + escapeHtml(message) + "</p>" +
+      "</div>";
+  }
+
+  function renderFound(p) {
+    resultBox.hidden = false;
+    var chipsHtml = p.chips
+      .map(function (c) { return '<span class="chip ' + c[1] + '">' + escapeHtml(c[0]) + "</span>"; })
+      .join("");
+    resultBox.innerHTML =
+      '<article class="patient-card" style="max-width:420px; margin-top:var(--space-2);">' +
+        '<div class="patient-card-top">' +
+          "<div>" +
+            '<div class="patient-card-name">' + escapeHtml(p.name) + "</div>" +
+            '<div class="patient-card-meta">HN-' + p.hn + " · " + escapeHtml(p.meta) + "</div>" +
+          "</div>" +
+          '<span class="risk-badge ' + p.risk + '">' + escapeHtml(p.riskLabel) + "</span>" +
+        "</div>" +
+        '<div class="patient-card-chips">' + chipsHtml + "</div>" +
+        '<div class="patient-card-action" style="display:flex; gap:var(--space-2); flex-wrap:wrap;">' +
+          '<a class="btn btn-primary btn-sm" href="' + p.href + '">เปิดประวัติ</a>' +
+          '<a class="btn btn-secondary btn-sm" href="pdpa-data-subject-request.html">ดำเนินการคำขอสิทธิ PDPA สำหรับผู้ป่วยรายนี้</a>' +
+        "</div>" +
+      "</article>";
+  }
+
+  form.addEventListener("submit", function (e) {
+    e.preventDefault();
+    var value = input.value.trim();
+    if (!/^\d{7}$/.test(value)) {
+      renderNote("กรุณากรอกเลข HN ให้ครบ 7 หลัก (ตัวเลขล้วนเท่านั้น) แล้วลองค้นหาอีกครั้ง");
+      return;
+    }
+    var found = null;
+    for (var i = 0; i < patients.length; i++) {
+      if (patients[i].hn === value) { found = patients[i]; break; }
+    }
+    if (!found) {
+      renderNote("ไม่พบผู้ป่วยที่ตรงกับเลข HN " + value + " ในความดูแลของท่าน กรุณาตรวจสอบเลขแล้วค้นหาใหม่");
+      return;
+    }
+    renderFound(found);
+  });
+})();
+</script>
+
+</body>
+</html>

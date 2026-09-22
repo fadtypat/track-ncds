@@ -1,0 +1,25 @@
+// ==========================================================================
+// Firestore Security Rules — DEMO ONLY (ไม่ใช่กฎที่ใช้จริง)
+//
+// วิธีใช้: เปิด Firebase Console → โปรเจกต์ track-ncds → Firestore Database →
+// แท็บ "Rules" → วางเนื้อหาด้านล่างนี้ทับของเดิม → กด "Publish"
+//
+// กฎนี้เปิดให้อ่าน/เขียนได้แบบไม่ต้อง sign-in เลย (public) เพราะ demo นี้ยังไม่ทำ
+// Firebase Authentication — ใช้ได้เฉพาะกับข้อมูลจำลอง (mockup) เท่านั้น
+//
+// ต่างจากกฎ production ที่ตัดสินใจไว้แล้วใน db-spec.md ("โครงสร้างเอกสารจริงใน
+// Cloud Firestore" ของแต่ละ entity) อย่างมาก โดยเฉพาะ ncdDiagnoses, labResults,
+// complicationRiskThresholds, complicationRiskAssessments, riskFindings ที่
+// db-spec.md กำหนดไว้ว่า "allow read, write: if false;" สำหรับ Client ทั้งหมด
+// (ต้องผ่าน Cloud Functions ด้วย Admin SDK เท่านั้น) — ห้ามนำกฎนี้ไป deploy ใช้กับ
+// ข้อมูลผู้ป่วยจริงเด็ดขาด ต้องกลับไปใช้กฎตาม db-spec.md/technology-stack.md ก่อน
+// ==========================================================================
+
+rules_version = '2';
+service cloud.firestore {
+  match /databases/{database}/documents {
+    match /{document=**} {
+      allow read, write: if true;
+    }
+  }
+}

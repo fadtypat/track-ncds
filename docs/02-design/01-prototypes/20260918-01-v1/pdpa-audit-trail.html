@@ -1,0 +1,248 @@
+<!DOCTYPE html>
+<html lang="th">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>NCDs History &amp; Risk — Prototype v1 — Audit Trail (PDPA)</title>
+<link rel="stylesheet" href="style.css">
+</head>
+<body>
+
+<nav class="proto-bar">
+  <div class="proto-bar-inner">
+    <div class="proto-bar-top">
+      <span class="proto-bar-title">NCDS CLINIC · PROTOTYPE v1 · PDPA audit trail</span>
+      <div class="proto-bar-nav">
+        <a href="index.html">หน้ารวม</a>
+        <a href="patient-list.html">ค้นหา/รายชื่อผู้ป่วย</a>
+        <a href="patient-detail-risk-found.html">ประวัติ+ความเสี่ยง (พบ)</a>
+        <a href="patient-detail-no-risk.html">ประวัติ+ความเสี่ยง (ไม่พบ)</a>
+        <a href="access-denied.html">ปฏิเสธการเข้าถึง</a>
+        <a href="pdpa-data-subject-request.html">PDPA คำขอใช้สิทธิ</a>
+        <a href="pdpa-audit-trail.html" class="current">PDPA audit trail</a>
+      </div>
+    </div>
+    <div class="proto-bar-codes">
+      <span class="proto-code">NFR-02</span>
+      <span class="proto-code">NFR-06</span>
+      <span class="proto-code">NFR-08</span>
+    </div>
+  </div>
+</nav>
+
+<div class="app-bg">
+<div class="container stack gap-section">
+
+  <header class="stack" style="gap:8px;">
+    <span class="type-eyebrow">PDPA · AUDIT TRAIL RETRIEVAL</span>
+    <h1 class="type-page-title">สืบค้นบันทึกการเข้าถึงข้อมูล (Audit Trail)</h1>
+    <p class="type-body" style="max-width:720px;">
+      สนับสนุนการสืบสวนเมื่อสงสัยว่ามีเหตุข้อมูลส่วนบุคคลรั่วไหล และการแจ้งเหตุละเมิดข้อมูลส่วนบุคคลต่อสำนักงาน
+      คณะกรรมการคุ้มครองข้อมูลส่วนบุคคล (NFR-08) — ต่อยอดจากบันทึกการเข้าถึงข้อมูลตามหลัก Accountability
+      (NFR-06) ไม่บังคับต้องระบุผู้ป่วย/ช่วงเวลา/ผู้ใช้งานก่อนค้นหา
+    </p>
+  </header>
+
+  <section class="section-card">
+    <div class="section-head">
+      <h2 class="type-section-title">เงื่อนไขการสืบค้น</h2>
+      <span class="type-caption">ระบุเงื่อนไขที่ต้องการ (ไม่บังคับ) แล้วกดค้นหา — ระบบตรวจสอบหลังกดค้นหาเท่านั้น</span>
+    </div>
+
+    <form id="audit-form" novalidate>
+      <div class="field-row cols-3">
+        <div class="form-field">
+          <label for="audit-hn">เลขประจำตัวผู้ป่วย (HN)</label>
+          <input id="audit-hn" class="text-input" type="text" inputmode="numeric" pattern="[0-9]*" maxlength="7"
+                 placeholder="ไม่ระบุ = ทุกผู้ป่วย" autocomplete="off">
+        </div>
+        <div class="form-field">
+          <label for="audit-user">ผู้ใช้งานที่ต้องการตรวจสอบ</label>
+          <select id="audit-user" class="select-input">
+            <option value="">ทั้งหมด (ไม่ระบุ)</option>
+            <option value="พญ. อรุณี ศรีสุข">พญ. อรุณี ศรีสุข</option>
+            <option value="พย. กมล เก่งกล้า">พย. กมล เก่งกล้า</option>
+          </select>
+        </div>
+        <div class="form-field">
+          <label for="audit-action">ประเภทการดำเนินการ</label>
+          <select id="audit-action" class="select-input">
+            <option value="">ทั้งหมด (ไม่ระบุ)</option>
+            <option value="ดูข้อมูลผู้ป่วย">ดูข้อมูลผู้ป่วย</option>
+            <option value="ยื่นคำขอสิทธิผู้ป่วย">ยื่นคำขอสิทธิผู้ป่วย</option>
+            <option value="สืบค้น audit log">สืบค้น audit log</option>
+          </select>
+        </div>
+      </div>
+
+      <div class="field-row cols-2" style="margin-top:var(--space-4);">
+        <div class="form-field">
+          <label for="audit-start">วันที่เริ่มต้น</label>
+          <input id="audit-start" class="text-input" type="date" value="2026-09-15">
+        </div>
+        <div class="form-field">
+          <label for="audit-end">วันที่สิ้นสุด</label>
+          <input id="audit-end" class="text-input" type="date" value="2026-09-22">
+        </div>
+      </div>
+
+      <div id="audit-form-error"></div>
+
+      <div style="margin-top:var(--space-5);">
+        <button type="submit" class="btn btn-primary">ค้นหา audit log</button>
+      </div>
+    </form>
+  </section>
+
+  <section class="section-card" id="audit-result" hidden>
+    <div class="section-head">
+      <h2 class="type-section-title">ผลการสืบค้น</h2>
+      <span class="type-caption">เรียงตามวันที่-เวลาที่เข้าถึง (ใหม่ → เก่า)</span>
+    </div>
+    <div id="audit-result-body"></div>
+  </section>
+
+  <div class="callout note">
+    <span class="callout-title">ขอบเขตของหน้าจอนี้</span>
+    <ul>
+      <li>การเรียกดูหน้าจอนี้เองก็ถูกบันทึกลง audit log ด้วย (การดำเนินการ = "ดูข้อมูลผู้ป่วย") เพื่อรักษาความ
+        สมบูรณ์ของ Accountability (NFR-06)</li>
+      <li>การแจ้งเหตุละเมิดข้อมูลจริงต่อสำนักงานคณะกรรมการคุ้มครองข้อมูลส่วนบุคคลและเจ้าของข้อมูล เป็น
+        กระบวนการเชิงองค์กรที่อยู่นอกขอบเขตของระบบ (NFR-08) — ระบบมีหน้าที่ให้ข้อมูลสนับสนุนเท่านั้น</li>
+      <li>ข้อมูล audit log ทั้งหมดในหน้านี้เป็น mockup — ระบบจริงจะดึงจาก Audit Log Store ตาม db-spec</li>
+    </ul>
+  </div>
+
+</div>
+</div>
+
+<script>
+(function () {
+  // ผู้ป่วยที่อยู่ในความดูแล (ตรงกับ mock ใน patient-list.html) — ใช้ตรวจสอบ NFR-02 ระดับรายผู้ป่วย
+  var assignedHns = ["6500123", "6500089", "6500201", "6500345"];
+
+  var records = [
+    { date: "2026-09-22", dt: "22 ก.ย. 2569 09:12", user: "พญ. อรุณี ศรีสุข", action: "ดูข้อมูลผู้ป่วย", hn: "6500123", name: "นายสมชาย ใจกล้า", detail: "เปิดประวัติวินิจฉัย + ผลตรวจ lab" },
+    { date: "2026-09-22", dt: "22 ก.ย. 2569 09:40", user: "พญ. อรุณี ศรีสุข", action: "ดูข้อมูลผู้ป่วย", hn: "6500089", name: "นางสมหญิง พูนสุข", detail: "เปิดประวัติวินิจฉัย + ผลตรวจ lab" },
+    { date: "2026-09-21", dt: "21 ก.ย. 2569 14:05", user: "พย. กมล เก่งกล้า", action: "ยื่นคำขอสิทธิผู้ป่วย", hn: "6500123", name: "นายสมชาย ใจกล้า", detail: "ประเภทคำขอ: ขอสำเนาข้อมูล (DSR-2026-118420)" },
+    { date: "2026-09-20", dt: "20 ก.ย. 2569 08:22", user: "พย. กมล เก่งกล้า", action: "ดูข้อมูลผู้ป่วย", hn: "6500201", name: "นายวิชัย ถุงลมดี", detail: "เปิดประวัติวินิจฉัย + ผลตรวจ lab" },
+    { date: "2026-09-19", dt: "19 ก.ย. 2569 16:48", user: "พญ. อรุณี ศรีสุข", action: "สืบค้น audit log", hn: "-", name: "-", detail: "สืบค้นแบบไม่ระบุผู้ป่วย (สนับสนุนการสืบสวน)" },
+    { date: "2026-09-18", dt: "18 ก.ย. 2569 11:30", user: "พย. กมล เก่งกล้า", action: "ยื่นคำขอสิทธิผู้ป่วย", hn: "6500345", name: "นางสาวปราณี สุขใจ", detail: "ประเภทคำขอ: ขอลบข้อมูล (DSR-2026-118355) — ปฏิเสธคำขอ (NFR-05)" }
+  ];
+
+  var form = document.getElementById("audit-form");
+  var hnInput = document.getElementById("audit-hn");
+  var userSelect = document.getElementById("audit-user");
+  var actionSelect = document.getElementById("audit-action");
+  var startInput = document.getElementById("audit-start");
+  var endInput = document.getElementById("audit-end");
+  var errorBox = document.getElementById("audit-form-error");
+  var resultSection = document.getElementById("audit-result");
+  var resultBody = document.getElementById("audit-result-body");
+
+  function escapeHtml(str) {
+    return String(str).replace(/[&<>"']/g, function (c) {
+      return { "&": "&amp;", "<": "&lt;", ">": "&gt;", '"': "&quot;", "'": "&#39;" }[c];
+    });
+  }
+
+  function renderNote(title, message) {
+    resultSection.hidden = true;
+    errorBox.innerHTML =
+      '<div class="callout note" role="alert" style="margin-top:var(--space-4);">' +
+        '<span class="callout-title">' + escapeHtml(title) + "</span>" +
+        '<p class="type-body" style="color:inherit;">' + escapeHtml(message) + "</p>" +
+      "</div>";
+  }
+
+  function renderDenied(hn) {
+    resultSection.hidden = true;
+    errorBox.innerHTML =
+      '<div class="callout warn" role="alert" style="margin-top:var(--space-4);">' +
+        '<span class="callout-title">ไม่มีสิทธิ์เข้าถึงข้อมูล audit trail ของผู้ป่วยรายนี้ (NFR-02)</span>' +
+        '<p class="type-body" style="color:inherit;">เลข HN ' + escapeHtml(hn) + ' ไม่มี PatientAssignment ' +
+        'เชื่อมโยงกับบัญชีของท่าน — ลบเงื่อนไข HN หรือระบุผู้ป่วยที่อยู่ในความดูแลของท่านแล้วค้นหาใหม่</p>' +
+      "</div>";
+  }
+
+  function renderResults(rows) {
+    errorBox.innerHTML = "";
+    resultSection.hidden = false;
+
+    if (rows.length === 0) {
+      resultBody.innerHTML =
+        '<div class="callout info"><span class="callout-title">ไม่พบบันทึกที่ตรงเงื่อนไข</span>' +
+        '<p class="type-body" style="color:inherit;">ไม่ถือเป็นข้อผิดพลาด — ลองปรับเงื่อนไขการสืบค้นแล้วค้นหาอีกครั้ง</p></div>';
+      return;
+    }
+
+    var body = rows.map(function (r) {
+      return "<tr>" +
+        "<td>" + escapeHtml(r.dt) + "</td>" +
+        "<td>" + escapeHtml(r.user) + "</td>" +
+        "<td>" + escapeHtml(r.action) + "</td>" +
+        '<td class="param-name">' + (r.hn === "-" ? "—" : "HN-" + escapeHtml(r.hn) + " · " + escapeHtml(r.name)) + "</td>" +
+        "<td style=\"font-family:var(--font-sans); font-size:13px; white-space:normal;\">" + escapeHtml(r.detail) + "</td>" +
+      "</tr>";
+    }).join("");
+
+    resultBody.innerHTML =
+      '<div class="callout info" style="margin-bottom:var(--space-4);">' +
+        '<span class="callout-title">Audit Logging</span>' +
+        '<p class="type-body" style="color:inherit;">การเรียก Operation 5 นี้เองถูกบันทึกลง audit log แล้วก่อน' +
+        'แสดงผลลัพธ์ด้านล่าง (NFR-06) — ถ้าบันทึกไม่สำเร็จ ระบบจะยกเลิกการค้นหาทั้งหมด (fail-safe)</p>' +
+      "</div>" +
+      '<div class="trend-table-wrap">' +
+        '<table class="trend-table" style="min-width:760px;">' +
+          "<thead><tr>" +
+            "<th>วันที่-เวลาที่เข้าถึง</th><th>ผู้ใช้งาน</th><th>การดำเนินการ</th><th>ผู้ป่วยที่เกี่ยวข้อง</th><th>รายละเอียด</th>" +
+          "</tr></thead>" +
+          "<tbody>" + body + "</tbody>" +
+        "</table>" +
+      "</div>" +
+      '<p class="type-caption" style="margin-top:var(--space-3);">พบ ' + rows.length + ' รายการที่ตรงเงื่อนไข</p>';
+  }
+
+  form.addEventListener("submit", function (e) {
+    e.preventDefault();
+    errorBox.innerHTML = "";
+
+    var hn = hnInput.value.trim();
+    var user = userSelect.value;
+    var action = actionSelect.value;
+    var start = startInput.value;
+    var end = endInput.value;
+
+    if (start && end && start > end) {
+      renderNote("ช่วงเวลาที่ระบุไม่ถูกต้อง", "วันที่เริ่มต้นต้องอยู่ก่อนหรือเท่ากับวันที่สิ้นสุด กรุณาแก้ไขช่วงเวลาแล้วค้นหาใหม่");
+      return;
+    }
+
+    if (hn !== "") {
+      if (!/^\d{7}$/.test(hn)) {
+        renderNote("รูปแบบเลข HN ไม่ถูกต้อง", "เลขประจำตัวผู้ป่วย (HN) ต้องเป็นตัวเลขล้วน 7 หลัก หรือเว้นว่างไว้เพื่อค้นหาทุกผู้ป่วย");
+        return;
+      }
+      if (assignedHns.indexOf(hn) === -1) {
+        renderDenied(hn);
+        return;
+      }
+    }
+
+    var rows = records.filter(function (r) {
+      if (hn !== "" && r.hn !== hn) return false;
+      if (user !== "" && r.user !== user) return false;
+      if (action !== "" && r.action !== action) return false;
+      if (start && r.date < start) return false;
+      if (end && r.date > end) return false;
+      return true;
+    });
+
+    renderResults(rows);
+    resultSection.scrollIntoView({ behavior: "smooth", block: "start" });
+  });
+})();
+</script>
+
+</body>
+</html>

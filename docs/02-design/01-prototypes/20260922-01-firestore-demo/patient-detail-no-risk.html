@@ -1,0 +1,132 @@
+<!DOCTYPE html>
+<html lang="th">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>NCDs History &amp; Risk — Firestore Demo — วิชัย ถุงลมดี (ไม่พบความเสี่ยง)</title>
+<link rel="stylesheet" href="style.css">
+<script src="https://www.gstatic.com/firebasejs/10.14.1/firebase-app-compat.js"></script>
+<script src="https://www.gstatic.com/firebasejs/10.14.1/firebase-firestore-compat.js"></script>
+<script src="firebase-init.js"></script>
+</head>
+<body>
+
+<nav class="proto-bar">
+  <div class="proto-bar-inner">
+    <div class="proto-bar-top">
+      <span class="proto-bar-title">NCDS CLINIC · FIRESTORE DEMO · ประวัติ+ความเสี่ยง (ไม่พบ)</span>
+      <div class="proto-bar-nav">
+        <a href="index.html">หน้ารวม</a>
+        <a href="patient-list.html">ค้นหา/รายชื่อผู้ป่วย</a>
+        <a href="patient-detail-risk-found.html">ประวัติ+ความเสี่ยง (พบ)</a>
+        <a href="patient-detail-no-risk.html" class="current">ประวัติ+ความเสี่ยง (ไม่พบ)</a>
+        <a href="access-denied.html">ปฏิเสธการเข้าถึง</a>
+        <a href="pdpa-data-subject-request.html">PDPA คำขอใช้สิทธิ</a>
+        <a href="pdpa-audit-trail.html">PDPA audit trail</a>
+        <a href="seed.html">Seed Firestore</a>
+      </div>
+    </div>
+    <div class="proto-bar-codes">
+      <span class="proto-code">FR-01</span>
+      <span class="proto-code">FR-02</span>
+      <span class="proto-code">FR-03</span>
+      <span class="proto-code">FR-04</span>
+      <span class="proto-code">NFR-01</span>
+    </div>
+  </div>
+</nav>
+
+<div class="app-bg">
+<div class="container stack gap-section" id="detail-root">
+
+  <a href="patient-list.html" class="type-caption" style="display:inline-block;">← กลับไปรายชื่อผู้ป่วย</a>
+  <p class="type-caption" id="firestore-status">กำลังโหลดข้อมูลจาก Firestore …</p>
+
+  <header class="patient-header">
+    <div class="patient-header-id">
+      <div class="patient-header-namerow">
+        <div class="patient-avatar" aria-hidden="true">…</div>
+        <div>
+          <h1 class="type-page-title" style="font-size:24px; line-height:32px;" id="patient-name">…</h1>
+          <div class="patient-card-meta" id="patient-meta">…</div>
+        </div>
+        <span class="risk-badge" id="patient-overall-badge">…</span>
+      </div>
+      <div class="patient-header-chips" id="patient-header-chips"></div>
+    </div>
+    <div class="patient-header-actions">
+      <button type="button" class="btn btn-secondary btn-sm">Copy link</button>
+      <button type="button" class="btn btn-accent btn-sm">Sync to HosXP</button>
+      <button type="button" class="btn btn-secondary btn-sm">เปิดผ่าน Lookup</button>
+    </div>
+  </header>
+
+  <!-- ฟีเจอร์ 1: ประวัติการวินิจฉัย (FR-01) — จาก Firestore collection ncdDiagnoses -->
+  <section class="section-card">
+    <div class="section-head">
+      <h2 class="type-section-title">ประวัติการวินิจฉัยโรค NCD</h2>
+      <span class="type-caption">เรียงตามช่วงเวลา (เก่า → ใหม่) · ข้อมูลอ้างอิงจาก HOSxP mockup (NFR-01)</span>
+    </div>
+    <ul class="dx-list" id="dx-list"></ul>
+  </section>
+
+  <!-- ฟีเจอร์ 1: ผลตรวจ lab ย้อนหลัง (FR-02) — จาก Firestore collection labResults -->
+  <section class="section-card">
+    <div class="section-head">
+      <h2 class="type-section-title">ผลตรวจ Lab ย้อนหลัง</h2>
+      <span class="type-caption">เลือกดู visit รายครั้ง หรือดูตารางแนวโน้มทั้งหมดด้านล่าง</span>
+    </div>
+
+    <div class="visit-tabs" role="tablist" aria-label="เลือก visit" id="visit-tabs"></div>
+
+    <div style="display:grid; grid-template-columns:1fr; gap:12px;" class="grid-2-tablet" id="value-tiles"></div>
+
+    <div class="section-head">
+      <h3 class="type-card-title">ตารางแนวโน้ม 3 visit</h3>
+      <span class="type-caption">คอลัมน์ = visit เรียงเก่า→ใหม่ซ้าย→ขวา · บนมือถือเลื่อนแนวนอน คอลัมน์แรก sticky</span>
+    </div>
+    <div class="trend-table-wrap">
+      <table class="trend-table" id="trend-table">
+        <thead></thead>
+        <tbody></tbody>
+      </table>
+    </div>
+  </section>
+
+  <!-- ฟีเจอร์ 2: วิเคราะห์และแจ้งเตือนความเสี่ยง (FR-03/FR-04) — แขนง "ไม่พบ" — จาก complicationRiskAssessments + riskFindings -->
+  <section class="section-card">
+    <div class="section-head">
+      <h2 class="type-section-title">ผลวิเคราะห์ความเสี่ยงโรคแทรกซ้อน</h2>
+      <span class="type-caption">ประเมินแบบ rule-based เทียบ threshold ค่า lab มาตรฐาน (ไม่ใช้ AI/ML — FR-03)</span>
+    </div>
+
+    <div class="risk-bar-list" id="risk-bar-list"></div>
+
+    <div id="risk-summary"></div>
+
+    <div class="callout note">
+      <span class="callout-title">หมายเหตุ threshold</span>
+      <p class="type-body" style="color:inherit; margin:0;">
+        ค่า threshold ตัวเลขที่ใช้ตัดสินระดับความเสี่ยงข้างต้นยังไม่ได้รับการยืนยันจากผู้เชี่ยวชาญ
+        (ดู DESIGN.md §2.3 และ spec ต้นทาง หัวข้อสมมติฐาน) ตัวเลข % ในหน้านี้เป็นข้อมูล mockup
+        สำหรับสาธิตการแสดงผลเท่านั้น — เชื่อมกับ Firestore จริงแล้ว (ดู prototype.md ของโฟลเดอร์นี้)
+      </p>
+    </div>
+  </section>
+
+</div>
+</div>
+
+<script src="patient-detail-render.js"></script>
+<script>
+  renderPatientDetail("wichai-thunglomdee").then(function () {
+    document.getElementById("firestore-status").textContent = "โหลดจาก Firestore สำเร็จ — แก้ไขข้อมูลใน Firebase Console แล้วรีเฟรชหน้านี้เพื่อดูผลได้ทันที";
+  }).catch(function (err) {
+    var el = document.getElementById("firestore-status");
+    el.textContent = "โหลดจาก Firestore ไม่สำเร็จ: " + err.message + " — ตรวจสอบว่า seed ข้อมูลแล้ว (seed.html) และตั้ง Security Rules แบบ demo แล้ว (firestore.rules.demo.txt)";
+    el.style.color = "var(--rose-600, #d10)";
+  });
+</script>
+
+</body>
+</html>

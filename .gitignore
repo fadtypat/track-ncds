@@ -1,0 +1,37 @@
+# --- Secrets / keys / credentials ---
+.env
+.env.*
+!.env.example
+*.pem
+*.key
+*.p12
+*.pfx
+*credential*.json
+*credentials*.json
+*serviceAccountKey*.json
+*service-account*.json
+firebase-adminsdk*.json
+.firebaserc
+secrets/
+*.secret
+
+# --- Local/machine-specific config (not meant to be shared) ---
+*.local.json
+*.local.js
+config.local.*
+.vscode/
+.idea/
+
+# --- OS/editor cruft ---
+.DS_Store
+Thumbs.db
+*.swp
+
+# --- Future build output (once a tech stack/app is scaffolded) ---
+node_modules/
+dist/
+build/
+
+# --- Raw hospital DB export (removed from repo — contains real-looking patient
+#     record structure/HN/dates; keep local-only, never re-add) ---
+docs/02-design/02-technical/databese/

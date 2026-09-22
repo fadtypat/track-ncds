@@ -1,0 +1,219 @@
+<!DOCTYPE html>
+<html lang="th">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>NCDs History &amp; Risk — Prototype v1 — วิชัย ถุงลมดี (ไม่พบความเสี่ยง)</title>
+<link rel="stylesheet" href="style.css">
+</head>
+<body>
+
+<nav class="proto-bar">
+  <div class="proto-bar-inner">
+    <div class="proto-bar-top">
+      <span class="proto-bar-title">NCDS CLINIC · PROTOTYPE v1 · ประวัติ+ความเสี่ยง (ไม่พบ)</span>
+      <div class="proto-bar-nav">
+        <a href="index.html">หน้ารวม</a>
+        <a href="patient-list.html">ค้นหา/รายชื่อผู้ป่วย</a>
+        <a href="patient-detail-risk-found.html">ประวัติ+ความเสี่ยง (พบ)</a>
+        <a href="patient-detail-no-risk.html" class="current">ประวัติ+ความเสี่ยง (ไม่พบ)</a>
+        <a href="access-denied.html">ปฏิเสธการเข้าถึง</a>
+        <a href="pdpa-data-subject-request.html">PDPA คำขอใช้สิทธิ</a>
+        <a href="pdpa-audit-trail.html">PDPA audit trail</a>
+      </div>
+    </div>
+    <div class="proto-bar-codes">
+      <span class="proto-code">FR-01</span>
+      <span class="proto-code">FR-02</span>
+      <span class="proto-code">FR-03</span>
+      <span class="proto-code">FR-04</span>
+      <span class="proto-code">NFR-01</span>
+    </div>
+  </div>
+</nav>
+
+<div class="app-bg">
+<div class="container stack gap-section">
+
+  <a href="patient-list.html" class="type-caption" style="display:inline-block;">← กลับไปรายชื่อผู้ป่วย</a>
+
+  <header class="patient-header">
+    <div class="patient-header-id">
+      <div class="patient-header-namerow">
+        <div class="patient-avatar" aria-hidden="true">วถ</div>
+        <div>
+          <h1 class="type-page-title" style="font-size:24px; line-height:32px;">นายวิชัย ถุงลมดี</h1>
+          <div class="patient-card-meta">HN-6500201 · ชาย · 65 ปี</div>
+        </div>
+        <span class="risk-badge low">ความเสี่ยงโดยรวม: ต่ำ</span>
+      </div>
+      <div class="patient-header-chips">
+        <span class="chip chip-chronic">ถุงลมโป่งพอง (J44)</span>
+      </div>
+    </div>
+    <div class="patient-header-actions">
+      <button type="button" class="btn btn-secondary btn-sm">Copy link</button>
+      <button type="button" class="btn btn-accent btn-sm">Sync to HosXP</button>
+      <button type="button" class="btn btn-secondary btn-sm">เปิดผ่าน Lookup</button>
+    </div>
+  </header>
+
+  <!-- ฟีเจอร์ 1: ประวัติการวินิจฉัย (FR-01) -->
+  <section class="section-card">
+    <div class="section-head">
+      <h2 class="type-section-title">ประวัติการวินิจฉัยโรค NCD</h2>
+      <span class="type-caption">เรียงตามช่วงเวลา (เก่า → ใหม่) · ข้อมูลอ้างอิงจาก HOSxP mockup (NFR-01)</span>
+    </div>
+    <ul class="dx-list">
+      <li class="dx-item">
+        <div class="dx-item-main">
+          <span class="dx-item-name">ถุงลมโป่งพอง (Emphysema/COPD)</span>
+          <span class="dx-item-code">ICD-10: J44</span>
+        </div>
+        <span class="dx-item-date">5 ม.ค. 2565</span>
+      </li>
+    </ul>
+  </section>
+
+  <!-- ฟีเจอร์ 1: ผลตรวจ lab ย้อนหลัง (FR-02) -->
+  <section class="section-card">
+    <div class="section-head">
+      <h2 class="type-section-title">ผลตรวจ Lab ย้อนหลัง</h2>
+      <span class="type-caption">เลือกดู visit รายครั้ง หรือดูตารางแนวโน้มทั้งหมดด้านล่าง</span>
+    </div>
+
+    <div class="visit-tabs" role="tablist" aria-label="เลือก visit">
+      <div class="visit-tab" role="tab">Visit 1 · 8 ก.พ. 66</div>
+      <div class="visit-tab" role="tab">Visit 2 · 6 ส.ค. 66</div>
+      <div class="visit-tab selected" role="tab" aria-selected="true">Visit 3 (ล่าสุด) · 3 ก.พ. 67</div>
+    </div>
+
+    <div style="display:grid; grid-template-columns:1fr; gap:12px;" class="grid-2-tablet">
+      <div class="value-tile normal">
+        <span class="value-label">eGFR (ล่าสุด)</span>
+        <span class="value-number">88 mL/min/1.73m²</span>
+        <span class="value-status">ปกติ</span>
+      </div>
+      <div class="value-tile normal">
+        <span class="value-label">LDL (ล่าสุด)</span>
+        <span class="value-number">102 mg/dL</span>
+        <span class="value-status">ปกติ</span>
+      </div>
+      <div class="value-tile normal">
+        <span class="value-label">ความดันโลหิต (ล่าสุด)</span>
+        <span class="value-number">124/78 mmHg</span>
+        <span class="value-status">ปกติ</span>
+      </div>
+      <div class="value-tile normal">
+        <span class="value-label">HbA1c (ล่าสุด)</span>
+        <span class="value-number">5.6 %</span>
+        <span class="value-status">ปกติ</span>
+      </div>
+    </div>
+
+    <div class="section-head">
+      <h3 class="type-card-title">ตารางแนวโน้ม 3 visit</h3>
+      <span class="type-caption">คอลัมน์ = visit เรียงเก่า→ใหม่ซ้าย→ขวา · บนมือถือเลื่อนแนวนอน คอลัมน์แรก sticky</span>
+    </div>
+    <div class="trend-table-wrap">
+      <table class="trend-table">
+        <thead>
+          <tr>
+            <th>พารามิเตอร์</th>
+            <th>Visit 1<br>8 ก.พ. 66</th>
+            <th>Visit 2<br>6 ส.ค. 66</th>
+            <th>Visit 3<br>3 ก.พ. 67</th>
+            <th>แนวโน้ม</th>
+          </tr>
+        </thead>
+        <tbody>
+          <tr>
+            <td class="param-name">HbA1c (%)</td>
+            <td class="cell-normal">5.7</td>
+            <td class="cell-normal">5.6</td>
+            <td class="cell-normal">5.6</td>
+            <td><span class="trend-arrow flat">→ คงที่</span></td>
+          </tr>
+          <tr>
+            <td class="param-name">eGFR (mL/min/1.73m²)</td>
+            <td class="cell-normal">92</td>
+            <td class="cell-normal">90</td>
+            <td class="cell-normal">88</td>
+            <td><span class="trend-arrow flat">→ คงที่</span></td>
+          </tr>
+          <tr>
+            <td class="param-name">LDL (mg/dL)</td>
+            <td class="cell-normal">110</td>
+            <td class="cell-normal">106</td>
+            <td class="cell-normal">102</td>
+            <td><span class="trend-arrow better">↓ ดีขึ้น</span></td>
+          </tr>
+          <tr>
+            <td class="param-name">ความดันโลหิต SBP/DBP (mmHg)</td>
+            <td class="cell-normal">128/80</td>
+            <td class="cell-normal">126/79</td>
+            <td class="cell-normal">124/78</td>
+            <td><span class="trend-arrow better">↓ ดีขึ้น</span></td>
+          </tr>
+        </tbody>
+      </table>
+    </div>
+  </section>
+
+  <!-- ฟีเจอร์ 2: วิเคราะห์และแจ้งเตือนความเสี่ยง (FR-03/FR-04) — แขนง "ไม่พบ" -->
+  <section class="section-card">
+    <div class="section-head">
+      <h2 class="type-section-title">ผลวิเคราะห์ความเสี่ยงโรคแทรกซ้อน</h2>
+      <span class="type-caption">ประเมินแบบ rule-based เทียบ threshold ค่า lab มาตรฐาน (ไม่ใช้ AI/ML — FR-03)</span>
+    </div>
+
+    <div class="risk-bar-list">
+      <div class="risk-bar-item">
+        <div class="risk-bar-head">
+          <span class="risk-bar-name">ไตวายเรื้อรัง (CKD)</span>
+          <span class="risk-badge low">เสี่ยง ต่ำ</span>
+          <span class="risk-bar-pct">8%</span>
+        </div>
+        <div class="risk-bar-track"><div class="risk-bar-fill low" style="width:8%;"></div></div>
+      </div>
+      <div class="risk-bar-item">
+        <div class="risk-bar-head">
+          <span class="risk-bar-name">โรคหัวใจ</span>
+          <span class="risk-badge low">เสี่ยง ต่ำ</span>
+          <span class="risk-bar-pct">12%</span>
+        </div>
+        <div class="risk-bar-track"><div class="risk-bar-fill low" style="width:12%;"></div></div>
+      </div>
+      <div class="risk-bar-item">
+        <div class="risk-bar-head">
+          <span class="risk-bar-name">โรคหลอดเลือดสมอง</span>
+          <span class="risk-badge low">เสี่ยง ต่ำ</span>
+          <span class="risk-bar-pct">6%</span>
+        </div>
+        <div class="risk-bar-track"><div class="risk-bar-fill low" style="width:6%;"></div></div>
+      </div>
+    </div>
+
+    <div class="callout tip">
+      <span class="callout-title">ผลการประเมิน: ไม่พบความเสี่ยงเพิ่มเติม</span>
+      <p class="type-body" style="color:inherit; margin:0;">
+        ค่า lab ทั้งหมดอยู่ในเกณฑ์ปกติต่อเนื่องทุก visit ระบบไม่พบปัจจัยเสี่ยงที่เข้าเกณฑ์ต้องเฝ้าระวัง
+        เพิ่มเติมในการประเมินครั้งนี้ (FR-04 — แขนง "ไม่พบ") ระบบจะประเมินใหม่โดยอัตโนมัติทุกครั้งที่มี
+        ผลตรวจ lab ใหม่เข้ามา แนะนำให้ตรวจติดตามตามรอบปกติต่อไป
+      </p>
+    </div>
+
+    <div class="callout note">
+      <span class="callout-title">หมายเหตุ threshold</span>
+      <p class="type-body" style="color:inherit; margin:0;">
+        ค่า threshold ตัวเลขที่ใช้ตัดสินระดับความเสี่ยงข้างต้นยังไม่ได้รับการยืนยันจากผู้เชี่ยวชาญ
+        (ดู DESIGN.md §2.3 และ spec ต้นทาง หัวข้อสมมติฐาน) ตัวเลข % ในหน้านี้เป็นข้อมูล mockup
+        สำหรับสาธิตการแสดงผลเท่านั้น
+      </p>
+    </div>
+  </section>
+
+</div>
+</div>
+</body>
+</html>

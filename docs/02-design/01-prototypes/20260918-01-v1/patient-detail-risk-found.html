@@ -1,0 +1,248 @@
+<!DOCTYPE html>
+<html lang="th">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>NCDs History &amp; Risk — Prototype v1 — สมชาย ใจกล้า (พบความเสี่ยง)</title>
+<link rel="stylesheet" href="style.css">
+</head>
+<body>
+
+<nav class="proto-bar">
+  <div class="proto-bar-inner">
+    <div class="proto-bar-top">
+      <span class="proto-bar-title">NCDS CLINIC · PROTOTYPE v1 · ประวัติ+ความเสี่ยง (พบ)</span>
+      <div class="proto-bar-nav">
+        <a href="index.html">หน้ารวม</a>
+        <a href="patient-list.html">ค้นหา/รายชื่อผู้ป่วย</a>
+        <a href="patient-detail-risk-found.html" class="current">ประวัติ+ความเสี่ยง (พบ)</a>
+        <a href="patient-detail-no-risk.html">ประวัติ+ความเสี่ยง (ไม่พบ)</a>
+        <a href="access-denied.html">ปฏิเสธการเข้าถึง</a>
+        <a href="pdpa-data-subject-request.html">PDPA คำขอใช้สิทธิ</a>
+        <a href="pdpa-audit-trail.html">PDPA audit trail</a>
+      </div>
+    </div>
+    <div class="proto-bar-codes">
+      <span class="proto-code">FR-01</span>
+      <span class="proto-code">FR-02</span>
+      <span class="proto-code">FR-03</span>
+      <span class="proto-code">FR-04</span>
+      <span class="proto-code">NFR-01</span>
+    </div>
+  </div>
+</nav>
+
+<div class="app-bg">
+<div class="container stack gap-section">
+
+  <a href="patient-list.html" class="type-caption" style="display:inline-block;">← กลับไปรายชื่อผู้ป่วย</a>
+
+  <header class="patient-header">
+    <div class="patient-header-id">
+      <div class="patient-header-namerow">
+        <div class="patient-avatar" aria-hidden="true">สก</div>
+        <div>
+          <h1 class="type-page-title" style="font-size:24px; line-height:32px;">นายสมชาย ใจกล้า</h1>
+          <div class="patient-card-meta">HN-6500123 · ชาย · 58 ปี</div>
+        </div>
+        <span class="risk-badge veryhigh">ความเสี่ยงโดยรวม: สูงมาก</span>
+      </div>
+      <div class="patient-header-chips">
+        <span class="chip chip-chronic">เบาหวานชนิดที่ 2 (E11)</span>
+        <span class="chip chip-chronic">ความดันโลหิตสูง (I10)</span>
+        <span class="chip chip-ckd">CKD stage 3</span>
+      </div>
+    </div>
+    <div class="patient-header-actions">
+      <button type="button" class="btn btn-secondary btn-sm">Copy link</button>
+      <button type="button" class="btn btn-accent btn-sm">Sync to HosXP</button>
+      <button type="button" class="btn btn-secondary btn-sm">เปิดผ่าน Lookup</button>
+    </div>
+  </header>
+
+  <!-- ฟีเจอร์ 1: ประวัติการวินิจฉัย (FR-01) -->
+  <section class="section-card">
+    <div class="section-head">
+      <h2 class="type-section-title">ประวัติการวินิจฉัยโรค NCD</h2>
+      <span class="type-caption">เรียงตามช่วงเวลา (เก่า → ใหม่) · ข้อมูลอ้างอิงจาก HOSxP mockup (NFR-01)</span>
+    </div>
+    <ul class="dx-list">
+      <li class="dx-item">
+        <div class="dx-item-main">
+          <span class="dx-item-name">เบาหวานชนิดที่ 2</span>
+          <span class="dx-item-code">ICD-10: E11</span>
+        </div>
+        <span class="dx-item-date">12 มี.ค. 2566</span>
+      </li>
+      <li class="dx-item">
+        <div class="dx-item-main">
+          <span class="dx-item-name">ความดันโลหิตสูง</span>
+          <span class="dx-item-code">ICD-10: I10</span>
+        </div>
+        <span class="dx-item-date">12 มี.ค. 2566</span>
+      </li>
+      <li class="dx-item" style="border-color: var(--rose-200); background: var(--rose-50);">
+        <div class="dx-item-main">
+          <span class="dx-item-name">ไตวายเรื้อรัง stage 3</span>
+          <span class="dx-item-code">ICD-10: N18.3</span>
+        </div>
+        <div style="display:flex; align-items:center; gap:8px;">
+          <span class="chip chip-alert">COMPLICATION</span>
+          <span class="dx-item-date">2 พ.ย. 2567</span>
+        </div>
+      </li>
+    </ul>
+  </section>
+
+  <!-- ฟีเจอร์ 1: ผลตรวจ lab ย้อนหลัง (FR-02) -->
+  <section class="section-card">
+    <div class="section-head">
+      <h2 class="type-section-title">ผลตรวจ Lab ย้อนหลัง</h2>
+      <span class="type-caption">เลือกดู visit รายครั้ง หรือดูตารางแนวโน้มทั้งหมดด้านล่าง</span>
+    </div>
+
+    <div class="visit-tabs" role="tablist" aria-label="เลือก visit">
+      <div class="visit-tab" role="tab">Visit 1 · 12 มี.ค. 66</div>
+      <div class="visit-tab" role="tab">Visit 2 · 10 ก.ย. 66</div>
+      <div class="visit-tab selected" role="tab" aria-selected="true">Visit 3 (ล่าสุด) · 2 พ.ย. 67</div>
+    </div>
+
+    <div style="display:grid; grid-template-columns:1fr; gap:12px;" class="grid-2-tablet">
+      <div class="value-tile abnormal">
+        <span class="value-label">HbA1c (ล่าสุด)</span>
+        <span class="value-number">9.2 %</span>
+        <span class="value-status">ผิดปกติ — สูงกว่าเกณฑ์</span>
+      </div>
+      <div class="value-tile abnormal">
+        <span class="value-label">eGFR (ล่าสุด)</span>
+        <span class="value-number">41 mL/min/1.73m²</span>
+        <span class="value-status">ผิดปกติ — ต่ำกว่าเกณฑ์</span>
+      </div>
+      <div class="value-tile normal">
+        <span class="value-label">LDL (ล่าสุด)</span>
+        <span class="value-number">98 mg/dL</span>
+        <span class="value-status">ปกติ</span>
+      </div>
+      <div class="value-tile abnormal">
+        <span class="value-label">ความดันโลหิต (ล่าสุด)</span>
+        <span class="value-number">138/85 mmHg</span>
+        <span class="value-status">ผิดปกติ — สูงกว่าเกณฑ์</span>
+      </div>
+    </div>
+
+    <div class="section-head">
+      <h3 class="type-card-title">ตารางแนวโน้ม 3 visit</h3>
+      <span class="type-caption">คอลัมน์ = visit เรียงเก่า→ใหม่ซ้าย→ขวา · บนมือถือเลื่อนแนวนอน คอลัมน์แรก sticky</span>
+    </div>
+    <div class="trend-table-wrap">
+      <table class="trend-table">
+        <thead>
+          <tr>
+            <th>พารามิเตอร์</th>
+            <th>Visit 1<br>12 มี.ค. 66</th>
+            <th>Visit 2<br>10 ก.ย. 66</th>
+            <th>Visit 3<br>2 พ.ย. 67</th>
+            <th>แนวโน้ม</th>
+          </tr>
+        </thead>
+        <tbody>
+          <tr>
+            <td class="param-name">HbA1c (%)</td>
+            <td class="cell-abnormal">7.8</td>
+            <td class="cell-abnormal">8.5</td>
+            <td class="cell-abnormal">9.2</td>
+            <td><span class="trend-arrow worse">↑ แย่ลง</span></td>
+          </tr>
+          <tr>
+            <td class="param-name">eGFR (mL/min/1.73m²)</td>
+            <td class="cell-normal">68</td>
+            <td class="cell-abnormal">52</td>
+            <td class="cell-abnormal">41</td>
+            <td><span class="trend-arrow worse">↓ แย่ลง</span></td>
+          </tr>
+          <tr>
+            <td class="param-name">LDL (mg/dL)</td>
+            <td class="cell-abnormal">145</td>
+            <td class="cell-abnormal">130</td>
+            <td class="cell-normal">98</td>
+            <td><span class="trend-arrow better">↓ ดีขึ้น</span></td>
+          </tr>
+          <tr>
+            <td class="param-name">ความดันโลหิต SBP/DBP (mmHg)</td>
+            <td class="cell-abnormal">150/95</td>
+            <td class="cell-abnormal">148/92</td>
+            <td class="cell-abnormal">138/85</td>
+            <td><span class="trend-arrow better">↓ ดีขึ้น</span></td>
+          </tr>
+        </tbody>
+      </table>
+    </div>
+  </section>
+
+  <!-- ฟีเจอร์ 2: วิเคราะห์และแจ้งเตือนความเสี่ยง (FR-03/FR-04) -->
+  <section class="section-card">
+    <div class="section-head">
+      <h2 class="type-section-title">ผลวิเคราะห์ความเสี่ยงโรคแทรกซ้อน</h2>
+      <span class="type-caption">ประเมินแบบ rule-based เทียบ threshold ค่า lab มาตรฐาน (ไม่ใช้ AI/ML — FR-03)</span>
+    </div>
+
+    <div class="risk-bar-list">
+      <div class="risk-bar-item">
+        <div class="risk-bar-head">
+          <span class="risk-bar-name">ไตวายเรื้อรัง (CKD)</span>
+          <span class="risk-badge veryhigh">เสี่ยง สูงมาก</span>
+          <span class="risk-bar-pct">85%</span>
+        </div>
+        <div class="risk-bar-track"><div class="risk-bar-fill veryhigh" style="width:85%;"></div></div>
+      </div>
+      <div class="risk-bar-item">
+        <div class="risk-bar-head">
+          <span class="risk-bar-name">โรคหัวใจ</span>
+          <span class="risk-badge high">เสี่ยง สูง</span>
+          <span class="risk-bar-pct">65%</span>
+        </div>
+        <div class="risk-bar-track"><div class="risk-bar-fill high" style="width:65%;"></div></div>
+      </div>
+      <div class="risk-bar-item">
+        <div class="risk-bar-head">
+          <span class="risk-bar-name">โรคหลอดเลือดสมอง</span>
+          <span class="risk-badge moderate">เสี่ยง ปานกลาง</span>
+          <span class="risk-bar-pct">40%</span>
+        </div>
+        <div class="risk-bar-track"><div class="risk-bar-fill moderate" style="width:40%;"></div></div>
+      </div>
+    </div>
+
+    <div class="grid-2-tablet">
+      <div class="callout warn">
+        <span class="callout-title">ปัจจัยเสี่ยงที่พบ</span>
+        <ul>
+          <li>eGFR ลดลงต่อเนื่อง 3 visit ล่าสุด (68 → 52 → 41 mL/min/1.73m²)</li>
+          <li>HbA1c สูงกว่าเกณฑ์ต่อเนื่องและมีแนวโน้มแย่ลง (7.8 → 8.5 → 9.2%)</li>
+          <li>ควบคุมความดันโลหิตได้ไม่ดีต่อเนื่องหลายครั้ง</li>
+        </ul>
+      </div>
+      <div class="callout tip">
+        <span class="callout-title">คำแนะนำเชิงระบบ</span>
+        <ul>
+          <li>พิจารณาส่งปรึกษาอายุรแพทย์โรคไต (Nephrology referral)</li>
+          <li>ทบทวนแผนการรักษาเบาหวานเพื่อควบคุม HbA1c ให้เข้าเกณฑ์</li>
+          <li>ติดตาม eGFR และความดันโลหิตซ้ำในรอบ 3 เดือน</li>
+        </ul>
+      </div>
+    </div>
+
+    <div class="callout note">
+      <span class="callout-title">หมายเหตุ threshold</span>
+      <p class="type-body" style="color:inherit; margin:0;">
+        ค่า threshold ตัวเลขที่ใช้ตัดสินระดับความเสี่ยงข้างต้นยังไม่ได้รับการยืนยันจากผู้เชี่ยวชาญ
+        (ดู DESIGN.md §2.3 และ spec ต้นทาง หัวข้อสมมติฐาน) ตัวเลข % ในหน้านี้เป็นข้อมูล mockup
+        สำหรับสาธิตการแสดงผลเท่านั้น
+      </p>
+    </div>
+  </section>
+
+</div>
+</div>
+</body>
+</html>

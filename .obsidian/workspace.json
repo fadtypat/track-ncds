@@ -1,0 +1,230 @@
+{
+  "main": {
+    "id": "2cedcdf073d41027",
+    "type": "split",
+    "children": [
+      {
+        "id": "9fc7cab4a9a08c6e",
+        "type": "tabs",
+        "children": [
+          {
+            "id": "09db69b321a0050e",
+            "type": "leaf",
+            "state": {
+              "type": "markdown",
+              "state": {
+                "file": "docs/01-requirements/01-spec/20260917-01-patient-ncd-history-lab-complication-risk.md",
+                "mode": "source",
+                "source": false
+              },
+              "icon": "lucide-file",
+              "title": "20260917-01-patient-ncd-history-lab-complication-risk"
+            }
+          }
+        ]
+      }
+    ],
+    "direction": "vertical"
+  },
+  "left": {
+    "id": "50fea986c7f75bfc",
+    "type": "split",
+    "children": [
+      {
+        "id": "34792980b504f204",
+        "type": "tabs",
+        "children": [
+          {
+            "id": "688c5d3fbe457324",
+            "type": "leaf",
+            "state": {
+              "type": "file-explorer",
+              "state": {
+                "sortOrder": "alphabetical",
+                "autoReveal": true,
+                "showSearch": false,
+                "searchQuery": ""
+              },
+              "icon": "lucide-folder-closed",
+              "title": "Files"
+            }
+          },
+          {
+            "id": "d45cc20f832ef450",
+            "type": "leaf",
+            "state": {
+              "type": "search",
+              "state": {
+                "query": "",
+                "matchingCase": false,
+                "explainSearch": false,
+                "collapseAll": false,
+                "extraContext": false,
+                "sortOrder": "alphabetical"
+              },
+              "icon": "lucide-search",
+              "title": "Search"
+            }
+          },
+          {
+            "id": "8a4888753fbe77f7",
+            "type": "leaf",
+            "state": {
+              "type": "bookmarks",
+              "state": {
+                "showSearch": false,
+                "searchQuery": ""
+              },
+              "icon": "lucide-bookmark",
+              "title": "Bookmarks"
+            }
+          }
+        ]
+      }
+    ],
+    "direction": "horizontal",
+    "width": 300
+  },
+  "right": {
+    "id": "85f267d6a341399f",
+    "type": "split",
+    "children": [
+      {
+        "id": "ebaa39bb83e377a9",
+        "type": "tabs",
+        "children": [
+          {
+            "id": "6e7794a2ee3c63f0",
+            "type": "leaf",
+            "state": {
+              "type": "backlink",
+              "state": {
+                "file": "CLAUDE.md",
+                "collapseAll": false,
+                "extraContext": false,
+                "sortOrder": "alphabetical",
+                "showSearch": false,
+                "searchQuery": "",
+                "backlinkCollapsed": false,
+                "unlinkedCollapsed": true
+              },
+              "icon": "links-coming-in",
+              "title": "Backlinks"
+            }
+          },
+          {
+            "id": "c8f5181f4732061f",
+            "type": "leaf",
+            "state": {
+              "type": "outgoing-link",
+              "state": {
+                "file": "CLAUDE.md",
+                "linksCollapsed": false,
+                "unlinkedCollapsed": true
+              },
+              "icon": "links-going-out",
+              "title": "Outgoing links"
+            }
+          },
+          {
+            "id": "747758c4eaa2e4a4",
+            "type": "leaf",
+            "state": {
+              "type": "tag",
+              "state": {
+                "sortOrder": "frequency",
+                "useHierarchy": true,
+                "showSearch": false,
+                "searchQuery": ""
+              },
+              "icon": "lucide-tags",
+              "title": "Tags"
+            }
+          },
+          {
+            "id": "4769d2b6f5961827",
+            "type": "leaf",
+            "state": {
+              "type": "all-properties",
+              "state": {
+                "sortOrder": "frequency",
+                "showSearch": false,
+                "searchQuery": ""
+              },
+              "icon": "lucide-archive",
+              "title": "All properties"
+            }
+          },
+          {
+            "id": "4b01adc2a120f19f",
+            "type": "leaf",
+            "state": {
+              "type": "outline",
+              "state": {
+                "file": "CLAUDE.md",
+                "followCursor": false,
+                "showSearch": false,
+                "searchQuery": ""
+              },
+              "icon": "lucide-list",
+              "title": "Outline"
+            }
+          }
+        ]
+      }
+    ],
+    "direction": "horizontal",
+    "width": 300,
+    "collapsed": true
+  },
+  "left-ribbon": {
+    "hiddenItems": {
+      "switcher:Open quick switcher": false,
+      "graph:Open graph view": false,
+      "canvas:Create new canvas": false,
+      "daily-notes:Open today's daily note": false,
+      "templates:Insert template": false,
+      "command-palette:Open command palette": false,
+      "bases:Create new base": false
+    }
+  },
+  "active": "09db69b321a0050e",
+  "lastOpenFiles": [
+    "docs/02-design/01-prototypes/20260922-01-firestore-demo/patient-detail-render.js.tmp.31484.ab5e88ca0d19",
+    "docs/02-design/01-prototypes/20260922-01-firestore-demo/patient-list.html.tmp.31484.d63a243ecf54",
+    "docs/02-design/01-prototypes/20260922-01-firestore-demo/patient-list.html.tmp.31484.c311332744c2",
+    "docs/02-design/01-prototypes/20260922-01-firestore-demo/patient-list.html.tmp.31484.0d9e797f5303",
+    "docs/02-design/01-prototypes/20260922-01-firestore-demo/seed.html.tmp.31484.55e8a5d522c9",
+    "docs/02-design/01-prototypes/20260922-01-firestore-demo/seed.html.tmp.31484.b9cf3ec7c525",
+    "docs/02-design/01-prototypes/20260922-01-firestore-demo/seed.html.tmp.31484.7005aafc2731",
+    "docs/02-design/01-prototypes/20260922-01-firestore-demo/prototype.md",
+    "docs/02-design/01-prototypes/20260922-01-firestore-demo/prototype.md.tmp.31484.163079300be8",
+    "docs/02-design/01-prototypes/20260922-01-firestore-demo/patient-detail-no-risk.html.tmp.31484.8303cece8503",
+    "docs/02-design/01-prototypes/20260922-01-firestore-demo/patient-detail-risk-found.html.tmp.31484.7c551f38f2c5",
+    "docs/02-design/01-prototypes/20260922-01-firestore-demo/patient-list.html.tmp.31484.b253b7e3de86",
+    "docs/02-design/02-technical/db-spec.md",
+    "docs/02-design/DESIGN.md",
+    "docs/03-testing/01-test-plan/test-cases/operational-quality-nfr.md",
+    "docs/01-requirements/01-spec/20260922-01-operational-quality-nfr.md",
+    "docs/02-design/02-technical/technology-stack.md",
+    ".claude/skills/build-tech-stack/SKILL.md",
+    ".claude/agents/tech-stack-writer.md",
+    "docs/03-testing/01-test-plan/test-plan.md",
+    "docs/03-testing/01-test-plan/test-cases/pdpa-data-protection-compliance.md",
+    "docs/03-testing/01-test-plan/test-cases/complication-risk-analysis-alert.md",
+    "docs/03-testing/01-test-plan/test-cases/patient-ncd-diagnosis-lab-history.md",
+    "docs/03-testing/01-test-plan/test-cases/patient-search-selection.md",
+    "docs/03-testing/01-test-plan/acceptance-criteria.md",
+    "docs/02-design/user-journey.md",
+    "docs/05-log/20260922-log.md",
+    "docs/01-requirements/01-spec/20260917-01-patient-ncd-history-lab-complication-risk.md",
+    ".claude/skills/sync-test-plan/SKILL.md",
+    ".claude/skills/sync-feature-journey/SKILL.md",
+    ".claude/skills/sync-technical-spec/SKILL.md",
+    ".claude/skills/sync-phase-plan/SKILL.md",
+    ".claude/skills/sync-detailed-design/SKILL.md",
+    ".claude/skills/sync-api-db/SKILL.md",
+    ".claude/skills/sync-architecture/SKILL.md",
+    ".claude/skills/run-technical-phase/SKILL.md"
+  ]
+}

@@ -1,0 +1,244 @@
+<!DOCTYPE html>
+<html lang="th">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>NCDs History &amp; Risk — Firestore Demo — รายชื่อผู้ป่วย</title>
+<link rel="stylesheet" href="style.css">
+<script src="https://www.gstatic.com/firebasejs/10.14.1/firebase-app-compat.js"></script>
+<script src="https://www.gstatic.com/firebasejs/10.14.1/firebase-firestore-compat.js"></script>
+<script src="firebase-init.js"></script>
+</head>
+<body>
+
+<nav class="proto-bar">
+  <div class="proto-bar-inner">
+    <div class="proto-bar-top">
+      <span class="proto-bar-title">NCDS CLINIC · FIRESTORE DEMO · ค้นหา/เลือกผู้ป่วย</span>
+      <div class="proto-bar-nav">
+        <a href="index.html">หน้ารวม</a>
+        <a href="patient-list.html" class="current">ค้นหา/รายชื่อผู้ป่วย</a>
+        <a href="patient-detail-risk-found.html">ประวัติ+ความเสี่ยง (พบ)</a>
+        <a href="patient-detail-no-risk.html">ประวัติ+ความเสี่ยง (ไม่พบ)</a>
+        <a href="access-denied.html">ปฏิเสธการเข้าถึง</a>
+        <a href="pdpa-data-subject-request.html">PDPA คำขอใช้สิทธิ</a>
+        <a href="pdpa-audit-trail.html">PDPA audit trail</a>
+        <a href="seed.html">Seed Firestore</a>
+      </div>
+    </div>
+    <div class="proto-bar-codes">
+      <span class="proto-code">FR-05</span>
+      <span class="proto-code">FR-06</span>
+      <span class="proto-code">NFR-02</span>
+    </div>
+  </div>
+</nav>
+
+<div class="app-bg">
+<div class="container stack gap-section">
+
+  <header class="stack" style="gap:8px;">
+    <span class="type-eyebrow">ผู้ใช้งาน: พญ. อรุณี ศรีสุข · แพทย์ผู้ดูแลผู้ป่วย NCD</span>
+    <h1 class="type-page-title">ผู้ป่วย NCD ในความดูแลของฉัน</h1>
+    <p class="type-body" style="max-width:640px;">
+      รายชื่อนี้แสดงเฉพาะผู้ป่วยที่ถูก assign ให้อยู่ในความดูแลของท่านเท่านั้น (NFR-02) — ค้นหาด้วยเลข
+      ประจำตัวผู้ป่วย (HN) ตัวเลขล้วน 7 หลักเท่านั้น (ไม่รองรับการค้นหาด้วยชื่ออีกต่อไป, FR-06) หรือเลื่อนดู
+      รายการทั้งหมดได้โดยไม่ต้องค้นหาก่อน (FR-05)
+    </p>
+  </header>
+
+  <section class="stat-grid">
+    <div class="stat-tile sky">
+      <span class="stat-label">ผู้ป่วย NCDS ในความดูแลทั้งหมด</span>
+      <span class="stat-value" id="stat-total">…</span>
+    </div>
+    <div class="stat-tile rose">
+      <span class="stat-label">พบความเสี่ยงโรคแทรกซ้อนระดับสูง/สูงมาก</span>
+      <span class="stat-value" id="stat-highrisk">…</span>
+    </div>
+    <div class="stat-tile purple">
+      <span class="stat-label">อยู่ในระยะ CKD ที่ต้องเฝ้าระวัง</span>
+      <span class="stat-value" id="stat-ckd">…</span>
+    </div>
+  </section>
+  <p class="type-caption" id="firestore-status">กำลังโหลดข้อมูลจาก Firestore …</p>
+
+  <section class="section-card">
+    <div class="section-head">
+      <h2 class="type-section-title">ค้นหาด้วยเลข HN (FR-06)</h2>
+      <span class="type-caption">
+        กรอกเลขประจำตัวผู้ป่วย (HN) ตัวเลขล้วน 7 หลัก แล้วกดปุ่ม "ค้นหา" — ระบบตรวจสอบความถูกต้องหลังกด
+        ค้นหาเท่านั้น ไม่ใช่แบบ real-time ระหว่างพิมพ์ ไม่บังคับต้องค้นหาก่อน เลื่อนดูรายชื่อทั้งหมดด้านล่าง
+        ได้ทันที (FR-05)
+      </span>
+    </div>
+
+    <form id="hn-search-form" class="search-field" style="max-width:none;" novalidate>
+      <label for="patient-search">เลขประจำตัวผู้ป่วย (HN)</label>
+      <div style="display:flex; gap:var(--space-2); flex-wrap:wrap; align-items:center;">
+        <input id="patient-search" class="search-input" style="max-width:220px;" type="text"
+               inputmode="numeric" pattern="[0-9]*" maxlength="7"
+               placeholder="เช่น 6500123" autocomplete="off" />
+        <button type="submit" class="btn btn-primary">ค้นหา</button>
+      </div>
+      <span class="type-caption">รองรับเฉพาะตัวเลขล้วน 7 หลักเท่านั้น (ไม่รองรับการค้นหาด้วยชื่ออีกต่อไป)</span>
+    </form>
+
+    <div id="hn-search-result" hidden></div>
+  </section>
+
+  <section class="stack" style="gap:12px;">
+    <div class="flex-between">
+      <h2 class="type-section-title" id="patient-grid-title">รายชื่อผู้ป่วยทั้งหมดในความดูแล</h2>
+    </div>
+
+    <div class="patient-grid" id="patient-grid">
+      <!-- เติมจาก Firestore collection "patients" ด้วย JS ด้านล่าง (ไม่มีข้อมูล hardcode แล้ว) -->
+    </div>
+
+    <p class="type-caption">
+      หมายเหตุ prototype: การ์ดผู้ป่วย 2 คู่ข้างต้นเชื่อมไปยังหน้าตัวอย่างเดียวกัน (patient-detail-risk-found.html /
+      patient-detail-no-risk.html) เพราะเวอร์ชันนี้ทำ 2 ตัวอย่างข้อมูลเพื่อครอบคลุมทั้งสองแขนงของ FR-04
+      (พบ/ไม่พบความเสี่ยง) — ระบบจริงจะมีข้อมูลรายบุคคลของแต่ละคนแยกกัน
+    </p>
+    <p class="type-caption">
+      หมายเหตุ Firestore demo: field ที่ขึ้นต้นด้วย <code>demo</code> (เช่น <code>demoRiskLevel</code>,
+      <code>demoChips</code>) เป็นการ denormalize เพิ่มเติมเฉพาะหน้านี้เพื่อความง่ายของ demo เท่านั้น
+      ไม่ได้อยู่ใน db-spec.md — ระบบจริงต้องคำนวณ risk badge จาก collection
+      <code>complicationRiskAssessments</code> ผ่าน Cloud Functions ตามที่ออกแบบไว้
+    </p>
+  </section>
+
+</div>
+</div>
+
+<script>
+(function () {
+  // ผู้ป่วยในความดูแล — โหลดจาก Firestore collection "patients" จริง (ดู loadPatients() ด้านล่าง)
+  // ไม่มีข้อมูล hardcode ในไฟล์นี้อีกต่อไป — HN ที่เก็บใน Firestore เป็นเลขล้วน 7 หลัก (ไม่มี "HN-" prefix)
+  // ตรงกับ FR-06 ส่วน label ที่แสดงผลบนการ์ดใช้รูปแบบ "HN-xxxxxxx" เพื่ออ่านง่าย
+  var patients = [];
+
+  function fromDoc(doc) {
+    var d = doc.data();
+    return {
+      hn: d.hn, name: d.fullName, meta: d.demoMeta,
+      risk: d.demoRiskLevel, riskLabel: d.demoRiskLabel,
+      chips: d.demoChips || [], href: d.demoDetailHref || "patient-list.html"
+    };
+  }
+
+  function renderGrid() {
+    var grid = document.getElementById("patient-grid");
+    var title = document.getElementById("patient-grid-title");
+    title.textContent = "รายชื่อผู้ป่วยทั้งหมดในความดูแล (" + patients.length + " คน)";
+    grid.innerHTML = patients.map(function (p) {
+      var chipsHtml = p.chips.map(function (c) {
+        return '<span class="chip ' + c.cls + '">' + escapeHtml(c.label) + "</span>";
+      }).join("");
+      return (
+        '<article class="patient-card">' +
+          '<div class="patient-card-top">' +
+            "<div>" +
+              '<div class="patient-card-name">' + escapeHtml(p.name) + "</div>" +
+              '<div class="patient-card-meta">HN-' + p.hn + " · " + escapeHtml(p.meta) + "</div>" +
+            "</div>" +
+            '<span class="risk-badge ' + p.risk + '">' + escapeHtml(p.riskLabel) + "</span>" +
+          "</div>" +
+          '<div class="patient-card-chips">' + chipsHtml + "</div>" +
+          '<div class="patient-card-action">' +
+            '<a class="btn btn-primary btn-sm" href="' + p.href + '">เปิดประวัติ</a>' +
+          "</div>" +
+        "</article>"
+      );
+    }).join("");
+  }
+
+  function renderStats() {
+    document.getElementById("stat-total").textContent = patients.length + " คน";
+    var highRisk = patients.filter(function (p) { return p.risk === "veryhigh" || p.risk === "high"; }).length;
+    document.getElementById("stat-highrisk").textContent = highRisk + " คน";
+    var ckd = patients.filter(function (p) {
+      return p.chips.some(function (c) { return c.cls === "chip-ckd"; });
+    }).length;
+    document.getElementById("stat-ckd").textContent = ckd + " คน";
+  }
+
+  function loadPatients() {
+    var statusEl = document.getElementById("firestore-status");
+    demoDb.collection("patients").get().then(function (snapshot) {
+      patients = snapshot.docs.map(fromDoc);
+      renderGrid();
+      renderStats();
+      statusEl.textContent = "โหลดจาก Firestore สำเร็จ (" + patients.length + " ราย) — แก้ไขข้อมูลใน Firebase Console แล้วรีเฟรชหน้านี้เพื่อดูผลได้ทันที";
+    }).catch(function (err) {
+      statusEl.textContent = "โหลดจาก Firestore ไม่สำเร็จ: " + err.message + " — ตรวจสอบว่า seed ข้อมูลแล้ว (seed.html) และตั้ง Security Rules แบบ demo แล้ว (firestore.rules.demo.txt)";
+      statusEl.style.color = "var(--rose-600, #d10)";
+    });
+  }
+
+  var form = document.getElementById("hn-search-form");
+  var input = document.getElementById("patient-search");
+  var resultBox = document.getElementById("hn-search-result");
+
+  function escapeHtml(str) {
+    return String(str).replace(/[&<>"']/g, function (c) {
+      return { "&": "&amp;", "<": "&lt;", ">": "&gt;", '"': "&quot;", "'": "&#39;" }[c];
+    });
+  }
+
+  function renderNote(message) {
+    resultBox.hidden = false;
+    resultBox.innerHTML =
+      '<div class="callout note" role="alert" style="margin-top:var(--space-2);">' +
+        '<span class="callout-title">ผลการค้นหา</span>' +
+        '<p class="type-body" style="color:inherit;">' + escapeHtml(message) + "</p>" +
+      "</div>";
+  }
+
+  function renderFound(p) {
+    resultBox.hidden = false;
+    var chipsHtml = p.chips
+      .map(function (c) { return '<span class="chip ' + c.cls + '">' + escapeHtml(c.label) + "</span>"; })
+      .join("");
+    resultBox.innerHTML =
+      '<article class="patient-card" style="max-width:420px; margin-top:var(--space-2);">' +
+        '<div class="patient-card-top">' +
+          "<div>" +
+            '<div class="patient-card-name">' + escapeHtml(p.name) + "</div>" +
+            '<div class="patient-card-meta">HN-' + p.hn + " · " + escapeHtml(p.meta) + "</div>" +
+          "</div>" +
+          '<span class="risk-badge ' + p.risk + '">' + escapeHtml(p.riskLabel) + "</span>" +
+        "</div>" +
+        '<div class="patient-card-chips">' + chipsHtml + "</div>" +
+        '<div class="patient-card-action" style="display:flex; gap:var(--space-2); flex-wrap:wrap;">' +
+          '<a class="btn btn-primary btn-sm" href="' + p.href + '">เปิดประวัติ</a>' +
+          '<a class="btn btn-secondary btn-sm" href="pdpa-data-subject-request.html">ดำเนินการคำขอสิทธิ PDPA สำหรับผู้ป่วยรายนี้</a>' +
+        "</div>" +
+      "</article>";
+  }
+
+  form.addEventListener("submit", function (e) {
+    e.preventDefault();
+    var value = input.value.trim();
+    if (!/^\d{7}$/.test(value)) {
+      renderNote("กรุณากรอกเลข HN ให้ครบ 7 หลัก (ตัวเลขล้วนเท่านั้น) แล้วลองค้นหาอีกครั้ง");
+      return;
+    }
+    var found = null;
+    for (var i = 0; i < patients.length; i++) {
+      if (patients[i].hn === value) { found = patients[i]; break; }
+    }
+    if (!found) {
+      renderNote("ไม่พบผู้ป่วยที่ตรงกับเลข HN " + value + " ในความดูแลของท่าน กรุณาตรวจสอบเลขแล้วค้นหาใหม่");
+      return;
+    }
+    renderFound(found);
+  });
+
+  loadPatients();
+})();
+</script>
+
+</body>
+</html>

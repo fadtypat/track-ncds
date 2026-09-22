@@ -1,0 +1,217 @@
+<!DOCTYPE html>
+<html lang="th">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>NCDS CLINIC · Firestore Demo · Seed ข้อมูลตัวอย่าง</title>
+<link rel="stylesheet" href="style.css">
+<script src="https://www.gstatic.com/firebasejs/10.14.1/firebase-app-compat.js"></script>
+<script src="https://www.gstatic.com/firebasejs/10.14.1/firebase-firestore-compat.js"></script>
+<script src="firebase-init.js"></script>
+</head>
+<body>
+
+<nav class="proto-bar">
+  <div class="proto-bar-inner">
+    <div class="proto-bar-top">
+      <span class="proto-bar-title">NCDS CLINIC · FIRESTORE DEMO · Seed ข้อมูลตัวอย่าง</span>
+      <div class="proto-bar-nav">
+        <a href="index.html">หน้ารวม</a>
+        <a href="patient-list.html">ค้นหา/รายชื่อผู้ป่วย</a>
+        <a href="patient-detail-risk-found.html">ประวัติ+ความเสี่ยง (พบ)</a>
+        <a href="patient-detail-no-risk.html">ประวัติ+ความเสี่ยง (ไม่พบ)</a>
+      </div>
+    </div>
+  </div>
+</nav>
+
+<div class="app-bg">
+<div class="container stack gap-section">
+
+  <header class="stack" style="gap:8px;">
+    <h1 class="type-page-title">Seed ข้อมูลตัวอย่างลง Firestore (Demo)</h1>
+    <p class="type-body" style="max-width:640px;">
+      หน้านี้เขียนข้อมูลจำลอง (mock) ลง Firestore project <code>track-ncds</code> จริง ตาม collection
+      ที่ db-spec.md กำหนดไว้ (patients, ncdDiagnoses, labResults, complicationRiskAssessments +
+      riskFindings subcollection) — กดปุ่มด้านล่างครั้งเดียว รันซ้ำได้ (เขียนทับด้วย document ID เดิม
+      ไม่สร้างข้อมูลซ้ำ)
+    </p>
+  </header>
+
+  <section class="section-card">
+    <button id="seed-btn" type="button" class="btn btn-primary">เริ่ม Seed ข้อมูล</button>
+    <div id="seed-log" class="stack" style="gap:6px; margin-top:var(--space-3);"></div>
+  </section>
+
+</div>
+</div>
+
+<script>
+(function () {
+  var logBox = document.getElementById("seed-log");
+  function log(msg, isError) {
+    var p = document.createElement("p");
+    p.className = "type-body";
+    if (isError) p.style.color = "var(--rose-600, #d10)";
+    p.textContent = msg;
+    logBox.appendChild(p);
+  }
+
+  function ts(y, m, d) { return firebase.firestore.Timestamp.fromDate(new Date(y, m - 1, d)); }
+
+  var patients = {
+    "somchai-jaikla": {
+      hn: "6500123", fullName: "นายสมชาย ใจกล้า", dataSource: "ข้อมูลจำลอง",
+      demoMeta: "ชาย · 58 ปี", demoAvatarInitials: "สก",
+      demoRiskLevel: "veryhigh", demoRiskLabel: "เสี่ยง สูงมาก",
+      demoChips: [{ label: "เบาหวาน (E11)", cls: "chip-chronic" }, { label: "ความดันโลหิตสูง (I10)", cls: "chip-chronic" }, { label: "CKD stage 3", cls: "chip-ckd" }],
+      demoDetailHref: "patient-detail-risk-found.html"
+    },
+    "somying-poonsuk": {
+      hn: "6500089", fullName: "นางสมหญิง พูนสุข", dataSource: "ข้อมูลจำลอง",
+      demoMeta: "หญิง · 62 ปี", demoAvatarInitials: "สพ",
+      demoRiskLevel: "veryhigh", demoRiskLabel: "เสี่ยง สูงมาก",
+      demoChips: [{ label: "เบาหวาน (E11)", cls: "chip-chronic" }, { label: "CKD stage 3", cls: "chip-ckd" }],
+      demoDetailHref: "patient-detail-risk-found.html"
+    },
+    "wichai-thunglomdee": {
+      hn: "6500201", fullName: "นายวิชัย ถุงลมดี", dataSource: "ข้อมูลจำลอง",
+      demoMeta: "ชาย · 65 ปี", demoAvatarInitials: "วถ",
+      demoRiskLevel: "low", demoRiskLabel: "เสี่ยง ต่ำ",
+      demoChips: [{ label: "ถุงลมโป่งพอง (J44)", cls: "chip-chronic" }],
+      demoDetailHref: "patient-detail-no-risk.html"
+    },
+    "pranee-sukjai": {
+      hn: "6500345", fullName: "นางสาวปราณี สุขใจ", dataSource: "ข้อมูลจำลอง",
+      demoMeta: "หญิง · 50 ปี", demoAvatarInitials: "ปส",
+      demoRiskLevel: "low", demoRiskLabel: "เสี่ยง ต่ำ",
+      demoChips: [{ label: "ความดันโลหิตสูง (I10)", cls: "chip-chronic" }],
+      demoDetailHref: "patient-detail-no-risk.html"
+    }
+  };
+
+  var diagnoses = {
+    "somchai-jaikla": [
+      { icd10Code: "E11", diseaseGroup: "เบาหวาน", diagnosedAt: ts(2023, 3, 12) },
+      { icd10Code: "I10", diseaseGroup: "ความดันโลหิตสูง", diagnosedAt: ts(2023, 3, 12) }
+    ],
+    "wichai-thunglomdee": [
+      { icd10Code: "J44", diseaseGroup: "ถุงลมโป่งพอง", diagnosedAt: ts(2022, 1, 5) }
+    ]
+  };
+
+  // visit date คู่กับ label แสดงผล (พ.ศ.) ที่หน้า detail ใช้
+  var labVisits = {
+    "somchai-jaikla": [
+      { date: ts(2023, 3, 12), label: "12 มี.ค. 66", values: { "HbA1c": 7.8, "eGFR": 68, "LDL": 145, "ความดันโลหิตซิสโตลิก": 150, "ความดันโลหิตไดแอสโตลิก": 95 } },
+      { date: ts(2023, 9, 10), label: "10 ก.ย. 66", values: { "HbA1c": 8.5, "eGFR": 52, "LDL": 130, "ความดันโลหิตซิสโตลิก": 148, "ความดันโลหิตไดแอสโตลิก": 92 } },
+      { date: ts(2024, 11, 2), label: "2 พ.ย. 67", values: { "HbA1c": 9.2, "eGFR": 41, "LDL": 98, "ความดันโลหิตซิสโตลิก": 138, "ความดันโลหิตไดแอสโตลิก": 85 } }
+    ],
+    "wichai-thunglomdee": [
+      { date: ts(2023, 2, 8), label: "8 ก.พ. 66", values: { "HbA1c": 5.7, "eGFR": 92, "LDL": 110, "ความดันโลหิตซิสโตลิก": 128, "ความดันโลหิตไดแอสโตลิก": 80 } },
+      { date: ts(2023, 8, 6), label: "6 ส.ค. 66", values: { "HbA1c": 5.6, "eGFR": 90, "LDL": 106, "ความดันโลหิตซิสโตลิก": 126, "ความดันโลหิตไดแอสโตลิก": 79 } },
+      { date: ts(2024, 2, 3), label: "3 ก.พ. 67", values: { "HbA1c": 5.6, "eGFR": 88, "LDL": 102, "ความดันโลหิตซิสโตลิก": 124, "ความดันโลหิตไดแอสโตลิก": 78 } }
+    ]
+  };
+
+  var labUnits = {
+    "HbA1c": "%", "eGFR": "mL/min/1.73m²", "LDL": "mg/dL",
+    "ความดันโลหิตซิสโตลิก": "mmHg", "ความดันโลหิตไดแอสโตลิก": "mmHg"
+  };
+
+  var assessments = {
+    "somchai-jaikla": {
+      assessedAt: ts(2024, 11, 2), hasRisk: true,
+      findings: [
+        { complicationType: "ไตวายเรื้อรัง", comparatorSnapshot: "น้อยกว่า", thresholdValueSnapshot: 45, isRiskMet: true, riskLevel: "veryhigh", demoPercent: 85 },
+        { complicationType: "โรคหัวใจ", comparatorSnapshot: "มากกว่าหรือเท่ากับ", thresholdValueSnapshot: 130, isRiskMet: true, riskLevel: "high", demoPercent: 65 },
+        { complicationType: "โรคหลอดเลือดสมอง", comparatorSnapshot: "มากกว่าหรือเท่ากับ", thresholdValueSnapshot: 90, isRiskMet: true, riskLevel: "moderate", demoPercent: 40 }
+      ]
+    },
+    "wichai-thunglomdee": {
+      assessedAt: ts(2024, 2, 3), hasRisk: false,
+      findings: [
+        { complicationType: "ไตวายเรื้อรัง", comparatorSnapshot: "น้อยกว่า", thresholdValueSnapshot: 45, isRiskMet: false, riskLevel: "low", demoPercent: 8 },
+        { complicationType: "โรคหัวใจ", comparatorSnapshot: "มากกว่าหรือเท่ากับ", thresholdValueSnapshot: 130, isRiskMet: false, riskLevel: "low", demoPercent: 12 },
+        { complicationType: "โรคหลอดเลือดสมอง", comparatorSnapshot: "มากกว่าหรือเท่ากับ", thresholdValueSnapshot: 90, isRiskMet: false, riskLevel: "low", demoPercent: 6 }
+      ]
+    }
+  };
+
+  async function seed() {
+    var btn = document.getElementById("seed-btn");
+    btn.disabled = true;
+    logBox.innerHTML = "";
+    try {
+      log("กำลังเขียน collection patients ...");
+      for (var pid in patients) {
+        await demoDb.collection("patients").doc(pid).set(patients[pid]);
+      }
+      log("✓ patients เสร็จ (" + Object.keys(patients).length + " ราย)");
+
+      log("กำลังเขียน collection ncdDiagnoses ...");
+      var dxCount = 0;
+      for (var dpid in diagnoses) {
+        // ลบของเดิมก่อนเพื่อไม่ให้ข้อมูลซ้ำเวลากด seed ซ้ำ
+        var existing = await demoDb.collection("ncdDiagnoses").where("patientId", "==", dpid).get();
+        for (var i = 0; i < existing.docs.length; i++) await existing.docs[i].ref.delete();
+        for (var j = 0; j < diagnoses[dpid].length; j++) {
+          var d = diagnoses[dpid][j];
+          await demoDb.collection("ncdDiagnoses").add(Object.assign({ patientId: dpid, dataSource: "ข้อมูลจำลอง" }, d));
+          dxCount++;
+        }
+      }
+      log("✓ ncdDiagnoses เสร็จ (" + dxCount + " รายการ)");
+
+      log("กำลังเขียน collection labResults ...");
+      var labCount = 0;
+      for (var lpid in labVisits) {
+        var existingLab = await demoDb.collection("labResults").where("patientId", "==", lpid).get();
+        for (var k = 0; k < existingLab.docs.length; k++) await existingLab.docs[k].ref.delete();
+        var visits = labVisits[lpid];
+        for (var v = 0; v < visits.length; v++) {
+          var visit = visits[v];
+          for (var testType in visit.values) {
+            await demoDb.collection("labResults").add({
+              patientId: lpid, testType: testType, value: visit.values[testType],
+              unit: labUnits[testType], testedAt: visit.date, dataSource: "ข้อมูลจำลอง"
+            });
+            labCount++;
+          }
+        }
+      }
+      log("✓ labResults เสร็จ (" + labCount + " รายการ)");
+
+      log("กำลังเขียน complicationRiskAssessments + riskFindings ...");
+      for (var apid in assessments) {
+        var old = await demoDb.collection("complicationRiskAssessments").where("patientId", "==", apid).get();
+        for (var o = 0; o < old.docs.length; o++) {
+          var subOld = await old.docs[o].ref.collection("riskFindings").get();
+          for (var s = 0; s < subOld.docs.length; s++) await subOld.docs[s].ref.delete();
+          await old.docs[o].ref.delete();
+        }
+        var a = assessments[apid];
+        var assessRef = await demoDb.collection("complicationRiskAssessments").add({
+          patientId: apid, requestedByUserId: "demo-user", assessedAt: a.assessedAt, hasRisk: a.hasRisk
+        });
+        for (var f = 0; f < a.findings.length; f++) {
+          await assessRef.collection("riskFindings").add(a.findings[f]);
+        }
+      }
+      log("✓ complicationRiskAssessments + riskFindings เสร็จ");
+
+      log("เสร็จสมบูรณ์ — เปิดหน้า patient-list.html หรือหน้า detail เพื่อดูผลได้เลย");
+    } catch (err) {
+      log("เกิดข้อผิดพลาด: " + (err && err.message ? err.message : err), true);
+      log("ถ้าเป็น permission-denied ให้ตรวจสอบว่าตั้งค่า Firestore Security Rules แบบ demo แล้ว (ดู firestore.rules.demo.txt)", true);
+    } finally {
+      btn.disabled = false;
+    }
+  }
+
+  document.getElementById("seed-btn").addEventListener("click", seed);
+})();
+</script>
+
+</body>
+</html>

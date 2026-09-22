@@ -1,0 +1,308 @@
+<!DOCTYPE html>
+<html lang="th">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>NCDs History &amp; Risk — Prototype v1 — คำขอใช้สิทธิ PDPA</title>
+<link rel="stylesheet" href="style.css">
+</head>
+<body>
+
+<nav class="proto-bar">
+  <div class="proto-bar-inner">
+    <div class="proto-bar-top">
+      <span class="proto-bar-title">NCDS CLINIC · PROTOTYPE v1 · PDPA คำขอใช้สิทธิ</span>
+      <div class="proto-bar-nav">
+        <a href="index.html">หน้ารวม</a>
+        <a href="patient-list.html">ค้นหา/รายชื่อผู้ป่วย</a>
+        <a href="patient-detail-risk-found.html">ประวัติ+ความเสี่ยง (พบ)</a>
+        <a href="patient-detail-no-risk.html">ประวัติ+ความเสี่ยง (ไม่พบ)</a>
+        <a href="access-denied.html">ปฏิเสธการเข้าถึง</a>
+        <a href="pdpa-data-subject-request.html" class="current">PDPA คำขอใช้สิทธิ</a>
+        <a href="pdpa-audit-trail.html">PDPA audit trail</a>
+      </div>
+    </div>
+    <div class="proto-bar-codes">
+      <span class="proto-code">NFR-03</span>
+      <span class="proto-code">NFR-05</span>
+      <span class="proto-code">NFR-06</span>
+      <span class="proto-code">NFR-07</span>
+    </div>
+  </div>
+</nav>
+
+<div class="app-bg">
+<div class="container stack gap-section">
+
+  <header class="stack" style="gap:8px;">
+    <span class="type-eyebrow">PDPA · DATA SUBJECT RIGHTS REQUEST</span>
+    <h1 class="type-page-title">ยื่นและดำเนินการคำขอใช้สิทธิของเจ้าของข้อมูล</h1>
+    <p class="type-body" style="max-width:720px;">
+      หน้าจอนี้ครอบคลุมฟีเจอร์ที่ 4 (NFR-07) — เจ้าหน้าที่ที่มีสิทธิ์ดำเนินการแทนผู้ป่วยเมื่อได้รับคำขอใช้สิทธิ
+      (เข้าถึง/สำเนา/แก้ไข/ลบ/คัดค้านการประมวลผล) กระบวนการยืนยันตัวตนของผู้ป่วยกับหน่วยงานเป็นขั้นตอนก่อนหน้า
+      ที่อยู่นอกขอบเขตของระบบ
+    </p>
+  </header>
+
+  <div class="callout info">
+    <span class="callout-title">Precondition — Operation 0 (ค้นหา/เลือกผู้ป่วย)</span>
+    <p class="type-body" style="color:inherit;">
+      หน้าจอนี้สืบเนื่องจากการค้นหา/เลือกผู้ป่วยด้วยเลข HN ในหน้า "ค้นหา/รายชื่อผู้ป่วย" เสมอ (FR-05, FR-06) —
+      ผู้ป่วยด้านล่างคือผู้ป่วยที่ถูกเลือกไว้แล้ว การประมวลผลข้อมูลในหน้านี้จำกัดเฉพาะเท่าที่จำเป็นตามคำขอที่
+      ได้รับเท่านั้น ตามหลัก lawful basis &amp; purpose limitation (NFR-03)
+    </p>
+  </div>
+
+  <header class="patient-header">
+    <div class="patient-header-id">
+      <div class="patient-header-namerow">
+        <div class="patient-avatar" aria-hidden="true">สก</div>
+        <div>
+          <h2 class="type-section-title" style="margin:0;">นายสมชาย ใจกล้า</h2>
+          <div class="patient-card-meta">HN-6500123 · ชาย · 58 ปี</div>
+        </div>
+      </div>
+      <div class="patient-header-chips">
+        <span class="chip chip-chronic">เบาหวานชนิดที่ 2 (E11)</span>
+        <span class="chip chip-chronic">ความดันโลหิตสูง (I10)</span>
+        <span class="chip chip-ckd">CKD stage 3</span>
+      </div>
+    </div>
+    <div class="patient-header-actions">
+      <a class="btn btn-secondary btn-sm" href="patient-list.html">เปลี่ยนผู้ป่วย (ค้นหาด้วย HN ใหม่)</a>
+    </div>
+  </header>
+
+  <section class="section-card">
+    <div class="section-head">
+      <h2 class="type-section-title">เลือกประเภทคำขอใช้สิทธิของเจ้าของข้อมูล</h2>
+      <span class="type-caption">เลือกประเภทคำขอ 1 รายการ แล้วกรอกรายละเอียด (ถ้าจำเป็น) ก่อนกดยื่นคำขอ</span>
+    </div>
+
+    <form id="dsr-form" novalidate>
+      <div class="radio-group" id="request-type-group" role="radiogroup" aria-label="ประเภทคำขอ">
+        <label class="radio-option selected" data-type="access">
+          <input type="radio" name="request-type" value="access" checked>
+          <span class="radio-option-text">
+            <span class="radio-option-title">ขอเข้าถึงข้อมูล (Access)</span>
+            <span class="radio-option-desc">ผู้ป่วยขอทราบว่าระบบมีข้อมูลส่วนบุคคลของตนอะไรบ้าง</span>
+          </span>
+        </label>
+        <label class="radio-option" data-type="copy">
+          <input type="radio" name="request-type" value="copy">
+          <span class="radio-option-text">
+            <span class="radio-option-title">ขอสำเนาข้อมูล (Copy)</span>
+            <span class="radio-option-desc">ผู้ป่วยขอสำเนาประวัติวินิจฉัย/ผลตรวจ lab/ผลวิเคราะห์ความเสี่ยงของตน</span>
+          </span>
+        </label>
+        <label class="radio-option" data-type="rectify">
+          <input type="radio" name="request-type" value="rectify">
+          <span class="radio-option-text">
+            <span class="radio-option-title">ขอแก้ไขข้อมูล (Rectify)</span>
+            <span class="radio-option-desc">ต้องระบุรายละเอียดคำขอด้านล่าง มิฉะนั้นระบบจะแจ้งว่า input ไม่ถูกต้อง</span>
+          </span>
+        </label>
+        <label class="radio-option" data-type="delete">
+          <input type="radio" name="request-type" value="delete">
+          <span class="radio-option-text">
+            <span class="radio-option-title">ขอลบข้อมูล (Erasure)</span>
+            <span class="radio-option-desc">ระบบตรวจสอบ RetentionPolicy ก่อนลบจริงเสมอ (NFR-05)</span>
+          </span>
+        </label>
+        <label class="radio-option" data-type="object">
+          <input type="radio" name="request-type" value="object">
+          <span class="radio-option-text">
+            <span class="radio-option-title">คัดค้านการประมวลผล (Object)</span>
+            <span class="radio-option-desc">ต้องระบุรายละเอียดคำขอด้านล่าง มิฉะนั้นระบบจะแจ้งว่า input ไม่ถูกต้อง</span>
+          </span>
+        </label>
+      </div>
+
+      <div class="form-field" id="detail-field" style="margin-top:var(--space-4); display:none;">
+        <label for="request-detail">รายละเอียดคำขอ <span style="color:var(--rose-600);">*จำเป็นสำหรับประเภทนี้</span></label>
+        <textarea id="request-detail" class="textarea-input"
+          placeholder="อธิบายรายละเอียดคำขอ เช่น ข้อมูลที่ต้องการแก้ไข หรือเหตุผลที่คัดค้านการประมวลผล"></textarea>
+      </div>
+
+      <label class="checkbox-row" id="retention-sim" style="margin-top:var(--space-4); display:none;">
+        <input type="checkbox" id="retention-block">
+        <span class="type-body" style="color:inherit;">
+          <strong>จำลองสถานการณ์ (สำหรับสาธิต prototype เท่านั้น):</strong> ข้อมูลของผู้ป่วยรายนี้ยังมีความจำเป็น
+          ตามฐานทางกฎหมายอื่น (เช่น ข้อบังคับเวชระเบียน) — ถ้าติ๊กช่องนี้ ระบบจะระงับการลบตาม NFR-05
+        </span>
+      </label>
+
+      <div id="dsr-form-error"></div>
+
+      <div style="margin-top:var(--space-5);">
+        <button type="submit" class="btn btn-primary">ยื่นคำขอ</button>
+      </div>
+    </form>
+  </section>
+
+  <section class="section-card" id="dsr-result" hidden>
+    <div class="section-head">
+      <h2 class="type-section-title">ผลการดำเนินการ</h2>
+      <span class="type-caption">รหัสคำขอจำลองสำหรับ prototype เท่านั้น — ระบบจริงจะสร้าง DataSubjectRequest.id ที่ไม่ซ้ำกัน</span>
+    </div>
+    <div class="result-panel" id="dsr-result-body"></div>
+  </section>
+
+  <div class="callout note">
+    <span class="callout-title">ขอบเขตของหน้าจอนี้</span>
+    <ul>
+      <li>การยืนยันตัวตน/ความถูกต้องของคำขอกับผู้ป่วยจริง เป็นกระบวนการเชิงองค์กรนอกขอบเขตของระบบ</li>
+      <li>การดำเนินการแก้ไข/หยุดประมวลผลจริงกับข้อมูลนอกระบบ เป็นกระบวนการเชิงองค์กรนอกขอบเขตของระบบ</li>
+      <li>ค่าตัวเลขระยะเวลาเก็บรักษาข้อมูล (RetentionPolicy) จริงยังไม่ถูกกำหนด — ช่อง "จำลองสถานการณ์" ด้านบนใช้
+        สาธิต flow เท่านั้น</li>
+    </ul>
+  </div>
+
+</div>
+</div>
+
+<script>
+(function () {
+  var form = document.getElementById("dsr-form");
+  var detailField = document.getElementById("detail-field");
+  var detailInput = document.getElementById("request-detail");
+  var retentionSim = document.getElementById("retention-sim");
+  var retentionCheckbox = document.getElementById("retention-block");
+  var errorBox = document.getElementById("dsr-form-error");
+  var resultSection = document.getElementById("dsr-result");
+  var resultBody = document.getElementById("dsr-result-body");
+  var radios = form.querySelectorAll('input[name="request-type"]');
+
+  var typeLabel = {
+    access: "ขอเข้าถึงข้อมูล (Access)",
+    copy: "ขอสำเนาข้อมูล (Copy)",
+    rectify: "ขอแก้ไขข้อมูล (Rectify)",
+    delete: "ขอลบข้อมูล (Erasure)",
+    object: "คัดค้านการประมวลผล (Object)"
+  };
+  var requiresDetail = { rectify: true, object: true };
+
+  function escapeHtml(str) {
+    return String(str).replace(/[&<>"']/g, function (c) {
+      return { "&": "&amp;", "<": "&lt;", ">": "&gt;", '"': "&quot;", "'": "&#39;" }[c];
+    });
+  }
+
+  function selectedType() {
+    for (var i = 0; i < radios.length; i++) { if (radios[i].checked) return radios[i].value; }
+    return null;
+  }
+
+  function syncFieldVisibility() {
+    var type = selectedType();
+    radios.forEach(function (r) {
+      var label = r.closest(".radio-option");
+      label.classList.toggle("selected", r.checked);
+    });
+    detailField.style.display = requiresDetail[type] ? "flex" : "none";
+    retentionSim.style.display = type === "delete" ? "flex" : "none";
+    resultSection.hidden = true;
+    errorBox.innerHTML = "";
+  }
+
+  radios.forEach(function (r) { r.addEventListener("change", syncFieldVisibility); });
+  syncFieldVisibility();
+
+  function renderError(message) {
+    errorBox.innerHTML =
+      '<div class="callout note" role="alert" style="margin-top:var(--space-4);">' +
+        '<span class="callout-title">ยื่นคำขอไม่สำเร็จ</span>' +
+        '<p class="type-body" style="color:inherit;">' + escapeHtml(message) + "</p>" +
+      "</div>";
+  }
+
+  function requestId() {
+    return "DSR-2026-" + String(Math.floor(100000 + Math.random() * 900000));
+  }
+
+  function renderAccessOrCopy(type, id) {
+    resultBody.innerHTML =
+      '<div style="display:flex; align-items:center; gap:var(--space-2); flex-wrap:wrap;">' +
+        '<span class="status-pill success">ดำเนินการสำเร็จ</span>' +
+        '<span class="type-code">' + id + "</span>" +
+      "</div>" +
+      '<p class="type-body">ระบบบันทึกการดำเนินการนี้ลง audit log ก่อนเสมอ (NFR-06, fail-safe) แล้วสกัดข้อมูล' +
+      'ส่วนบุคคลของผู้ป่วยตามคำขอ "' + escapeHtml(typeLabel[type]) + '"</p>' +
+      '<ul class="dx-list">' +
+        '<li class="dx-item"><div class="dx-item-main"><span class="dx-item-name">ข้อมูลระบุตัวตน</span>' +
+        '<span class="dx-item-code">นายสมชาย ใจกล้า · HN-6500123</span></div></li>' +
+        '<li class="dx-item"><div class="dx-item-main"><span class="dx-item-name">ประวัติการวินิจฉัยโรค NCD</span>' +
+        '<span class="dx-item-code">เบาหวานชนิดที่ 2 (E11), ความดันโลหิตสูง (I10)</span></div></li>' +
+        '<li class="dx-item"><div class="dx-item-main"><span class="dx-item-name">ผลตรวจ lab ย้อนหลัง</span>' +
+        '<span class="dx-item-code">HbA1c, eGFR, LDL, ค่าความดันโลหิต (3 visit ล่าสุด)</span></div></li>' +
+        '<li class="dx-item"><div class="dx-item-main"><span class="dx-item-name">ผลวิเคราะห์ความเสี่ยงโรคแทรกซ้อน</span>' +
+        '<span class="dx-item-code">ไตวายเรื้อรัง stage 3 (เสี่ยงสูงมาก)</span></div></li>' +
+      "</ul>" +
+      '<p class="type-caption">ข้อมูลข้างต้นเป็น mockup — ระบบจริงจะสกัดจากแหล่งข้อมูลตามขอบเขต spec PDPA</p>';
+  }
+
+  function renderRectifyOrObject(type, id, detail) {
+    resultBody.innerHTML =
+      '<div style="display:flex; align-items:center; gap:var(--space-2); flex-wrap:wrap;">' +
+        '<span class="status-pill success">ดำเนินการสำเร็จ</span>' +
+        '<span class="type-code">' + id + "</span>" +
+      "</div>" +
+      '<p class="type-body">ระบบบันทึกรายละเอียดคำขอ "' + escapeHtml(typeLabel[type]) + '" ตามที่ระบุแล้ว</p>' +
+      '<div class="callout note"><span class="callout-title">รายละเอียดคำขอที่บันทึก</span>' +
+      '<p class="type-body" style="color:inherit;">' + escapeHtml(detail) + "</p></div>" +
+      '<p class="type-caption">การยืนยันตัวตน/ความถูกต้องของคำขอกับผู้ป่วยจริง และการดำเนินการแก้ไข/หยุด' +
+      'ประมวลผลจริงกับข้อมูลนอกระบบ เป็นกระบวนการเชิงองค์กรนอกขอบเขตของระบบ</p>';
+  }
+
+  function renderDelete(id, blocked) {
+    if (blocked) {
+      resultBody.innerHTML =
+        '<div style="display:flex; align-items:center; gap:var(--space-2); flex-wrap:wrap;">' +
+          '<span class="status-pill rejected">ปฏิเสธคำขอ</span>' +
+          '<span class="type-code">' + id + "</span>" +
+        "</div>" +
+        '<div class="callout warn"><span class="callout-title">ระงับการลบ (NFR-05)</span>' +
+        '<p class="type-body" style="color:inherit;">ข้อมูลของผู้ป่วยรายนี้ยังมีความจำเป็นตามฐานทางกฎหมายอื่น ' +
+        '(เช่น ข้อบังคับเวชระเบียน) ระบบจึงไม่ลบข้อมูลโดยไม่มีการยืนยันเพิ่มเติม</p></div>';
+    } else {
+      resultBody.innerHTML =
+        '<div style="display:flex; align-items:center; gap:var(--space-2); flex-wrap:wrap;">' +
+          '<span class="status-pill success">ดำเนินการสำเร็จ</span>' +
+          '<span class="type-code">' + id + "</span>" +
+        "</div>" +
+        '<div class="callout tip"><span class="callout-title">ลบข้อมูลตามคำขอสำเร็จ</span>' +
+        '<p class="type-body" style="color:inherit;">ไม่มีข้อจำกัดตาม RetentionPolicy เพิ่มเติม ระบบลบข้อมูล' +
+        'ส่วนบุคคลของผู้ป่วยตามขอบเขตคำขอแล้ว</p></div>';
+    }
+  }
+
+  form.addEventListener("submit", function (e) {
+    e.preventDefault();
+    var type = selectedType();
+    var detail = detailInput.value.trim();
+
+    if (requiresDetail[type] && detail === "") {
+      renderError('ประเภทคำขอ "' + typeLabel[type] + '" ต้องระบุรายละเอียดคำขอก่อนยื่น — กรุณากรอกรายละเอียดแล้วลองใหม่');
+      resultSection.hidden = true;
+      return;
+    }
+
+    errorBox.innerHTML = "";
+    var id = requestId();
+    resultSection.hidden = false;
+
+    if (type === "access" || type === "copy") {
+      renderAccessOrCopy(type, id);
+    } else if (type === "rectify" || type === "object") {
+      renderRectifyOrObject(type, id, detail);
+    } else if (type === "delete") {
+      renderDelete(id, retentionCheckbox.checked);
+    }
+
+    resultSection.scrollIntoView({ behavior: "smooth", block: "start" });
+  });
+})();
+</script>
+
+</body>
+</html>
