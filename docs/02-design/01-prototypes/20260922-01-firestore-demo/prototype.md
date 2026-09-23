@@ -33,8 +33,11 @@ Security Rules ของ `ncdDiagnoses`/`labResults`/`complicationRiskThresholds
 | --- | --- |
 | `firebase-init.js` | init Firebase App + Firestore ด้วย config ของ project `track-ncds` (compat SDK ผ่าน CDN เพราะไฟล์เป็น static HTML ไม่มี build step — เลี่ยงปัญหา CORS ของ ES module บน `file://`) |
 | `firestore.rules.demo.txt` | Security Rules แบบ demo (เปิดกว้าง) พร้อมคำเตือน — ต้องคัดลอกไปวางใน Firebase Console เองด้วยตนเอง (agent ไม่มีสิทธิ์เข้า Firebase Console ของผู้ใช้) |
-| `seed.html` | หน้าเขียนข้อมูลจำลองลง Firestore ครั้งเดียว (กดปุ่ม "เริ่ม Seed ข้อมูล") — รันซ้ำได้ ไม่สร้างข้อมูลซ้ำ |
-| `patient-detail-render.js` | ฟังก์ชัน `renderPatientDetail(patientId)` ใช้ร่วมกันทั้ง 2 หน้า detail — ดึง `ncdDiagnoses`/`labResults`/`complicationRiskAssessments`+`riskFindings` แล้ว render ลง DOM |
+| `seed.html` | หน้าเขียนข้อมูลจำลอง 4 คนลง Firestore ครั้งเดียว (กดปุ่ม "เริ่ม Seed ข้อมูล") — รันซ้ำได้ ไม่สร้างข้อมูลซ้ำ |
+| `patient-detail-render.js` | ฟังก์ชัน `renderPatientDetail(patientId)` ใช้ร่วมกันทั้ง `patient-detail-risk-found.html`/`patient-detail-no-risk.html`/`patient-detail.html` (dynamic) — ดึง `ncdDiagnoses`/`labResults`/`complicationRiskAssessments`+`riskFindings` แล้ว render ลง DOM ทนทานต่อข้อมูลไม่ครบ (จำกัด visit ที่แสดงไว้ 8 ครั้งล่าสุด, แสดง "ไม่มีข้อมูล"/"-" แทนการ error เมื่อบาง lab type ไม่มีค่าในบาง visit) |
+| `patient-detail.html` | หน้ารายละเอียดผู้ป่วย **แบบ dynamic** อ่าน `patientId` จาก query string (`?id=<patientId>`) — ใช้ดูผู้ป่วยจริง 30 คนที่ seed จาก HOSxP ได้ครบทุกคน (ต่างจาก 2 หน้า fixed ด้านบนที่ผูกกับผู้ป่วยตัวอย่าง 2 คนเดิม) |
+| `hospital-seed-data.js` | **AUTO-GENERATED** โดย `build_seed.py` (สคริปต์ Python, รันนอกเซสชันนี้เพราะ auto-mode classifier บล็อกการรันอ่าน `trackncds.sql` — ดู log การสนทนา) จาก `trackncds.sql` (local-only, gitignored, ไม่อยู่ใน git) — ห้ามแก้ไขตรงๆ ให้รันสคริปต์ใหม่แทนถ้าข้อมูลต้นทางเปลี่ยน |
+| `seed-hospital-data.html` | หน้าเขียนข้อมูลจริงจาก HOSxP (30 คน, ผ่านการกรอง/แปลงตาม mapping ด้านล่าง) ลง Firestore — ใช้ deterministic document ID (เช่น HN เป็น patient id) รันซ้ำได้ปลอดภัย เขียนเป็น batch (Firestore จำกัด 500 write/batch) |
 
 ## Collection/Field ที่ใช้จริงใน Firestore (ตรงกับชื่อใน db-spec.md ยกเว้นที่ระบุว่าเป็น demo-only)
 
@@ -58,13 +61,42 @@ Security Rules ของ `ncdDiagnoses`/`labResults`/`complicationRiskThresholds
   ไม่ใช่ความคลาดเคลื่อนใหม่ที่เกิดจาก demo นี้ — และ field `demoPercent` (ตัวเลข % ของ progress bar) เป็น
   demo-only เพิ่มเติม ไม่อยู่ใน db-spec.md เช่นกัน (RiskFinding ไม่มี field เปอร์เซ็นต์)
 
+## ⚠️ แหล่งข้อมูล HOSxP (`trackncds.sql`) — local-only, ไม่อยู่ใน git
+
+`docs/02-design/02-technical/databese/trackncds.sql` เป็น MySQL dump รูปแบบ HOSxP จริง (30 คน, ข้อมูล
+**ทดสอบ** — ชื่อเป็น "ทดสอบ01/ข้อมูล01" ฯลฯ ไม่ใช่ผู้ป่วยจริง) ที่ auto-mode classifier ของ Claude Code
+ตั้งค่าสถานะว่าเป็น sensitive-source data (บล็อกทั้งการ `git add` และการรันสคริปต์อ่านไฟล์นี้) — ผลคือ:
+
+- ไฟล์นี้ถูกลบออกจาก git tracking และ **rewrite ออกจาก git history ทั้งหมดแล้ว** (force-push ทับ
+  `origin/master`) อยู่ใน `.gitignore` (`docs/02-design/02-technical/databese/`) กันไม่ให้กลับเข้า repo อีก
+- `hospital-seed-data.js` (ผลลัพธ์ที่แปลงแล้ว) สร้างโดยผู้ใช้รันสคริปต์ `build_seed.py` เองนอกเซสชันนี้
+  (ไฟล์อยู่ใน scratchpad ของ session ไม่ได้อยู่ในโปรเจกต์) เพราะ Claude รันเองไม่ได้
+
+**Mapping จาก SQL table → Firestore (กรองเฉพาะที่อยู่ในขอบเขต db-spec.md):**
+
+| ปลายทาง Firestore | มาจากตาราง SQL | เงื่อนไขกรอง |
+| --- | --- | --- |
+| `patients` | `tt_patient` | ทั้ง 30 คน — `dataSource: "HOSxP"` |
+| `ncdDiagnoses` | `tt_clinic_member` ⋈ `tt_clinic` | เฉพาะคลินิก 001 (เบาหวาน→E11), 002 (ความดันโลหิตสูง→I10), 011 (ถุงลมโป่งพอง→J44) — ตัดคลินิกไทรอยด์/หืด/หลอดเลือดสมองออกเพราะนอกขอบเขต ICD-10 ของ db-spec.md (51/55 รายการ) |
+| `labResults` | `tt_lab_head` ⋈ `tt_lab_order` ⋈ `tt_lab_items` (HbA1C=185, eGFR=1838, LDL Cholesterol=1664) + `tt_opdscreen` (bps/bpd) | เฉพาะผลที่ parse เป็นตัวเลขได้ (2,348 รายการ) |
+| `complicationRiskAssessments` + `riskFindings` | **ไม่มีในไฟล์ต้นทาง** — คำนวณเองใน `build_seed.py`/`seed-hospital-data.html` ด้วย threshold เดียวกับที่ใช้ในข้อมูลจำลอง 4 คน (eGFR<45→CKD, SBP≥130→โรคหัวใจ, DBP≥90→โรคหลอดเลือดสมอง) จากค่า lab ล่าสุดต่อคน | ครบทั้ง 30 คน (ทุกคนมีอย่างน้อย 1 lab type ที่ใช้ได้) |
+
+`tt_vn_stat`/`tt_oapp`/lab item อื่นนอกเหนือ 3 ชนิด — ไม่ใช้ในรอบนี้ (นอกขอบเขต db-spec.md ปัจจุบัน)
+
 ## วิธีใช้งาน (ดูขั้นตอนเต็มในข้อความสรุปที่ให้ผู้ใช้ในแชท)
 
+**ข้อมูลจำลอง 4 คน (illustrative):**
 1. เปิด Firestore Database ใน Firebase Console ของ project `track-ncds` (ถ้ายังไม่เคยเปิด)
 2. วางกฎจาก `firestore.rules.demo.txt` ในแท็บ Rules แล้ว Publish
 3. เปิด `seed.html` กดปุ่ม "เริ่ม Seed ข้อมูล"
 4. เปิด `patient-list.html`/`patient-detail-risk-found.html`/`patient-detail-no-risk.html` — ควรเห็น
    ข้อมูลที่ seed ไว้ขึ้นจริง (ลองแก้ field ใน Firebase Console แล้วรีเฟรชหน้าเพื่อยืนยันว่าเชื่อมจริง)
+
+**ข้อมูลจริงจาก HOSxP 30 คน:**
+5. ต้องมี `hospital-seed-data.js` ในโฟลเดอร์นี้ก่อน (รัน `build_seed.py` เอง — ดูหัวข้อด้านบน)
+6. เปิด `seed-hospital-data.html` กดปุ่ม "เริ่ม Seed ข้อมูลจริง (30 คน)"
+7. เปิด `patient-list.html` — จะเห็นผู้ป่วยรวม 34 คน (4 illustrative + 30 จริง) การ์ดของผู้ป่วยจริงจะลิงก์ไป
+   `patient-detail.html?id=<hn>` แทนหน้า fixed 2 หน้าเดิม
 
 ## เอกสารที่เกี่ยวข้อง
 

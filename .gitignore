@@ -35,3 +35,4 @@ build/
 # --- Raw hospital DB export (removed from repo — contains real-looking patient
 #     record structure/HN/dates; keep local-only, never re-add) ---
 docs/02-design/02-technical/databese/
+docs/02-design/01-prototypes/20260922-01-firestore-demo/hospital-seed-data.js

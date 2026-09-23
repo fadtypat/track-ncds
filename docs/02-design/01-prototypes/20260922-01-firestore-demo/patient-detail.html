@@ -3,7 +3,7 @@
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
-<title>NCDs History &amp; Risk — Firestore Demo — สมชาย ใจกล้า (พบความเสี่ยง)</title>
+<title>NCDs History &amp; Risk — Firestore Demo — รายละเอียดผู้ป่วย</title>
 <link rel="stylesheet" href="style.css">
 <script src="https://www.gstatic.com/firebasejs/10.14.1/firebase-app-compat.js"></script>
 <script src="https://www.gstatic.com/firebasejs/10.14.1/firebase-firestore-compat.js"></script>
@@ -14,25 +14,13 @@
 <nav class="proto-bar">
   <div class="proto-bar-inner">
     <div class="proto-bar-top">
-      <span class="proto-bar-title">NCDS CLINIC · FIRESTORE DEMO · ประวัติ+ความเสี่ยง (พบ)</span>
+      <span class="proto-bar-title">NCDS CLINIC · FIRESTORE DEMO · รายละเอียดผู้ป่วย (dynamic)</span>
       <div class="proto-bar-nav">
         <a href="index.html">หน้ารวม</a>
         <a href="patient-list.html">ค้นหา/รายชื่อผู้ป่วย</a>
-        <a href="patient-detail-risk-found.html" class="current">ประวัติ+ความเสี่ยง (พบ)</a>
-        <a href="patient-detail-no-risk.html">ประวัติ+ความเสี่ยง (ไม่พบ)</a>
-        <a href="access-denied.html">ปฏิเสธการเข้าถึง</a>
-        <a href="pdpa-data-subject-request.html">PDPA คำขอใช้สิทธิ</a>
-        <a href="pdpa-audit-trail.html">PDPA audit trail</a>
         <a href="seed.html">Seed ข้อมูลจำลอง (4 คน)</a>
         <a href="seed-hospital-data.html">Seed ข้อมูลจริง (30 คน)</a>
       </div>
-    </div>
-    <div class="proto-bar-codes">
-      <span class="proto-code">FR-01</span>
-      <span class="proto-code">FR-02</span>
-      <span class="proto-code">FR-03</span>
-      <span class="proto-code">FR-04</span>
-      <span class="proto-code">NFR-01</span>
     </div>
   </div>
 </nav>
@@ -62,7 +50,6 @@
     </div>
   </header>
 
-  <!-- ฟีเจอร์ 1: ประวัติการวินิจฉัย (FR-01) — จาก Firestore collection ncdDiagnoses -->
   <section class="section-card">
     <div class="section-head">
       <h2 class="type-section-title">ประวัติการวินิจฉัยโรค NCD</h2>
@@ -71,19 +58,15 @@
     <ul class="dx-list" id="dx-list"></ul>
   </section>
 
-  <!-- ฟีเจอร์ 1: ผลตรวจ lab ย้อนหลัง (FR-02) — จาก Firestore collection labResults -->
   <section class="section-card">
     <div class="section-head">
       <h2 class="type-section-title">ผลตรวจ Lab ย้อนหลัง</h2>
       <span class="type-caption">เลือกดู visit รายครั้ง หรือดูตารางแนวโน้มทั้งหมดด้านล่าง</span>
     </div>
-
     <div class="visit-tabs" role="tablist" aria-label="เลือก visit" id="visit-tabs"></div>
-
     <div style="display:grid; grid-template-columns:1fr; gap:12px;" class="grid-2-tablet" id="value-tiles"></div>
-
     <div class="section-head">
-      <h3 class="type-card-title">ตารางแนวโน้ม 3 visit</h3>
+      <h3 class="type-card-title">ตารางแนวโน้ม</h3>
       <span class="type-caption">คอลัมน์ = visit เรียงเก่า→ใหม่ซ้าย→ขวา · บนมือถือเลื่อนแนวนอน คอลัมน์แรก sticky</span>
     </div>
     <div class="trend-table-wrap">
@@ -94,23 +77,18 @@
     </div>
   </section>
 
-  <!-- ฟีเจอร์ 2: วิเคราะห์และแจ้งเตือนความเสี่ยง (FR-03/FR-04) — จาก complicationRiskAssessments + riskFindings -->
   <section class="section-card">
     <div class="section-head">
       <h2 class="type-section-title">ผลวิเคราะห์ความเสี่ยงโรคแทรกซ้อน</h2>
       <span class="type-caption">ประเมินแบบ rule-based เทียบ threshold ค่า lab มาตรฐาน (ไม่ใช้ AI/ML — FR-03)</span>
     </div>
-
     <div class="risk-bar-list" id="risk-bar-list"></div>
-
     <div id="risk-summary"></div>
-
     <div class="callout note">
       <span class="callout-title">หมายเหตุ threshold</span>
       <p class="type-body" style="color:inherit; margin:0;">
-        ค่า threshold ตัวเลขที่ใช้ตัดสินระดับความเสี่ยงข้างต้นยังไม่ได้รับการยืนยันจากผู้เชี่ยวชาญ
-        (ดู DESIGN.md §2.3 และ spec ต้นทาง หัวข้อสมมติฐาน) ตัวเลข % ในหน้านี้เป็นข้อมูล mockup
-        สำหรับสาธิตการแสดงผลเท่านั้น — เชื่อมกับ Firestore จริงแล้ว (ดู prototype.md ของโฟลเดอร์นี้)
+        ค่า threshold ตัวเลขที่ใช้ตัดสินระดับความเสี่ยงข้างต้นยังไม่ได้รับการยืนยันจากผู้เชี่ยวชาญ — เป็นข้อมูล
+        demo สำหรับสาธิตการแสดงผลเท่านั้น (ดู prototype.md ของโฟลเดอร์นี้)
       </p>
     </div>
   </section>
@@ -120,13 +98,20 @@
 
 <script src="patient-detail-render.js"></script>
 <script>
-  renderPatientDetail("somchai-jaikla").then(function () {
-    document.getElementById("firestore-status").textContent = "โหลดจาก Firestore สำเร็จ — แก้ไขข้อมูลใน Firebase Console แล้วรีเฟรชหน้านี้เพื่อดูผลได้ทันที";
-  }).catch(function (err) {
-    var el = document.getElementById("firestore-status");
-    el.textContent = "โหลดจาก Firestore ไม่สำเร็จ: " + err.message + " — ตรวจสอบว่า seed ข้อมูลแล้ว (seed.html) และตั้ง Security Rules แบบ demo แล้ว (firestore.rules.demo.txt)";
-    el.style.color = "var(--rose-600, #d10)";
-  });
+  var params = new URLSearchParams(window.location.search);
+  var patientId = params.get("id");
+  var statusEl = document.getElementById("firestore-status");
+  if (!patientId) {
+    statusEl.textContent = "ไม่พบ patientId ใน URL — ต้องเปิดหน้านี้ผ่านลิงก์จาก patient-list.html (เช่น patient-detail.html?id=4858092)";
+    statusEl.style.color = "var(--rose-600, #d10)";
+  } else {
+    renderPatientDetail(patientId).then(function () {
+      statusEl.textContent = "โหลดจาก Firestore สำเร็จ (patientId: " + patientId + ") — แก้ไขข้อมูลใน Firebase Console แล้วรีเฟรชหน้านี้เพื่อดูผลได้ทันที";
+    }).catch(function (err) {
+      statusEl.textContent = "โหลดจาก Firestore ไม่สำเร็จ: " + err.message;
+      statusEl.style.color = "var(--rose-600, #d10)";
+    });
+  }
 </script>
 
 </body>

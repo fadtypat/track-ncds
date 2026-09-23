@@ -1,0 +1,155 @@
+<!DOCTYPE html>
+<html lang="th">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>NCDS CLINIC · Firestore Demo · Seed ข้อมูลจริง (HOSxP)</title>
+<link rel="stylesheet" href="style.css">
+<script src="https://www.gstatic.com/firebasejs/10.14.1/firebase-app-compat.js"></script>
+<script src="https://www.gstatic.com/firebasejs/10.14.1/firebase-firestore-compat.js"></script>
+<script src="firebase-init.js"></script>
+<script src="hospital-seed-data.js"></script>
+</head>
+<body>
+
+<nav class="proto-bar">
+  <div class="proto-bar-inner">
+    <div class="proto-bar-top">
+      <span class="proto-bar-title">NCDS CLINIC · FIRESTORE DEMO · Seed ข้อมูลจริง (HOSxP)</span>
+      <div class="proto-bar-nav">
+        <a href="index.html">หน้ารวม</a>
+        <a href="patient-list.html">ค้นหา/รายชื่อผู้ป่วย</a>
+        <a href="seed.html">Seed ข้อมูลจำลอง (4 คน)</a>
+      </div>
+    </div>
+  </div>
+</nav>
+
+<div class="app-bg">
+<div class="container stack gap-section">
+
+  <header class="stack" style="gap:8px;">
+    <h1 class="type-page-title">Seed ข้อมูลจากไฟล์ HOSxP export (30 คน)</h1>
+    <p class="type-body" style="max-width:640px;">
+      เขียนข้อมูลจาก <code>hospital-seed-data.js</code> (แปลงมาจาก <code>trackncds.sql</code> ที่เก็บไว้ในเครื่อง
+      เท่านั้น ไม่ได้อยู่ใน git) ลง Firestore project <code>track-ncds</code> จริง ตาม collection เดียวกับที่
+      db-spec.md กำหนดไว้ — ใช้ document ID แบบ deterministic (เช่น HN เป็น patient id) รันซ้ำได้ปลอดภัย
+      ไม่สร้างข้อมูลซ้ำ
+    </p>
+    <p class="type-caption" id="counts"></p>
+  </header>
+
+  <section class="section-card">
+    <button id="seed-btn" type="button" class="btn btn-primary">เริ่ม Seed ข้อมูลจริง (30 คน)</button>
+    <div id="seed-log" class="stack" style="gap:6px; margin-top:var(--space-3);"></div>
+  </section>
+
+</div>
+</div>
+
+<script>
+(function () {
+  var logBox = document.getElementById("seed-log");
+  function log(msg, isError) {
+    var p = document.createElement("p");
+    p.className = "type-body";
+    if (isError) p.style.color = "var(--rose-600, #d10)";
+    p.textContent = msg;
+    logBox.appendChild(p);
+  }
+
+  document.getElementById("counts").textContent =
+    "ในไฟล์: patients=" + Object.keys(HOSPITAL_SEED_DATA.patients).length +
+    ", ncdDiagnoses=" + HOSPITAL_SEED_DATA.diagnoses.length +
+    ", labResults=" + HOSPITAL_SEED_DATA.labResults.length +
+    ", assessments=" + HOSPITAL_SEED_DATA.assessments.length;
+
+  function toTs(dateStr) {
+    var parts = dateStr.split("-").map(Number);
+    return firebase.firestore.Timestamp.fromDate(new Date(parts[0], parts[1] - 1, parts[2]));
+  }
+
+  // เขียนเป็น batch, commit ทุก 400 operation (Firestore จำกัด 500/batch)
+  function makeBatcher() {
+    var batch = demoDb.batch();
+    var count = 0;
+    var commits = [];
+    function set(ref, data) {
+      batch.set(ref, data);
+      count++;
+      if (count >= 400) {
+        commits.push(batch.commit());
+        batch = demoDb.batch();
+        count = 0;
+      }
+    }
+    async function finish() {
+      if (count > 0) commits.push(batch.commit());
+      await Promise.all(commits);
+    }
+    return { set: set, finish: finish };
+  }
+
+  async function seed() {
+    var btn = document.getElementById("seed-btn");
+    btn.disabled = true;
+    logBox.innerHTML = "";
+    try {
+      var b = makeBatcher();
+
+      log("กำลังเตรียม patients...");
+      var patients = HOSPITAL_SEED_DATA.patients;
+      for (var hn in patients) {
+        b.set(demoDb.collection("patients").doc(hn), patients[hn]);
+      }
+
+      log("กำลังเตรียม ncdDiagnoses...");
+      HOSPITAL_SEED_DATA.diagnoses.forEach(function (d) {
+        var id = d.patientId + "_" + d.icd10Code;
+        b.set(demoDb.collection("ncdDiagnoses").doc(id), {
+          patientId: d.patientId, icd10Code: d.icd10Code, diseaseGroup: d.diseaseGroup,
+          diagnosedAt: toTs(d.diagnosedAt), dataSource: d.dataSource
+        });
+      });
+
+      log("กำลังเตรียม labResults...");
+      HOSPITAL_SEED_DATA.labResults.forEach(function (r) {
+        var id = r.patientId + "_" + r.testType + "_" + r.testedAt;
+        b.set(demoDb.collection("labResults").doc(id), {
+          patientId: r.patientId, testType: r.testType, value: r.value, unit: r.unit,
+          testedAt: toTs(r.testedAt), dataSource: r.dataSource
+        });
+      });
+
+      log("กำลังเตรียม complicationRiskAssessments + riskFindings...");
+      HOSPITAL_SEED_DATA.assessments.forEach(function (a) {
+        var assessId = a.patientId + "_assessment";
+        var assessRef = demoDb.collection("complicationRiskAssessments").doc(assessId);
+        b.set(assessRef, {
+          patientId: a.patientId, requestedByUserId: a.requestedByUserId,
+          assessedAt: toTs(a.assessedAt), hasRisk: a.hasRisk
+        });
+        a.findings.forEach(function (f) {
+          var findingRef = assessRef.collection("riskFindings").doc(f.complicationType);
+          b.set(findingRef, f);
+        });
+      });
+
+      log("กำลัง commit ลง Firestore (แบ่งเป็นหลาย batch)...");
+      await b.finish();
+
+      log("✓ เสร็จสมบูรณ์ — เปิด patient-list.html เพื่อดูผู้ป่วยทั้ง 30 คน");
+    } catch (err) {
+      log("เกิดข้อผิดพลาด: " + (err && err.message ? err.message : err), true);
+      log("ถ้าเป็น permission-denied ให้ตรวจสอบว่าตั้ง Firestore Security Rules แบบ demo แล้ว (ดู firestore.rules.demo.txt)", true);
+    } finally {
+      btn.disabled = false;
+    }
+  }
+
+  document.getElementById("seed-btn").addEventListener("click", seed);
+})();
+</script>
+
+</body>
+</html>

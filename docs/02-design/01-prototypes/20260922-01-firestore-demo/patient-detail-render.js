@@ -32,6 +32,7 @@ function escapeHtmlDetail(str) {
 var COMPLICATION_ICD = { "ไตวายเรื้อรัง": "N18.3", "โรคหัวใจ": "I25", "โรคหลอดเลือดสมอง": "I63" };
 
 var LAB_ORDER = ["HbA1c", "eGFR", "LDL", "ความดันโลหิต"];
+var MAX_VISITS_SHOWN = 8; // ข้อมูลจริงจาก HOSxP บางคนมีหลายสิบ visit — จำกัดไว้เพื่อให้ตาราง/tab ยังอ่านง่าย
 var ABNORMAL_RULE = {
   "HbA1c": function (v) { return v > 6.5; },
   "eGFR": function (v) { return v < 60; },
@@ -39,6 +40,11 @@ var ABNORMAL_RULE = {
   "ความดันโลหิต": function (v) { return v.sys >= 130 || v.dia >= 85; }
 };
 var HIGHER_IS_BETTER = { "HbA1c": false, "eGFR": true, "LDL": false, "ความดันโลหิต": false };
+
+function hasValue(metric, v) {
+  if (metric === "ความดันโลหิต") return v && (v.sys !== undefined || v.dia !== undefined);
+  return v !== undefined;
+}
 
 function groupLabsByVisit(labDocs) {
   // labDocs: array ของ { testType, value, unit, testedAt } เรียงตาม testedAt แล้ว
@@ -63,20 +69,26 @@ function groupLabsByVisit(labDocs) {
 }
 
 function labDisplay(metric, value) {
-  if (metric === "ความดันโลหิต") return value.sys + "/" + value.dia + " mmHg";
+  if (metric === "ความดันโลหิต") {
+    return (value.sys !== undefined ? value.sys : "-") + "/" + (value.dia !== undefined ? value.dia : "-") + " mmHg";
+  }
   var units = { "HbA1c": "%", "eGFR": "mL/min/1.73m²", "LDL": "mg/dL" };
   return value + " " + units[metric];
 }
 
 function labCell(metric, value) {
-  if (metric === "ความดันโลหิต") return value.sys + "/" + value.dia;
+  if (!hasValue(metric, value)) return "-";
+  if (metric === "ความดันโลหิต") {
+    return (value.sys !== undefined ? value.sys : "-") + "/" + (value.dia !== undefined ? value.dia : "-");
+  }
   return String(value);
 }
 
 function trendArrow(metric, prev, curr) {
+  if (!hasValue(metric, prev) || !hasValue(metric, curr)) return { cls: "flat", text: "—" };
   var prevNum = metric === "ความดันโลหิต" ? prev.sys : prev;
   var currNum = metric === "ความดันโลหิต" ? curr.sys : curr;
-  if (currNum === prevNum) return { cls: "flat", text: "→ คงที่" };
+  if (prevNum === undefined || currNum === undefined || currNum === prevNum) return { cls: "flat", text: "→ คงที่" };
   var improved = HIGHER_IS_BETTER[metric] ? currNum > prevNum : currNum < prevNum;
   return improved ? { cls: "better", text: "↓ ดีขึ้น" } : { cls: "worse", text: "↑ แย่ลง" };
 }
@@ -150,7 +162,14 @@ async function renderPatientDetail(patientId) {
   var labSnap = await demoDb.collection("labResults").where("patientId", "==", patientId).get();
   var labDocs = labSnap.docs.map(function (d) { return d.data(); });
   var visits = groupLabsByVisit(labDocs);
+  if (visits.length > MAX_VISITS_SHOWN) visits = visits.slice(-MAX_VISITS_SHOWN);
 
+  if (visits.length === 0) {
+    document.getElementById("visit-tabs").innerHTML = '<span class="type-caption">ไม่มีผล lab ที่ตรงกับชนิดที่ระบบใช้ (HbA1c/eGFR/LDL/ความดันโลหิต)</span>';
+    document.getElementById("value-tiles").innerHTML = "";
+    document.querySelector("#trend-table thead").innerHTML = "";
+    document.querySelector("#trend-table tbody").innerHTML = "";
+  } else {
   document.getElementById("visit-tabs").innerHTML = visits.map(function (v, i) {
     var isLast = i === visits.length - 1;
     var label = "Visit " + (i + 1) + (isLast ? " (ล่าสุด)" : "") + " · " + thaiDate(v.date, false);
@@ -160,6 +179,15 @@ async function renderPatientDetail(patientId) {
   var latestVisit = visits[visits.length - 1];
   document.getElementById("value-tiles").innerHTML = LAB_ORDER.map(function (metric) {
     var val = latestVisit.values[metric];
+    if (!hasValue(metric, val)) {
+      return (
+        '<div class="value-tile normal">' +
+          '<span class="value-label">' + metric + " (ล่าสุด)</span>" +
+          '<span class="value-number">-</span>' +
+          '<span class="value-status">ไม่มีข้อมูล</span>' +
+        "</div>"
+      );
+    }
     var abnormal = ABNORMAL_RULE[metric](val);
     return (
       '<div class="value-tile ' + (abnormal ? "abnormal" : "normal") + '">' +
@@ -177,10 +205,14 @@ async function renderPatientDetail(patientId) {
 
   var tbodyHtml = LAB_ORDER.map(function (metric) {
     var cells = visits.map(function (v) {
-      var abnormal = ABNORMAL_RULE[metric](v.values[metric]);
-      return '<td class="' + (abnormal ? "cell-abnormal" : "cell-normal") + '">' + labCell(metric, v.values[metric]) + "</td>";
+      var val = v.values[metric];
+      if (!hasValue(metric, val)) return '<td class="cell-normal">-</td>';
+      var abnormal = ABNORMAL_RULE[metric](val);
+      return '<td class="' + (abnormal ? "cell-abnormal" : "cell-normal") + '">' + labCell(metric, val) + "</td>";
     }).join("");
-    var arrow = trendArrow(metric, visits[visits.length - 2].values[metric], visits[visits.length - 1].values[metric]);
+    var arrow = visits.length >= 2
+      ? trendArrow(metric, visits[visits.length - 2].values[metric], visits[visits.length - 1].values[metric])
+      : { cls: "flat", text: "—" };
     var label = metric === "ความดันโลหิต" ? "ความดันโลหิต SBP/DBP (mmHg)" : metric + " (" + (metric === "eGFR" ? "mL/min/1.73m²" : metric === "LDL" ? "mg/dL" : "%") + ")";
     return (
       "<tr><td class=\"param-name\">" + label + "</td>" + cells +
@@ -188,6 +220,7 @@ async function renderPatientDetail(patientId) {
     );
   }).join("");
   document.querySelector("#trend-table tbody").innerHTML = tbodyHtml;
+  } // end else (visits.length > 0)
 
   // ---- ผลวิเคราะห์ความเสี่ยงโรคแทรกซ้อน ----
   var riskLabelMap = { veryhigh: "เสี่ยง สูงมาก", high: "เสี่ยง สูง", moderate: "เสี่ยง ปานกลาง", low: "เสี่ยง ต่ำ" };
