@@ -1,0 +1,176 @@
+<!DOCTYPE html>
+<html lang="th">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>NCDs History &amp; Risk — Prototype v1 — Admin: ผู้ป่วยทุกราย</title>
+<link rel="stylesheet" href="style.css">
+</head>
+<body>
+
+<nav class="proto-bar">
+  <div class="proto-bar-inner">
+    <div class="proto-bar-top">
+      <span class="proto-bar-title">NCDS CLINIC · PROTOTYPE v1 · Admin: ผู้ป่วยทุกราย</span>
+      <div class="proto-bar-nav">
+        <a href="index.html">หน้ารวม</a>
+        <a href="login.html">เข้าสู่ระบบ</a>
+        <a href="signup.html">สมัครบัญชี</a>
+        <a href="verify-email-notice.html">ยืนยันอีเมล/รออนุมัติ</a>
+        <a href="forgot-password.html">ลืมรหัสผ่าน</a>
+        <a href="reset-password.html">ตั้งรหัสผ่านใหม่</a>
+        <a href="patient-list.html">ค้นหา/รายชื่อผู้ป่วย</a>
+        <a href="patient-detail-risk-found.html">ประวัติ+ความเสี่ยง (พบ)</a>
+        <a href="patient-detail-no-risk.html">ประวัติ+ความเสี่ยง (ไม่พบ)</a>
+        <a href="access-denied.html">ปฏิเสธการเข้าถึง</a>
+        <a href="pdpa-data-subject-request.html">PDPA คำขอใช้สิทธิ</a>
+        <a href="pdpa-audit-trail.html">PDPA audit trail</a>
+        <a href="admin-dashboard.html">Admin: หน้าหลัก</a>
+        <a href="admin-account-approval.html">Admin: อนุมัติบัญชี</a>
+        <a href="admin-user-directory.html">Admin: จัดการผู้ใช้งาน</a>
+        <a href="admin-patient-assignment.html">Admin: มอบหมายผู้ป่วย</a>
+        <a href="admin-patient-directory.html" class="current">Admin: ผู้ป่วยทุกราย</a>
+        <a href="admin-patient-detail-readonly.html">Admin: ดูประวัติ (read-only)</a>
+      </div>
+    </div>
+    <div class="proto-bar-codes">
+      <span class="proto-code">FR-15</span>
+      <span class="proto-code">NFR-19</span>
+    </div>
+  </div>
+</nav>
+
+<div class="app-bg">
+<div class="container stack gap-section">
+
+  <a href="admin-dashboard.html" class="type-caption" style="display:inline-block;">← กลับไปแผงควบคุม Admin</a>
+
+  <header class="stack" style="gap:8px;">
+    <h1 class="type-page-title">ผู้ป่วยทั้งหมดในระบบ (มุมมอง Admin)</h1>
+    <p class="type-body" style="max-width:680px;">
+      Admin เห็นผู้ป่วย<strong>ทุกราย</strong>ในระบบโดยไม่ต้องมี PatientAssignment เป็นของตนเอง
+      (ข้อยกเว้นจาก NFR-02 ตาม NFR-19) เพื่อสนับสนุนงานบริหารจัดการเท่านั้น — การเปิดดูประวัติแต่ละราย
+      เป็นแบบ<strong>อ่านอย่างเดียว</strong> (FR-15) และทุกครั้งที่เข้าถึงระบบจะบันทึก audit log แบบ
+      fail-safe ก่อนเสมอ (NFR-20)
+    </p>
+    <span class="chip chip-neutral" style="align-self:flex-start;">มุมมอง Admin: ไม่จำกัดด้วย PatientAssignment (NFR-19)</span>
+  </header>
+
+  <section class="patient-grid">
+
+    <article class="patient-card">
+      <div class="patient-card-top">
+        <div>
+          <div class="patient-card-name">นายสมชาย ใจกล้า</div>
+          <div class="patient-card-meta">HN-6500123 · ชาย · 58 ปี</div>
+        </div>
+        <span class="risk-badge veryhigh">เสี่ยง สูงมาก</span>
+      </div>
+      <div class="patient-card-chips">
+        <span class="chip chip-chronic">เบาหวาน (E11)</span>
+        <span class="chip chip-ckd">CKD stage 3</span>
+        <span class="chip chip-neutral">ผู้ดูแล: พญ. อรุณี ศรีสุข</span>
+      </div>
+      <div class="patient-card-action">
+        <a class="btn btn-primary btn-sm" href="admin-patient-detail-readonly.html">เปิดประวัติ (อ่านอย่างเดียว)</a>
+      </div>
+    </article>
+
+    <article class="patient-card">
+      <div class="patient-card-top">
+        <div>
+          <div class="patient-card-name">นางสมหญิง พูนสุข</div>
+          <div class="patient-card-meta">HN-6500089 · หญิง · 62 ปี</div>
+        </div>
+        <span class="risk-badge veryhigh">เสี่ยง สูงมาก</span>
+      </div>
+      <div class="patient-card-chips">
+        <span class="chip chip-chronic">เบาหวาน (E11)</span>
+        <span class="chip chip-ckd">CKD stage 3</span>
+        <span class="chip chip-neutral">ผู้ดูแล: พญ. อรุณี ศรีสุข</span>
+      </div>
+      <div class="patient-card-action">
+        <a class="btn btn-primary btn-sm" href="admin-patient-detail-readonly.html">เปิดประวัติ (อ่านอย่างเดียว)</a>
+      </div>
+    </article>
+
+    <article class="patient-card">
+      <div class="patient-card-top">
+        <div>
+          <div class="patient-card-name">นายวิชัย ถุงลมดี</div>
+          <div class="patient-card-meta">HN-6500201 · ชาย · 65 ปี</div>
+        </div>
+        <span class="risk-badge low">เสี่ยง ต่ำ</span>
+      </div>
+      <div class="patient-card-chips">
+        <span class="chip chip-chronic">ถุงลมโป่งพอง (J44)</span>
+        <span class="chip chip-neutral">ผู้ดูแล: นายวรรณะ ใจดี</span>
+      </div>
+      <div class="patient-card-action">
+        <a class="btn btn-primary btn-sm" href="admin-patient-detail-readonly.html">เปิดประวัติ (อ่านอย่างเดียว)</a>
+      </div>
+    </article>
+
+    <article class="patient-card">
+      <div class="patient-card-top">
+        <div>
+          <div class="patient-card-name">นางสาวปราณี สุขใจ</div>
+          <div class="patient-card-meta">HN-6500345 · หญิง · 50 ปี</div>
+        </div>
+        <span class="risk-badge low">เสี่ยง ต่ำ</span>
+      </div>
+      <div class="patient-card-chips">
+        <span class="chip chip-chronic">ความดันโลหิตสูง (I10)</span>
+        <span class="chip chip-neutral">ผู้ดูแล: ยังไม่ได้มอบหมาย</span>
+      </div>
+      <div class="patient-card-action">
+        <a class="btn btn-primary btn-sm" href="admin-patient-detail-readonly.html">เปิดประวัติ (อ่านอย่างเดียว)</a>
+      </div>
+    </article>
+
+    <article class="patient-card">
+      <div class="patient-card-top">
+        <div>
+          <div class="patient-card-name">นายประเสริฐ วงศ์สุข</div>
+          <div class="patient-card-meta">HN-6500777 · ชาย · 55 ปี</div>
+        </div>
+        <span class="risk-badge moderate">เสี่ยง ปานกลาง</span>
+      </div>
+      <div class="patient-card-chips">
+        <span class="chip chip-chronic">เบาหวาน (E11)</span>
+        <span class="chip chip-neutral">ผู้ดูแล: ยังไม่ได้มอบหมาย</span>
+      </div>
+      <div class="patient-card-action">
+        <a class="btn btn-primary btn-sm" href="admin-patient-detail-readonly.html">เปิดประวัติ (อ่านอย่างเดียว)</a>
+      </div>
+    </article>
+
+    <article class="patient-card">
+      <div class="patient-card-top">
+        <div>
+          <div class="patient-card-name">นางมาลี ทองดี</div>
+          <div class="patient-card-meta">HN-6500880 · หญิง · 70 ปี</div>
+        </div>
+        <span class="risk-badge high">เสี่ยง สูง</span>
+      </div>
+      <div class="patient-card-chips">
+        <span class="chip chip-chronic">ความดันโลหิตสูง (I10)</span>
+        <span class="chip chip-neutral">ผู้ดูแล: พญ. สุนีย์ แจ้งใส</span>
+      </div>
+      <div class="patient-card-action">
+        <a class="btn btn-primary btn-sm" href="admin-patient-detail-readonly.html">เปิดประวัติ (อ่านอย่างเดียว)</a>
+      </div>
+    </article>
+
+  </section>
+
+  <p class="type-caption">
+    หมายเหตุ prototype: การ์ดผู้ป่วยทั้ง 6 ใบเชื่อมไปยังหน้าตัวอย่างเดียวกัน
+    (admin-patient-detail-readonly.html) เพื่อสาธิตรูปแบบการนำเสนอแบบอ่านอย่างเดียวเท่านั้น
+    ระบบจริงจะมีข้อมูลรายบุคคลของแต่ละคนแยกกัน และแสดงชื่อ/HN ของผู้ป่วยที่เลือกจริงในหน้ารายละเอียด
+  </p>
+
+</div>
+</div>
+</body>
+</html>

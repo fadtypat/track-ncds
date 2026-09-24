@@ -3,15 +3,44 @@
 เอกสารนี้อธิบายโมเดลข้อมูลเชิง logical (entity/attribute/ความสัมพันธ์) ที่ [[architecture#ที่เก็บข้อมูลหลัก (Primary Data Store)|Primary Data Store]]
 และ [[architecture#ที่เก็บบันทึกการเข้าถึง (Audit Log Store)|Audit Log Store]] ใน [[architecture]] ต้องรองรับ
 เพื่อให้ [[architecture#บริการฝั่งเซิร์ฟเวอร์ (Backend Service)|Backend Service]]
-ใช้งานได้ตามฟีเจอร์ทั้งห้าใน [[feature-list]] และทั้งสอง journey ใน [[user-journey]] อ้างอิงความ
+ใช้งานได้ตามฟีเจอร์ทั้งเจ็ดใน [[feature-list]] และทั้งสี่ journey ใน [[user-journey]] อ้างอิงความ
 ต้องการต้นทางจาก [[backlog]],
-[[20260917-01-patient-ncd-history-lab-complication-risk]],
+[[20260917-01-patient-ncd-history-lab-complication-risk]] (รวม FR-16),
 [[20260921-01-pdpa-data-protection-compliance]] (ฟีเจอร์ที่ 4 — คุ้มครองข้อมูลส่วนบุคคลตาม PDPA,
 NFR-03–NFR-08),
 [[20260922-01-operational-quality-nfr]] (ฟีเจอร์ที่ 5 — รับประกันคุณภาพเชิงปฏิบัติการของระบบ,
-NFR-09–NFR-16) และ
+NFR-09–NFR-16),
 [[20260923-01-user-authentication-email-password]] (ฟีเจอร์ที่ 6 — สมัครบัญชี เข้าสู่ระบบ และจัดการ
-รหัสผ่านด้วยอีเมล, FR-07–FR-10, NFR-17–NFR-18)
+รหัสผ่านด้วยอีเมล, FR-07–FR-10, NFR-17–NFR-18) และ
+[[20260924-01-admin-role-account-management]] (ฟีเจอร์ที่ 7 — Admin, FR-11–FR-15, NFR-19–NFR-20)
+
+**อัปเดต 2026-09-24 (รอบ sync ที่หก) — เพิ่มฟีเจอร์ที่ 7 (Admin, FR-11–FR-15, NFR-19, NFR-20) และ
+FR-16 (ยืนยัน/แก้ไขผลการประเมินความเสี่ยง):** สอดคล้องกับ [[architecture]] ที่อัปเดตวันนี้ (รอบ sync ที่หก)
+สามจุดที่ spec/architecture ไม่ได้ระบุรายละเอียดเชิงโครงสร้างชัดเจน ได้ถามผู้ใช้จริงผ่าน
+`NEEDS_USER_INPUT` และได้รับคำตอบยืนยันแล้ว:
+
+1. **โครงสร้างข้อมูลสำหรับ FR-16 (ยืนยัน/แก้ไขผลการประเมินความเสี่ยง) — ยืนยันแล้ว: "แก้ไข field ใน
+   เอกสารเดิมโดยตรง (mutate in place)"** — เพิ่ม attribute ใหม่ลงใน
+   [[#ผลการประเมินความเสี่ยงโรคแทรกซ้อน (ComplicationRiskAssessment)|ComplicationRiskAssessment]]
+   โดยตรง (ไม่สร้าง entity ใหม่แยกต่างหาก) ผู้ใช้รับทราบข้อเสียเรื่องค่าประเมินอัตโนมัติดั้งเดิมอาจถูก
+   บดบังแล้ว จึง**คงค่าที่ระบบประเมินอัตโนมัติไว้ใน attribute เดิม (`พบความเสี่ยงหรือไม่`) แบบไม่แก้ไข
+   (immutable) เสมอ** และเพิ่ม attribute ใหม่แยกต่างหากสำหรับผลหลังยืนยัน/แก้ไข (ดูหัวข้อ
+   ComplicationRiskAssessment ด้านล่าง) เพื่อคง traceability ตาม NFR-06 ไว้ครบตามที่ผู้ใช้ระบุเงื่อนไข
+   ไว้ — บันทึกเป็นการตัดสินใจเชิงออกแบบของผู้จัดทำเอกสาร (agent) ภายใต้กรอบที่ผู้ใช้ยืนยัน ไม่ใช่การ
+   เปลี่ยนคำตอบของผู้ใช้
+2. **โครงสร้าง audit log สำหรับ NFR-20 — ยืนยันแล้ว: "ใช้ `AuditLogRecord` เดียวกัน เพิ่ม attribute
+   ใหม่"** (`เข้าถึงในฐานะ Admin หรือไม่` — จริง/เท็จ, ไม่บังคับ) แทนการแยก collection ใหม่ — ดูหัวข้อ
+   AuditLogRecord ด้านล่าง
+3. **การป้องกัน Admin ระงับ/ลด role ตัวเองจนไม่มี Admin เหลือ — ยืนยันแล้ว: "ห้าม Admin แก้ไข
+   role/isActive ของตัวเองโดยเด็ดขาด"** ผ่าน operation ใน [[api-spec]] (ไม่ใช่ constraint ระดับข้อมูล/
+   attribute จึงไม่มี attribute ใหม่ใน entity ใด — เป็น business rule ที่ตรวจสอบใน Cloud Function ดู
+   [[api-spec#Operation 12 — เปลี่ยนบทบาท (Role) ของผู้ใช้งานที่มีอยู่|Operation 12]] และ
+   [[api-spec#Operation 13 — ระงับ/เปิดใช้งานบัญชีผู้ใช้งาน|Operation 13]])
+
+รายละเอียดเพิ่มเติม: `บทบาท` ของ [[#ผู้ใช้ (User)|User]] เพิ่มค่าที่เป็นไปได้ `"admin"` (นอกเหนือจาก
+"แพทย์"/"พยาบาล") ตาม NFR-19; ไม่มี entity ใหม่ถูกเพิ่มสำหรับฟีเจอร์ที่ 7 ทั้งหมด (FR-11–FR-14 ใช้
+entity `User`/`PatientAssignment` เดิม, FR-15 ใช้ entity `Patient`/`NcdDiagnosis`/`LabResult`/
+`ComplicationRiskAssessment`/`RiskFinding` เดิมทั้งหมดผ่านข้อยกเว้น NFR-19)
 
 **อัปเดต 2026-09-24 (รอบ sync ที่ห้า) — สอดคล้องกับ `[[technology-stack]]` รอบสาม (decision area
 7 แก้ไข + 13-19 ใหม่):** แก้ไขทุกจุดในหัวข้อ [[#ผู้ใช้ (User)|User]] ที่เคยอ้างอิง "เก็บ role/isActive
@@ -64,13 +93,13 @@ subcollection ตามความเหมาะสม)** ไม่ใช่�
 
 | Entity | คำอธิบายสั้น | รหัส FR/NFR ที่เกี่ยวข้อง |
 | --- | --- | --- |
-| ผู้ใช้ (User) | แพทย์/พยาบาลผู้ดูแลผู้ป่วย NCD ที่เข้าใช้งานระบบ (รวมบัญชีที่สมัครแล้วแต่ยังรออนุมัติ) | [[backlog#สูง (MVP)\|FR-05]], [[backlog#สูง (MVP)\|FR-07]], [[backlog#สูง (MVP)\|FR-08]], [[backlog#สูง (MVP)\|FR-09]], [[backlog#สูง (MVP)\|FR-10]], [[backlog#Non-Functional Requirements\|NFR-02]], [[backlog#Non-Functional Requirements\|NFR-17]], [[backlog#Non-Functional Requirements\|NFR-18]] |
-| ผู้ป่วย (Patient) | ผู้ป่วย NCD รายบุคคลที่ถูกดูประวัติ/ผลตรวจ/ผลวิเคราะห์ความเสี่ยง | [[backlog#สูง (MVP)\|FR-01]], [[backlog#สูง (MVP)\|FR-02]], [[backlog#สูง (MVP)\|FR-03]], [[backlog#สูง (MVP)\|FR-05]], [[backlog#สูง (MVP)\|FR-06]] |
-| การมอบหมายผู้ป่วยในความดูแล (PatientAssignment) | ความสัมพันธ์ระดับรายผู้ป่วยระหว่างแพทย์/พยาบาลผู้ดูแลกับผู้ป่วยแต่ละราย ใช้กรองรายชื่อและตรวจสิทธิ์ระดับรายผู้ป่วย | [[backlog#สูง (MVP)\|FR-05]], [[backlog#Non-Functional Requirements\|NFR-02]] |
+| ผู้ใช้ (User) | แพทย์/พยาบาลผู้ดูแลผู้ป่วย NCD หรือ Admin ที่เข้าใช้งานระบบ (รวมบัญชีที่สมัครแล้วแต่ยังรออนุมัติ) | [[backlog#สูง (MVP)\|FR-05]], [[backlog#สูง (MVP)\|FR-07]], [[backlog#สูง (MVP)\|FR-08]], [[backlog#สูง (MVP)\|FR-09]], [[backlog#สูง (MVP)\|FR-10]], [[backlog#สูง (MVP)\|FR-11]], [[backlog#สูง (MVP)\|FR-12]], [[backlog#สูง (MVP)\|FR-13]], [[backlog#Non-Functional Requirements\|NFR-02]], [[backlog#Non-Functional Requirements\|NFR-17]], [[backlog#Non-Functional Requirements\|NFR-18]], [[backlog#Non-Functional Requirements\|NFR-19]] |
+| ผู้ป่วย (Patient) | ผู้ป่วย NCD รายบุคคลที่ถูกดูประวัติ/ผลตรวจ/ผลวิเคราะห์ความเสี่ยง (แพทย์/พยาบาลเฉพาะที่อยู่ในความดูแล, Admin ดูได้ทุกราย) | [[backlog#สูง (MVP)\|FR-01]], [[backlog#สูง (MVP)\|FR-02]], [[backlog#สูง (MVP)\|FR-03]], [[backlog#สูง (MVP)\|FR-05]], [[backlog#สูง (MVP)\|FR-06]], [[backlog#สูง (MVP)\|FR-15]] |
+| การมอบหมายผู้ป่วยในความดูแล (PatientAssignment) | ความสัมพันธ์ระดับรายผู้ป่วยระหว่างแพทย์/พยาบาลผู้ดูแลกับผู้ป่วยแต่ละราย ใช้กรองรายชื่อและตรวจสิทธิ์ระดับรายผู้ป่วย จัดการโดย Admin (FR-14) | [[backlog#สูง (MVP)\|FR-05]], [[backlog#สูง (MVP)\|FR-14]], [[backlog#Non-Functional Requirements\|NFR-02]] |
 | ประวัติการวินิจฉัยโรค NCD (NcdDiagnosis) | บันทึกการวินิจฉัยโรค NCD แต่ละครั้งของผู้ป่วย | [[backlog#สูง (MVP)\|FR-01]] |
 | ผลตรวจ lab (LabResult) | ผลตรวจ lab มาตรฐานแต่ละครั้งของผู้ป่วย | [[backlog#สูง (MVP)\|FR-02]] |
 | threshold มาตรฐานของโรคแทรกซ้อน (ComplicationRiskThreshold) | เกณฑ์ค่า lab มาตรฐานที่ใช้ตัดสินความเสี่ยงโรคแทรกซ้อนแต่ละชนิด | [[backlog#สูง (MVP)\|FR-03]], [[backlog#Non-Functional Requirements\|NFR-11]] |
-| ผลการประเมินความเสี่ยงโรคแทรกซ้อน (ComplicationRiskAssessment) | ผลรวมของการประเมินความเสี่ยงหนึ่งครั้งของผู้ป่วยรายหนึ่ง | [[backlog#สูง (MVP)\|FR-03]], [[backlog#สูง (MVP)\|FR-04]] |
+| ผลการประเมินความเสี่ยงโรคแทรกซ้อน (ComplicationRiskAssessment) | ผลรวมของการประเมินความเสี่ยงหนึ่งครั้งของผู้ป่วยรายหนึ่ง รวมถึงผลการยืนยัน/แก้ไข (override) โดยแพทย์/พยาบาล | [[backlog#สูง (MVP)\|FR-03]], [[backlog#สูง (MVP)\|FR-04]], [[backlog#สูง (MVP)\|FR-16]] |
 | รายละเอียดผลการประเมินต่อโรคแทรกซ้อน (RiskFinding) | ผลลัพธ์ของการประเมินหนึ่งรายการ (หนึ่งโรคแทรกซ้อน) ภายใต้การประเมินหนึ่งครั้ง | [[backlog#สูง (MVP)\|FR-03]], [[backlog#สูง (MVP)\|FR-04]], [[backlog#Non-Functional Requirements\|NFR-13]] |
 | บันทึกการเข้าถึงข้อมูล (AuditLogRecord) | ร่องรอยการเข้าถึง/ดู/แก้ไขข้อมูลส่วนบุคคลหรือข้อมูลสุขภาพของผู้ป่วยแต่ละครั้ง เก็บใน [[architecture#ที่เก็บบันทึกการเข้าถึง (Audit Log Store)\|Audit Log Store]] | [[backlog#Non-Functional Requirements\|NFR-06]], [[backlog#Non-Functional Requirements\|NFR-08]] |
 | คำขอใช้สิทธิของเจ้าของข้อมูล (DataSubjectRequest) | คำขอใช้สิทธิของผู้ป่วย (เข้าถึง/สำเนา/แก้ไข/ลบ/คัดค้าน) ที่เจ้าหน้าที่ดำเนินการแทน | [[backlog#Non-Functional Requirements\|NFR-07]] |
@@ -81,11 +110,13 @@ subcollection ตามความเหมาะสม)** ไม่ใช่�
 ### ผู้ใช้ (User)
 
 รองรับ [[architecture#บริการฝั่งเซิร์ฟเวอร์ (Backend Service)|Access Control]] ตาม
-[[backlog#Non-Functional Requirements|NFR-02]] และตั้งแต่รอบ sync ที่สี่ (2026-09-23) ยังรองรับ
+[[backlog#Non-Functional Requirements|NFR-02]], ตั้งแต่รอบ sync ที่สี่ (2026-09-23) ยังรองรับ
 ฟีเจอร์ที่ 6 (Authentication) — [[backlog#สูง (MVP)|FR-07]]–[[backlog#สูง (MVP)|FR-10]],
-[[backlog#Non-Functional Requirements|NFR-17]], [[backlog#Non-Functional Requirements|NFR-18]] —
-ระเบียนหนึ่งใบครอบคลุมทั้งบัญชีที่อนุมัติแล้วและบัญชีที่เพิ่งสมัครแต่ยังรออนุมัติ (ไม่มี entity แยก
-สำหรับสถานะ "รออนุมัติ")
+[[backlog#Non-Functional Requirements|NFR-17]], [[backlog#Non-Functional Requirements|NFR-18]] และ
+ตั้งแต่รอบ sync ที่หก (2026-09-24) ยังรองรับฟีเจอร์ที่ 7 (Admin) —
+[[backlog#สูง (MVP)|FR-11]]–[[backlog#สูง (MVP)|FR-13]], [[backlog#Non-Functional Requirements|NFR-19]]
+— ระเบียนหนึ่งใบครอบคลุมทั้งบัญชีที่อนุมัติแล้ว บัญชีที่เพิ่งสมัครแต่ยังรออนุมัติ และบัญชี Admin
+(ไม่มี entity แยกสำหรับสถานะ "รออนุมัติ" หรือสำหรับบทบาท Admin)
 
 | Attribute | ชนิดข้อมูลเชิงตรรกะ | จำเป็นต้องมีค่า | คำอธิบาย |
 | --- | --- | --- | --- |
@@ -94,7 +125,7 @@ subcollection ตามความเหมาะสม)** ไม่ใช่�
 | อีเมล | ข้อความ (รูปแบบอีเมล, ไม่ซ้ำกันทั้งระบบ) | จำเป็น | ใช้เข้าสู่ระบบ (FR-07), สมัครบัญชี (FR-08) และรับอีเมลยืนยันตัวตน/รีเซ็ตรหัสผ่าน (FR-09, FR-10) — **ใหม่จากฟีเจอร์ที่ 6** |
 | รหัสผ่านที่จัดเก็บ | ข้อความ (hashed) | จำเป็น | ต้องเป็นไปตามนโยบายรหัสผ่านขั้นต่ำก่อนจัดเก็บเสมอ (ความยาว ≥ 8 ตัวอักษร มีทั้งตัวอักษรและตัวเลข — NFR-17) — **ใหม่จากฟีเจอร์ที่ 6** |
 | สถานะการยืนยันอีเมล | จริง/เท็จ | จำเป็น | จริง = ยืนยันความเป็นเจ้าของอีเมลแล้ว (FR-09) — ค่าเริ่มต้นเป็นเท็จทันทีที่สมัครบัญชี (FR-08) จนกว่าจะเปิดลิงก์ยืนยันจากอีเมล ต้องเป็นจริงก่อนจึงจะใช้งานฟีเจอร์อื่นได้ (แม้ `สถานะการใช้งานบัญชี` และ `บทบาท` จะถูกอนุมัติแล้วก็ตาม) — **ใหม่จากฟีเจอร์ที่ 6** |
-| บทบาท | ข้อความ (ค่าที่กำหนดไว้ล่วงหน้า: "แพทย์", "พยาบาล") | **ไม่บังคับ** (เปลี่ยนจาก "จำเป็น" ในรอบ sync ที่สี่) | ใช้ตัดสินสิทธิ์การเข้าถึงตาม NFR-02 — เฉพาะสองบทบาทนี้เท่านั้นที่เข้าถึงข้อมูลผู้ป่วยได้ **ไม่มีค่าโดยดีฟอลต์ทันทีที่สมัครบัญชีสำเร็จ (FR-08)** จนกว่าผู้ดูแลระบบจะกำหนดให้ผ่าน Firebase Console/Firestore โดยตรง (ยืนยันโดยผู้ใช้แล้ว — ไม่มีหน้าจออนุมัติในระบบสำหรับ MVP) บัญชีที่ยังไม่มีบทบาทนี้จะไม่ผ่านการตรวจสอบระดับบทบาทของ [[api-spec#Operation ร่วม — ตรวจสอบสิทธิ์การเข้าถึงข้อมูลผู้ป่วย (Access Control)\|Operation ร่วม ตรวจสอบสิทธิ์การเข้าถึงข้อมูลผู้ป่วย]] โดยอัตโนมัติ (ค่าว่าง/ไม่มีค่า ไม่ใช่ "แพทย์" หรือ "พยาบาล") |
+| บทบาท | ข้อความ (ค่าที่กำหนดไว้ล่วงหน้า: "แพทย์", "พยาบาล", "admin" — **เพิ่ม `"admin"` ในรอบ sync ที่หก ตามฟีเจอร์ที่ 7**) | **ไม่บังคับ** (เปลี่ยนจาก "จำเป็น" ในรอบ sync ที่สี่) | ใช้ตัดสินสิทธิ์การเข้าถึงตาม NFR-02 — สามบทบาทนี้เท่านั้นที่มีความหมายในระบบ (`"แพทย์"`/`"พยาบาล"` เข้าถึงข้อมูลผู้ป่วยเฉพาะที่อยู่ในความดูแลตาม PatientAssignment, `"admin"` เข้าถึงข้อมูลผู้ป่วยทุกรายแบบอ่านอย่างเดียวได้โดยไม่ต้องมี PatientAssignment ตามข้อยกเว้น [[backlog#Non-Functional Requirements\|NFR-19]] แต่ไม่มีสิทธิ์ยืนยัน/แก้ไขผลประเมินความเสี่ยงตาม FR-16 และไม่มีสิทธิ์แก้ไขข้อมูลทางคลินิกใดๆ) **ไม่มีค่าโดยดีฟอลต์ทันทีที่สมัครบัญชีสำเร็จ (FR-08)** จนกว่า **Admin จะอนุมัติผ่านหน้าจอในระบบ (FR-11 — แก้ไขในรอบ sync ที่หก แทนที่กลไกเดิมที่เคยเป็นการแก้ไข Firebase Console/Firestore โดยตรง)** โดย Operation อนุมัติ (FR-11) กำหนดได้เฉพาะค่า `"แพทย์"`/`"พยาบาล"` เท่านั้น (ไม่ใช่ `"admin"` — บัญชี Admin คนแรก/bootstrap ยังคงตั้งผ่าน Firebase Console/Firestore โดยตรง อยู่นอกขอบเขต) ส่วนการเปลี่ยน role ภายหลัง (FR-12) กำหนดเป็นค่าใดในสามค่านี้ก็ได้ ยกเว้นห้าม Admin เปลี่ยน role ของ**ตนเอง**โดยเด็ดขาด (ดู [[api-spec#Operation 12 — เปลี่ยนบทบาท (Role) ของผู้ใช้งานที่มีอยู่\|Operation 12 ใน api-spec]]) — บัญชีที่ยังไม่มีบทบาทนี้จะไม่ผ่านการตรวจสอบระดับบทบาทของ [[api-spec#Operation ร่วม — ตรวจสอบสิทธิ์การเข้าถึงข้อมูลผู้ป่วย (Access Control)\|Operation ร่วม ตรวจสอบสิทธิ์การเข้าถึงข้อมูลผู้ป่วย]] โดยอัตโนมัติ (ค่าว่าง/ไม่มีค่า ไม่ใช่ค่าที่กำหนดไว้ล่วงหน้าทั้งสาม) |
 | สถานะการใช้งานบัญชี | จริง/เท็จ | จำเป็น | จริง = ใช้งานได้, เท็จ = ถูกระงับสิทธิ์ (NFR-02) — **ค่าเริ่มต้นเป็นเท็จโดยอัตโนมัติทันทีที่สมัครบัญชีสำเร็จ (FR-08)** จนกว่าผู้ดูแลระบบจะเปลี่ยนเป็นจริงพร้อมกำหนด `บทบาท` ผ่าน Firebase Console/Firestore (ยืนยันโดยผู้ใช้แล้ว) |
 
 **Firestore Technical Binding (ตาม [[technology-stack#7. Authentication/Authorization — Firebase Authentication (ไม่ใช้ Custom Claims เก็บบทบาท — แก้ไขในรอบสาม 2026-09-24)|decision area 7 ใน technology-stack]] และ [[technology-stack#18. การ Sync role/isActive ระหว่าง Firestore กับ Custom Claims (ฟีเจอร์ที่ 6) — ไม่ Sync, Firestore เป็น Source of Truth เดียว|decision area 18]] — แก้ไข 2026-09-24: ไม่ใช้ Custom Claims เก็บบทบาท/isActive อีกต่อไป):**
@@ -103,8 +134,9 @@ subcollection ตามความเหมาะสม)** ไม่ใช่�
   โดยตรง** (ไม่ใช่ id แยกต่างหาก) เพื่อให้ Security Rules อ้างอิง `request.auth.uid` ตรงกับ document
   ID ได้ทันทีโดยไม่ต้อง query
 - **Field mapping:** `ชื่อ-นามสกุล` → `displayName` (string), `บทบาท` → `role` (string, ค่าที่
-  กำหนดไว้ล่วงหน้า `"แพทย์"` \| `"พยาบาล"`, **ไม่มี field นี้เลย/เป็น `null` เมื่อบัญชียังไม่ถูกอนุมัติ**),
-  `สถานะการใช้งานบัญชี` → `isActive` (boolean, ดีฟอลต์ `false` ตอนสร้างเอกสาร)
+  กำหนดไว้ล่วงหน้า `"แพทย์"` \| `"พยาบาล"` \| `"admin"` — **เพิ่ม `"admin"` ในรอบ sync ที่หก**, **ไม่มี
+  field นี้เลย/เป็น `null` เมื่อบัญชียังไม่ถูกอนุมัติ**), `สถานะการใช้งานบัญชี` → `isActive` (boolean,
+  ดีฟอลต์ `false` ตอนสร้างเอกสาร)
 - **`อีเมล`/`รหัสผ่านที่จัดเก็บ`/`สถานะการยืนยันอีเมล` — ไม่มี field ตรงกันใน Firestore document นี้
   (สำคัญ — ใหม่จากฟีเจอร์ที่ 6):** ทั้งสาม attribute ข้างต้นเป็นแนวคิดเชิง logical ของ "บัญชีผู้ใช้"
   แต่จัดเก็บจริงโดย **Firebase Authentication** (ไม่ใช่ Cloud Firestore) ตามที่
@@ -173,6 +205,10 @@ subcollection ตามความเหมาะสม)** ไม่ใช่�
   truth)** ของ `hn`/`fullName`/`dataSource` ที่ Cloud Functions (Operation 1-3) อ่านโดยตรงผ่าน
   Admin SDK เสมอเมื่อรู้ `patientId` แล้ว — field `hn`/`fullName` ที่ปรากฏซ้ำใน `patientAssignments`
   เป็นสำเนา denormalized สำหรับการแสดงรายชื่อเท่านั้น (ดูเหตุผลและกฎ sync ที่หัวข้อ PatientAssignment)
+  — **ใหม่ในรอบ sync ที่หก:** ต้องมี single-field index `(hn ASC)` (Firestore สร้างอัตโนมัติ) เพื่อ
+  รองรับ [[api-spec#Operation 15 — ค้นหา/แสดงรายชื่อผู้ป่วยทั้งหมดในระบบ (สำหรับ Admin)|Operation 15]]
+  ที่ Admin ค้นหาผู้ป่วยด้วย HN โดยตรงบน `patients` (ไม่ผ่าน `patientAssignments` เพราะ Admin ไม่มี
+  ระเบียนในนั้น)
 
 ### การมอบหมายผู้ป่วยในความดูแล (PatientAssignment)
 
@@ -229,17 +265,25 @@ subcollection ตามความเหมาะสม)** ไม่ใช่�
      ผู้ป่วย (ดู trade-off ด้านบน)
 - **Firestore Security Rules (Operation 0 — ตาม [[technology-stack#3. สถาปัตยกรรม Backend Service — Firebase-native (ไม่มี Backend Service แยกแบบดั้งเดิม)|decision area 3]] และ [[technology-stack#19. การตรวจสอบ `emailVerified` ซ้ำฝั่ง Backend (FR-09, ฟีเจอร์ที่ 6) — ตรวจทั้ง Cloud Functions และ Security Rules|decision area 19 — เพิ่มเงื่อนไข `email_verified` ในรอบ 2026-09-24]]):**
   `allow list, get: if request.auth != null && request.auth.token.email_verified == true && resource.data.userId == request.auth.uid && get(/databases/$(database)/documents/users/$(request.auth.uid)).data.role in ['แพทย์','พยาบาล'] && get(/databases/$(database)/documents/users/$(request.auth.uid)).data.isActive == true;`
-  `allow create, update, delete: if false;` (Client ไม่มีสิทธิ์เขียน `patientAssignments` โดยตรงเลย
-  ในขอบเขต MVP นี้ เพราะยังไม่มี operation สำหรับสร้าง/แก้ไข assignment ตาม "ประเด็นรอตัดสินใจ") —
-  เงื่อนไข `request.auth.token.email_verified == true` เป็นการเพิ่มใหม่ในรอบ 2026-09-24 เพื่อปิด
-  ช่องว่างที่ Client ถูกดัดแปลง/บั๊กข้ามการตรวจสอบ `emailVerified` เองแล้วเรียก Operation 0 ตรง (อ่านค่า
-  จาก Firebase ID token ที่ verify อยู่แล้ว ไม่ต้องเพิ่ม Firestore read)
+  `allow create, update, delete: if false;` (Client — รวมถึง Admin — ไม่มีสิทธิ์เขียน
+  `patientAssignments` โดยตรงเลยไม่ว่ากรณีใด) — เงื่อนไข `request.auth.token.email_verified == true`
+  เป็นการเพิ่มใหม่ในรอบ 2026-09-24 เพื่อปิดช่องว่างที่ Client ถูกดัดแปลง/บั๊กข้ามการตรวจสอบ
+  `emailVerified` เองแล้วเรียก Operation 0 ตรง (อ่านค่าจาก Firebase ID token ที่ verify อยู่แล้ว ไม่ต้อง
+  เพิ่ม Firestore read)
+- **การสร้าง/ลบระเบียนจริง (แก้ไข 2026-09-24 — ปิดประเด็นรอตัดสินใจเดิม):** เดิมเอกสารนี้ระบุว่า "ยังไม่มี
+  operation สำหรับสร้าง/แก้ไข/ยกเลิก PatientAssignment เพราะกลไก/ผู้กำหนดการมอบหมายยังไม่ถูกยืนยัน" —
+  ตาม [[20260924-01-admin-role-account-management#ความต้องการเชิงฟังก์ชัน (Functional Requirements)|FR-14]]
+  ปิดประเด็นนี้แล้ว: **Admin เป็นผู้กำหนดการมอบหมาย/ยกเลิกการมอบหมายผู้ป่วยให้แพทย์/พยาบาลโดยตรงผ่าน
+  หน้าจอในระบบ** เขียน (create)/ลบ (delete) เอกสาร `patientAssignments/{userId}_{patientId}` ผ่าน
+  **Firebase Admin SDK เท่านั้น** (bypass Security Rules ข้างต้น) ดู
+  [[api-spec#Operation 14 — จัดการการมอบหมายผู้ป่วย (Patient Assignment)|Operation 14 ใน api-spec]] —
+  รูปแบบยังคงเป็น **existence-based** เหมือนเดิม (มีระเบียน = อยู่ในความดูแล, ไม่มีระเบียน = ไม่อยู่ใน
+  ความดูแล ไม่มีสถานะ active/inactive แยกต่างหาก) "ยกเลิกการมอบหมาย" ตาม FR-14 หมายถึงการ**ลบ**เอกสารนี้
+  ทิ้งโดยตรง ไม่ใช่การเปลี่ยนสถานะ
 
-**หมายเหตุ:** รูปแบบปัจจุบันถือว่าการมีระเบียน PatientAssignment เชื่อมโยงผู้ใช้กับผู้ป่วยรายใด
-เท่ากับผู้ป่วยรายนั้น "อยู่ในความดูแล" ของผู้ใช้คนนั้น (แบบ existence-based ไม่มีสถานะ
-active/inactive แยกต่างหาก) เพราะกลไก/ผู้กำหนดการมอบหมาย (assignment) และความเป็นไปได้ที่จะสิ้นสุด
-การมอบหมายยังไม่ถูกยืนยันจากผู้ใช้ (ดูหัวข้อ "ประเด็นรอตัดสินใจ" ท้ายเอกสารนี้ และ
-[[architecture#ประเด็นรอตัดสินใจอื่น (ไม่เกี่ยวกับ technology stack)|ประเด็นรอตัดสินใจอื่นใน architecture]])
+**หมายเหตุ:** การมีระเบียน PatientAssignment เชื่อมโยงผู้ใช้กับผู้ป่วยรายใด เท่ากับผู้ป่วยรายนั้น
+"อยู่ในความดูแล" ของผู้ใช้คนนั้น (แบบ existence-based) — กลไก/ผู้กำหนดการมอบหมายถูกยืนยันแล้วว่าคือ Admin
+ผ่าน FR-14 (ดูด้านบน) จึงปิดประเด็นรอตัดสินใจเดิมส่วนนี้แล้ว
 
 ### ประวัติการวินิจฉัยโรค NCD (NcdDiagnosis)
 
@@ -341,7 +385,9 @@ spec ต้นทางว่าต้องการ)
 
 ### ผลการประเมินความเสี่ยงโรคแทรกซ้อน (ComplicationRiskAssessment)
 
-รองรับ [[backlog#สูง (MVP)|FR-03]], [[backlog#สูง (MVP)|FR-04]]
+รองรับ [[backlog#สูง (MVP)|FR-03]], [[backlog#สูง (MVP)|FR-04]] และตั้งแต่รอบ sync ที่หก (2026-09-24)
+ยังรองรับ [[backlog#สูง (MVP)|FR-16]] (ยืนยัน/แก้ไขผลการประเมินความเสี่ยงโดยแพทย์/พยาบาล — ดู
+attribute ใหม่ด้านล่าง)
 
 | Attribute | ชนิดข้อมูลเชิงตรรกะ | จำเป็นต้องมีค่า | คำอธิบาย |
 | --- | --- | --- | --- |
@@ -349,7 +395,12 @@ spec ต้นทางว่าต้องการ)
 | ผู้ป่วย | อ้างอิงถึง Entity ผู้ป่วย (Patient) | จำเป็น | ผู้ป่วยที่ถูกประเมิน |
 | ผู้ใช้ที่ร้องขอการประเมิน | อ้างอิงถึง Entity ผู้ใช้ (User) | จำเป็น | ผู้ใช้ที่ผ่านการตรวจสิทธิ์ (NFR-02) และเป็นผู้เรียกดูผลนี้ |
 | วันที่-เวลาในการประเมิน | วันที่-เวลา | จำเป็น | เวลาที่ Risk Rule Engine ประมวลผล (FR-03) |
-| พบความเสี่ยงหรือไม่ | จริง/เท็จ | จำเป็น | จริง = พบความเสี่ยงอย่างน้อยหนึ่งโรคแทรกซ้อน (แสดง flag ตาม FR-04), เท็จ = ไม่พบความเสี่ยงเพิ่มเติม |
+| พบความเสี่ยงหรือไม่ | จริง/เท็จ | จำเป็น | **ผลลัพธ์ที่ระบบประเมินอัตโนมัติ (immutable)** — จริง = พบความเสี่ยงอย่างน้อยหนึ่งโรคแทรกซ้อน (แสดง flag ตาม FR-04), เท็จ = ไม่พบความเสี่ยงเพิ่มเติม — **ค่านี้ต้องไม่ถูกเขียนทับเมื่อมีการยืนยัน/แก้ไข (FR-16) เพื่อคง traceability ของผลอัตโนมัติดั้งเดิมไว้เสมอ (ตาม NFR-06) — ดู attribute ใหม่ด้านล่างสำหรับผลหลังยืนยัน/แก้ไข** |
+| สถานะการยืนยัน/แก้ไข | ข้อความ (ค่าที่กำหนดไว้ล่วงหน้า: "ยังไม่ดำเนินการ", "ยืนยันผลเดิม", "แก้ไขแล้ว") | จำเป็น (ดีฟอลต์ "ยังไม่ดำเนินการ") | **ใหม่ในรอบ sync ที่หก (FR-16)** — ระบุว่าแพทย์/พยาบาลผู้ดูแลผู้ป่วยรายนี้ได้ยืนยัน/แก้ไขผลการประเมินนี้แล้วหรือไม่ (ยืนยันโดยผู้ใช้ให้ mutate in place ลงใน entity นี้โดยตรง แทนการสร้าง entity ประวัติแยก) |
+| พบความเสี่ยงหรือไม่ (หลังยืนยัน/แก้ไข) | จริง/เท็จ | ไม่บังคับ (มีค่าเมื่อ `สถานะการยืนยัน/แก้ไข` ไม่ใช่ "ยังไม่ดำเนินการ") | **ใหม่ในรอบ sync ที่หก (FR-16)** — ค่าที่ Client แสดงเป็นผลลัพธ์ล่าสุดหลังแพทย์/พยาบาลยืนยัน/แก้ไข (เมื่อ "ยืนยันผลเดิม" ค่านี้เท่ากับ `พบความเสี่ยงหรือไม่` ที่ระบบประเมินอัตโนมัติเสมอ; เมื่อ "แก้ไขแล้ว" ค่านี้คือผลที่แพทย์/พยาบาลกำหนดใหม่ ซึ่งอาจต่างจากผลอัตโนมัติ) |
+| ผู้ยืนยัน/แก้ไขผลการประเมิน | อ้างอิงถึง Entity ผู้ใช้ (User) | ไม่บังคับ (มีค่าเมื่อ `สถานะการยืนยัน/แก้ไข` ไม่ใช่ "ยังไม่ดำเนินการ") | **ใหม่ในรอบ sync ที่หก (FR-16)** — แพทย์/พยาบาลผู้ดูแลผู้ป่วยรายนี้ที่ดำเนินการยืนยัน/แก้ไข (ต้องเป็นผู้ใช้ที่มี PatientAssignment เชื่อมโยงกับผู้ป่วยรายนี้ตาม NFR-02 — ไม่ใช่ Admin เพราะ FR-16 ไม่ใช่สิทธิ์ของ Admin) |
+| วันที่-เวลาที่ยืนยัน/แก้ไข | วันที่-เวลา | ไม่บังคับ (มีค่าเมื่อ `สถานะการยืนยัน/แก้ไข` ไม่ใช่ "ยังไม่ดำเนินการ") | **ใหม่ในรอบ sync ที่หก (FR-16)** |
+| เหตุผลการแก้ไข | ข้อความ | ไม่บังคับ (**บังคับกรอกเมื่อ `สถานะการยืนยัน/แก้ไข` = "แก้ไขแล้ว"** — เป็น business rule ที่ตรวจสอบใน [[api-spec]] ไม่ใช่ attribute-level constraint) | **ใหม่ในรอบ sync ที่หก (FR-16)** — ไม่บังคับกรอกกรณี "ยืนยันผลเดิม" |
 
 **Firestore Technical Binding:**
 
@@ -360,12 +411,20 @@ spec ต้นทางว่าต้องการ)
   [[technology-stack#4. Database Engine ของ Primary Data Store — Cloud Firestore (Native mode)|decision area 4 ใน technology-stack]]
 - **Field mapping:** `ผู้ป่วย` → `patientId` (string, reference), `ผู้ใช้ที่ร้องขอการประเมิน` →
   `requestedByUserId` (string, reference), `วันที่-เวลาในการประเมิน` → `assessedAt` (timestamp),
-  `พบความเสี่ยงหรือไม่` → `hasRisk` (boolean)
-- **การเข้าถึง:** สร้าง/อ่านเฉพาะผ่าน Cloud Functions (Operation 3) ด้วย Admin SDK เท่านั้น —
-  Security Rules: `allow read, write: if false;` สำหรับ Client ทั้งหมด
+  `พบความเสี่ยงหรือไม่` → `hasRisk` (boolean, immutable หลังสร้าง), `สถานะการยืนยัน/แก้ไข` →
+  `overrideStatus` (string, ค่าที่กำหนดไว้ล่วงหน้า, ดีฟอลต์ `"ยังไม่ดำเนินการ"` ตอนสร้างเอกสาร —
+  **ใหม่ FR-16**), `พบความเสี่ยงหรือไม่ (หลังยืนยัน/แก้ไข)` → `overriddenHasRisk` (boolean, optional —
+  **ใหม่ FR-16**), `ผู้ยืนยัน/แก้ไขผลการประเมิน` → `overriddenByUserId` (string, reference, optional —
+  **ใหม่ FR-16**), `วันที่-เวลาที่ยืนยัน/แก้ไข` → `overriddenAt` (timestamp, optional — **ใหม่ FR-16**),
+  `เหตุผลการแก้ไข` → `overrideReason` (string, optional — **ใหม่ FR-16**)
+- **การเข้าถึง:** สร้าง/อ่านเฉพาะผ่าน Cloud Functions (Operation 3) ด้วย Admin SDK เท่านั้น — **แก้ไข
+  field `overrideStatus`/`overriddenHasRisk`/`overriddenByUserId`/`overriddenAt`/`overrideReason`
+  เฉพาะผ่าน Cloud Functions (Operation 16 — FR-16) ด้วย Admin SDK เท่านั้นเช่นกัน** — Security Rules:
+  `allow read, write: if false;` สำหรับ Client ทั้งหมด (ไม่เปลี่ยนแปลง แม้เพิ่ม attribute ใหม่)
 - **Composite index:** `(patientId ASC, assessedAt DESC)` — รองรับกรณีต้องดึงผลการประเมินล่าสุดของ
   ผู้ป่วยรายหนึ่ง (Operation 3 อาจสร้างระเบียนใหม่ทุกครั้งที่เรียกดู หรือ cache ผลล่าสุด — รายละเอียด
-  นี้กำหนดต่อใน `detailed-design/`)
+  นี้กำหนดต่อใน `detailed-design/`) — ไม่ต้องเพิ่ม composite index ใหม่สำหรับ FR-16 เพราะ Operation 16
+  อ่าน/แก้ไขด้วย `assessmentId` (document ID) โดยตรงเสมอ
 
 ### รายละเอียดผลการประเมินต่อโรคแทรกซ้อน (RiskFinding)
 
@@ -422,8 +481,10 @@ ComplicationRiskAssessment หนึ่งรายการต่อโรค�
 ### บันทึกการเข้าถึงข้อมูล (AuditLogRecord)
 
 รองรับ [[architecture#บริการฝั่งเซิร์ฟเวอร์ (Backend Service)|Audit Logging \& Accountability]] ใน
-architecture ตาม [[backlog#Non-Functional Requirements|NFR-06]] และให้ข้อมูลสนับสนุนการสืบสวน/แจ้งเหตุ
-ละเมิดตาม [[backlog#Non-Functional Requirements|NFR-08]] — เก็บใน
+architecture ตาม [[backlog#Non-Functional Requirements|NFR-06]], ให้ข้อมูลสนับสนุนการสืบสวน/แจ้งเหตุ
+ละเมิดตาม [[backlog#Non-Functional Requirements|NFR-08]] และตั้งแต่รอบ sync ที่หก (2026-09-24) ยัง
+รองรับ [[backlog#Non-Functional Requirements|NFR-20]] (audit log แบบ fail-safe สำหรับการเข้าถึงข้อมูล
+ผู้ป่วยของ Admin) — เก็บใน
 [[architecture#ที่เก็บบันทึกการเข้าถึง (Audit Log Store)|Audit Log Store]] ซึ่งเป็น component แยกจาก
 Primary Data Store ในระดับ logical
 
@@ -435,6 +496,7 @@ Primary Data Store ในระดับ logical
 | การดำเนินการ | ข้อความ (ค่าที่กำหนดไว้ล่วงหน้า: "ค้นหา", "ดูข้อมูลผู้ป่วย", "แก้ไขข้อมูลตามคำขอสิทธิ", "ลบข้อมูลตามคำขอสิทธิ", "สกัดข้อมูลตามคำขอสิทธิ", "คัดค้านการประมวลผลตามคำขอสิทธิ") | จำเป็น | ระบุว่าผ่านการดำเนินการใด ตามที่ NFR-06 กำหนด — สอดคล้องกับหมวดที่ระบุใน [[architecture#บริการฝั่งเซิร์ฟเวอร์ (Backend Service)\|architecture]] ("ค้นหา/ดู/แก้ไข/สกัดข้อมูลตามคำขอสิทธิ") ขยายเพิ่ม "ลบ" และ "คัดค้านการประมวลผล" ให้ครบตามสิทธิ 5 ประเภทใน NFR-07 ("ดูข้อมูลผู้ป่วย" ครอบคลุมทั้งประวัติวินิจฉัย/ผลตรวจ lab/ผลวิเคราะห์ความเสี่ยงในการเข้าถึงหนึ่งครั้ง เพราะระบบบันทึก audit log ครั้งเดียวต่อการเลือกผู้ป่วยหนึ่งราย ตาม [[architecture#Data Flow Diagram — Journey หลัก\|sequence diagram ของ architecture]]) |
 | วันที่-เวลาที่เข้าถึง | วันที่-เวลา | จำเป็น | ใช้สืบค้น audit trail (NFR-08) |
 | คำขอสิทธิที่เกี่ยวข้อง | อ้างอิงถึง Entity คำขอใช้สิทธิของเจ้าของข้อมูล (DataSubjectRequest) | ไม่บังคับ | มีค่าเฉพาะเมื่อการดำเนินการเกิดจากคำขอสิทธิของเจ้าของข้อมูล (NFR-07) ไม่ใช่การเข้าถึงข้อมูลปกติตามฟีเจอร์ที่ 1-3 |
+| เข้าถึงในฐานะ Admin หรือไม่ | จริง/เท็จ | ไม่บังคับ (ดีฟอลต์เท็จ) | **ใหม่ในรอบ sync ที่หก (NFR-20)** — ยืนยันแล้วโดยผู้ใช้ให้ใช้ `AuditLogRecord` เดียวกับ NFR-06 เพิ่ม attribute นี้แทนการแยก collection ใหม่ — จริง = ระเบียนนี้เกิดจากการที่ Admin เข้าถึงข้อมูลผู้ป่วยผ่านข้อยกเว้น NFR-19 (ไม่มี PatientAssignment เป็นของตนเอง — FR-15), เท็จ/ไม่มีค่า = การเข้าถึงปกติของแพทย์/พยาบาลตาม NFR-06 เดิม |
 
 **หมายเหตุ:** ระเบียนใน entity นี้ต้องคงสภาพเดิมตลอดระยะเวลาที่ต้องเก็บรักษาไว้เพื่อการตรวจสอบ
 (append-only/immutable ในเชิงหลักการ — ไม่มี operation ใดในเอกสารนี้/[[api-spec]] ที่แก้ไขหรือลบ
@@ -448,7 +510,9 @@ Primary Data Store ในระดับ logical
 - **Field mapping:** `ผู้ใช้` → `userId` (string, reference), `ผู้ป่วย` → `patientId` (string,
   reference), `การดำเนินการ` → `action` (string, ค่าที่กำหนดไว้ล่วงหน้าตามตารางในเอกสารนี้),
   `วันที่-เวลาที่เข้าถึง` → `accessedAt` (timestamp), `คำขอสิทธิที่เกี่ยวข้อง` → `dataSubjectRequestId`
-  (string, reference, optional)
+  (string, reference, optional), `เข้าถึงในฐานะ Admin หรือไม่` → `isAdminAccess` (boolean, optional,
+  ดีฟอลต์ `false` — **ใหม่ NFR-20**; เขียนเป็น `true` เฉพาะเมื่อ Operation 1/2/3 ถูกเรียกผ่านข้อยกเว้น
+  NFR-19 โดยผู้ใช้ที่มี `role = "admin"`)
 - **กลไกบังคับ append-only/immutable จริง:** เขียนได้เฉพาะผ่าน **Firebase Admin SDK ภายใน Cloud
   Functions เท่านั้น** (bypass Security Rules) — Security Rules:
   `allow read, write: if false;` สำหรับ Client ทั้งหมดในทุก operation (create/update/delete/read)
@@ -537,6 +601,7 @@ Primary Data Store ในระดับ logical
 | ผู้ป่วย (Patient) | ผลตรวจ lab (LabResult) | 1:N | ผู้ป่วยหนึ่งรายมีผลตรวจ lab ย้อนหลังได้หลายครั้ง (FR-02) |
 | ผู้ป่วย (Patient) | ผลการประเมินความเสี่ยงโรคแทรกซ้อน (ComplicationRiskAssessment) | 1:N | ผู้ป่วยหนึ่งรายถูกประเมินความเสี่ยงได้หลายครั้ง (FR-03) |
 | ผู้ใช้ (User) | ผลการประเมินความเสี่ยงโรคแทรกซ้อน (ComplicationRiskAssessment) | 1:N | ผู้ใช้หนึ่งคนร้องขอการประเมินได้หลายครั้ง (NFR-02 traceability) |
+| ผู้ใช้ (User) | ผลการประเมินความเสี่ยงโรคแทรกซ้อน (ComplicationRiskAssessment) | 1:N (optional) | **ใหม่ในรอบ sync ที่หก** — ผู้ใช้หนึ่งคน (แพทย์/พยาบาล) ยืนยัน/แก้ไข (override) ผลการประเมินได้หลายครั้ง ผ่าน field `ผู้ยืนยัน/แก้ไขผลการประเมิน` (FR-16) — เป็นความสัมพันธ์คนละบทบาทกับแถวข้างบน (ร้องขอ vs ยืนยัน/แก้ไข) |
 | ผลการประเมินความเสี่ยงโรคแทรกซ้อน (ComplicationRiskAssessment) | รายละเอียดผลการประเมินต่อโรคแทรกซ้อน (RiskFinding) | 1:N | การประเมินหนึ่งครั้งมีผลย่อยต่อโรคแทรกซ้อนได้หลายรายการ (สูงสุดเท่าจำนวนโรคแทรกซ้อนในขอบเขต) |
 | threshold มาตรฐานของโรคแทรกซ้อน (ComplicationRiskThreshold) | รายละเอียดผลการประเมินต่อโรคแทรกซ้อน (RiskFinding) | 1:N | threshold หนึ่งรายการถูกใช้ประเมินได้หลายครั้ง (ในหลายการประเมิน) |
 | ผลตรวจ lab (LabResult) | รายละเอียดผลการประเมินต่อโรคแทรกซ้อน (RiskFinding) | 1:N | ผลตรวจ lab หนึ่งค่าอาจถูกใช้เปรียบเทียบกับ threshold หลายรายการ |
@@ -551,6 +616,7 @@ Primary Data Store ในระดับ logical
 ```mermaid
 erDiagram
     USER ||--o{ COMPLICATION_RISK_ASSESSMENT : "ร้องขอ"
+    USER ||--o{ COMPLICATION_RISK_ASSESSMENT : "ยืนยัน/แก้ไขผล (FR-16)"
     USER ||--o{ PATIENT_ASSIGNMENT : "ได้รับมอบหมายดูแล"
     PATIENT ||--o{ PATIENT_ASSIGNMENT : "ถูกมอบหมายให้ดูแลโดย"
     PATIENT ||--o{ NCD_DIAGNOSIS : "มีประวัติวินิจฉัย"
@@ -571,8 +637,8 @@ erDiagram
         string อีเมล "ใหม่ฟีเจอร์ที่ 6 (FR-07/08) — จัดเก็บโดย Firebase Authentication"
         string รหัสผ่านที่จัดเก็บ "ใหม่ฟีเจอร์ที่ 6 (FR-08, NFR-17) — hashed, จัดเก็บโดย Firebase Authentication"
         boolean สถานะการยืนยันอีเมล "ใหม่ฟีเจอร์ที่ 6 (FR-09) — จัดเก็บโดย Firebase Authentication"
-        string บทบาท "ไม่บังคับ — ว่างจนกว่าจะอนุมัติ (FR-08)"
-        boolean สถานะการใช้งานบัญชี "ดีฟอลต์เท็จตอนสมัคร (FR-08)"
+        string บทบาท "แพทย์/พยาบาล/admin — ไม่บังคับ, ว่างจนกว่า Admin จะอนุมัติ (FR-08, FR-11, FR-12)"
+        boolean สถานะการใช้งานบัญชี "ดีฟอลต์เท็จตอนสมัคร (FR-08), Admin เปลี่ยนได้ (FR-13)"
     }
     PATIENT {
         string id
@@ -618,7 +684,12 @@ erDiagram
         string ผู้ป่วย_id
         string ผู้ใช้ที่ร้องขอ_id
         datetime วันที่ประเมิน
-        boolean พบความเสี่ยงหรือไม่
+        boolean พบความเสี่ยงหรือไม่ "immutable ผลอัตโนมัติ"
+        string สถานะการยืนยันแก้ไข "ใหม่ FR-16 — ยังไม่ดำเนินการ/ยืนยันผลเดิม/แก้ไขแล้ว"
+        boolean พบความเสี่ยงหรือไม่_หลังแก้ไข "ใหม่ FR-16 — optional"
+        string ผู้ยืนยันแก้ไข_id "ใหม่ FR-16 — optional"
+        datetime วันที่เวลาที่ยืนยันแก้ไข "ใหม่ FR-16 — optional"
+        string เหตุผลการแก้ไข "ใหม่ FR-16 — optional"
     }
     RISK_FINDING {
         string id
@@ -638,6 +709,7 @@ erDiagram
         string การดำเนินการ
         datetime วันที่เวลาที่เข้าถึง
         string คำขอสิทธิที่เกี่ยวข้อง_id
+        boolean เข้าถึงในฐานะAdminหรือไม่ "ใหม่ NFR-20 — optional, ดีฟอลต์เท็จ"
     }
     DATA_SUBJECT_REQUEST {
         string id
@@ -724,6 +796,8 @@ attribute "เข้ารหัสหรือไม่" ในแต่ละ 
 
 - [[#การมอบหมายผู้ป่วยในความดูแล (PatientAssignment)|PatientAssignment]] — `(userId ASC, patientHn ASC)`,
   `(userId ASC, patientFullName ASC)`, `(patientId ASC)` (รองรับ Operation 0)
+- [[#ผู้ป่วย (Patient)|Patient]] — `(hn ASC)` (**ใหม่ในรอบ sync ที่หก** — รองรับ Operation 15 ที่ Admin
+  ค้นหาผู้ป่วยด้วย HN โดยตรงบน `patients`)
 - [[#ประวัติการวินิจฉัยโรค NCD (NcdDiagnosis)|NcdDiagnosis]] — `(patientId ASC, diagnosedAt DESC)`
   (รองรับ Operation 1)
 - [[#ผลตรวจ lab (LabResult)|LabResult]] — `(patientId ASC, testedAt DESC)`,
@@ -756,22 +830,44 @@ entity ด้านบน):
 
 | Collection | กฎที่ต้องทดสอบ | รองรับ |
 | --- | --- | --- |
-| `users` | อ่านได้เฉพาะเอกสารของตนเอง (ใช้เป็นแหล่งตรวจ role/isActive); ต้องมี test case เพิ่มเติมสำหรับฟีเจอร์ที่ 6: บัญชีที่เพิ่งสมัคร (ไม่มี `role`, `isActive=false`) ต้องไม่ผ่านการตรวจสอบระดับบทบาทของ Operation ร่วม Access Control | [[#ผู้ใช้ (User)\|User]] |
-| `patientAssignments` | `allow list, get` เฉพาะเมื่อ `resource.data.userId == request.auth.uid`, `request.auth.token.email_verified == true` และ role/isActive ถูกต้อง; `allow create, update, delete: if false`; ต้องมี test case เพิ่มเติม: บัญชีที่ `isActive=true`/role ถูกต้องครบแต่ `email_verified=false` ต้องถูกปฏิเสธเช่นกัน (เพิ่มใหม่ 2026-09-24 ตาม decision area 19) | [[#การมอบหมายผู้ป่วยในความดูแล (PatientAssignment)\|PatientAssignment]] |
-| `patients`, `ncdDiagnoses`, `labResults`, `complicationRiskThresholds`, `complicationRiskAssessments` (+ subcollection `riskFindings`), `dataSubjectRequests`, `retentionPolicies` | `allow read, write: if false;` สำหรับ Client ทั้งหมด (เข้าถึงได้เฉพาะผ่าน Cloud Functions/Admin SDK) | แต่ละ entity ที่เกี่ยวข้องด้านบน |
-| `auditLogRecords` | `allow read, write: if false;` สำหรับ Client ทั้งหมด (บังคับ append-only/immutable) | [[#บันทึกการเข้าถึงข้อมูล (AuditLogRecord)\|AuditLogRecord]] |
+| `users` | อ่านได้เฉพาะเอกสารของตนเอง (ใช้เป็นแหล่งตรวจ role/isActive); ต้องมี test case เพิ่มเติมสำหรับฟีเจอร์ที่ 6: บัญชีที่เพิ่งสมัคร (ไม่มี `role`, `isActive=false`) ต้องไม่ผ่านการตรวจสอบระดับบทบาทของ Operation ร่วม Access Control; **เพิ่มใหม่ในรอบ sync ที่หก (ฟีเจอร์ที่ 7):** บัญชีที่ `role="admin"` ต้องอ่านเอกสารตนเองได้ตามปกติเช่นเดียวกับ `"แพทย์"`/`"พยาบาล"` (ไม่มีสิทธิ์พิเศษเพิ่มเติมในระดับ Security Rules ของ collection นี้เอง — สิทธิ์พิเศษของ Admin ควบคุมที่ Cloud Functions (Operation 10-16) ไม่ใช่ Security Rules) — Client (รวม Admin) ยังคง**ไม่มีสิทธิ์เขียน** `users` โดยตรงไม่ว่ากรณีใด | [[#ผู้ใช้ (User)\|User]] |
+| `patientAssignments` | `allow list, get` เฉพาะเมื่อ `resource.data.userId == request.auth.uid`, `request.auth.token.email_verified == true` และ role/isActive ถูกต้อง (**เฉพาะ `role` เป็น `"แพทย์"`/`"พยาบาล"` เท่านั้น — `"admin"` ไม่เข้าเงื่อนไขนี้ เพราะ Admin ไม่ใช้ Operation 0 ในการดูรายชื่อผู้ป่วย ดู Operation 15 แทน**); `allow create, update, delete: if false` (**รวมถึง Admin — การมอบหมาย/ยกเลิกมอบหมายผู้ป่วยของ Admin ตาม FR-14 เขียนผ่าน Cloud Function ด้วย Admin SDK เท่านั้น ไม่ผ่าน Security Rules**); ต้องมี test case เพิ่มเติม: บัญชีที่ `isActive=true`/role ถูกต้องครบแต่ `email_verified=false` ต้องถูกปฏิเสธเช่นกัน (เพิ่มใหม่ 2026-09-24 ตาม decision area 19); **เพิ่มใหม่ในรอบ sync ที่หก:** บัญชีที่ `role="admin"` ต้องไม่สามารถ `list`/`get` เอกสารของผู้อื่นใน collection นี้ได้เช่นกัน (เงื่อนไข `resource.data.userId == request.auth.uid` ปฏิเสธอยู่แล้วโดยไม่ต้องเพิ่มเงื่อนไขพิเศษ เพราะ Admin ไม่มีระเบียนของตนเองใน `patientAssignments`) | [[#การมอบหมายผู้ป่วยในความดูแล (PatientAssignment)\|PatientAssignment]] |
+| `patients`, `ncdDiagnoses`, `labResults`, `complicationRiskThresholds`, `complicationRiskAssessments` (+ subcollection `riskFindings`), `dataSubjectRequests`, `retentionPolicies` | `allow read, write: if false;` สำหรับ Client ทั้งหมด (เข้าถึงได้เฉพาะผ่าน Cloud Functions/Admin SDK) — **ไม่ต้องแก้ไข rule สำหรับฟีเจอร์ที่ 7: ข้อยกเว้น NFR-19 ของ Admin ถูกบังคับใช้ในโค้ด Cloud Functions (Operation 1-3, 15, 16) ไม่ใช่ Security Rules เพราะ collection เหล่านี้ปฏิเสธ Client ทั้งหมดอยู่แล้วไม่ว่า role ใด** | แต่ละ entity ที่เกี่ยวข้องด้านบน |
+| `auditLogRecords` | `allow read, write: if false;` สำหรับ Client ทั้งหมด (บังคับ append-only/immutable) — ไม่เปลี่ยนแปลงแม้เพิ่ม attribute `isAdminAccess` (NFR-20) เพราะเขียนผ่าน Admin SDK เท่านั้นเหมือนเดิม | [[#บันทึกการเข้าถึงข้อมูล (AuditLogRecord)\|AuditLogRecord]] |
+
+**เพิ่มใหม่ในรอบ sync ที่หก — test case ระดับโค้ด Cloud Functions (ไม่ใช่ Security Rules แต่ยังอยู่ในขอบเขต
+NFR-14 เพราะเป็นการบังคับสิทธิ์เข้าถึงข้อมูลผู้ป่วยเช่นกัน):**
+
+- Admin (`role="admin"`, `isActive=true`, `email_verified=true`) ที่**ไม่มี** PatientAssignment ใดๆ
+  เลย ต้องเรียก Operation 1/2/3/15/16 (อ่านข้อมูลผู้ป่วยรายใดก็ได้) **สำเร็จ** — ต่างจากแพทย์/พยาบาลที่
+  ต้องถูกปฏิเสธในกรณีเดียวกัน (NFR-19)
+- Admin ต้องถูก**ปฏิเสธ**เมื่อพยายามเรียก Operation 16 (FR-16 — ยืนยัน/แก้ไขผลประเมินความเสี่ยง) หรือ
+  operation ใดๆ ที่แก้ไขข้อมูลทางคลินิก (ไม่ใช่สิทธิ์ของ Admin)
+- Admin ต้องถูก**ปฏิเสธ**เมื่อ Operation 1/2/3/15/16 ไม่สามารถบันทึก audit log (`isAdminAccess=true`)
+  ได้สำเร็จก่อนคืนข้อมูล (fail-safe ตาม NFR-20)
+- Admin ต้องถูก**ปฏิเสธ**เมื่อเรียก Operation 12/13 (เปลี่ยน role/isActive) โดยระบุ target userId เป็น
+  ของตนเอง (ป้องกัน lockout — ยืนยันโดยผู้ใช้)
 
 ควรรันชุดทดสอบนี้เป็นส่วนหนึ่งของ CI/CD pipeline ก่อน deploy ทุกครั้งตามที่
 [[architecture#ตาราง Mapping NFR ไปยัง Component|ตาราง Mapping NFR ใน architecture]] ระบุไว้
 
 ## ประเด็นรอตัดสินใจ
 
-- กลไก/ผู้กำหนดการมอบหมายผู้ป่วยให้แพทย์/พยาบาลผู้ดูแล (PatientAssignment) — เช่น มาจากระบบ HOSxP
-  โดยตรง หรือมีขั้นตอนมอบหมายแยกต่างหากในระบบนี้ รวมถึงว่าการมอบหมายสิ้นสุด/เปลี่ยนแปลงได้หรือไม่
-  (ปัจจุบันออกแบบเป็น existence-based ไม่มีสถานะ active/inactive) ยังไม่ถูกยืนยันจากผู้ใช้ (ดู
-  [[20260917-01-patient-ncd-history-lab-complication-risk#สมมติฐาน (Assumptions) — โปรดตรวจทานอีกครั้ง|หัวข้อสมมติฐานของ spec]]
-  และ [[architecture#ประเด็นรอตัดสินใจอื่น (ไม่เกี่ยวกับ technology stack)|ประเด็นรอตัดสินใจอื่นใน architecture]])
-  — อาจกระทบโครงสร้าง entity PatientAssignment ในอนาคตเมื่อได้รับการยืนยัน
+**ฟีเจอร์ที่ 7 (Admin) และ FR-16 — ปิดแล้วในรอบ sync ที่หก (2026-09-24):** สามจุดที่เคยเป็นประเด็น
+รอตัดสินใจ (โครงสร้างข้อมูล FR-16, โครงสร้าง audit log NFR-20, กลไก/ผู้กำหนดการมอบหมายผู้ป่วย
+PatientAssignment) ได้รับคำตอบยืนยันจากผู้ใช้แล้วผ่าน `NEEDS_USER_INPUT` และถูกนำไปปรับปรุงในเอกสารนี้
+ครบแล้ว (ดูหัวข้อ [[#ผลการประเมินความเสี่ยงโรคแทรกซ้อน (ComplicationRiskAssessment)|ComplicationRiskAssessment]],
+[[#บันทึกการเข้าถึงข้อมูล (AuditLogRecord)|AuditLogRecord]] และ
+[[#การมอบหมายผู้ป่วยในความดูแล (PatientAssignment)|PatientAssignment]] ด้านบน) — รายการที่**ยังคงเหลือ
+เป็นความเสี่ยง/ข้อควรทราบต่อ** (ไม่ใช่ "ยังไม่ตัดสินใจ"):
+
+- **ค่าประเมินอัตโนมัติดั้งเดิมของ ComplicationRiskAssessment (`พบความเสี่ยงหรือไม่`) ต้องไม่ถูกเขียนทับ
+  เด็ดขาด** — เป็นวินัยของโค้ด Cloud Function (Operation 16) ไม่มีกลไกทางเทคนิคระดับ Firestore ที่บังคับ
+  ความ immutable นี้โดยอัตโนมัติ (Firestore ไม่มี field-level immutability) ควรพิจารณาเพิ่ม unit test
+  เฉพาะสำหรับพฤติกรรมนี้ในรอบ `sync-test-plan` ถัดไป
+- **จำนวน/การแบ่ง Cloud Function สำหรับ Operation 10-16** (Admin + FR-16) — ยังไม่ตัดสินใจว่าจะรวมเป็น
+  callable function เดียวหรือแยกฟังก์ชันตาม operation (ดู "ประเด็นรอตัดสินใจ" ใน [[api-spec]])
+
 - ค่าตัวเลขจริงของ threshold แต่ละรายการใน ComplicationRiskThreshold และการจับคู่โรคหลัก →
   โรคแทรกซ้อน ยังไม่ถูกยืนยันจากแพทย์ผู้เชี่ยวชาญ (ดู
   [[20260917-01-patient-ncd-history-lab-complication-risk#สมมติฐาน (Assumptions) — โปรดตรวจทานอีกครั้ง|หัวข้อสมมติฐานของ spec]]
@@ -830,3 +926,4 @@ entity ด้านบน):
 - [[20260921-01-pdpa-data-protection-compliance]]
 - [[20260922-01-operational-quality-nfr]]
 - [[20260923-01-user-authentication-email-password]]
+- [[20260924-01-admin-role-account-management]]

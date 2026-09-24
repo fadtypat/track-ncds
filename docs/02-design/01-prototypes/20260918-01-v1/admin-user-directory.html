@@ -1,0 +1,213 @@
+<!DOCTYPE html>
+<html lang="th">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>NCDs History &amp; Risk — Prototype v1 — Admin: จัดการผู้ใช้งาน</title>
+<link rel="stylesheet" href="style.css">
+</head>
+<body>
+
+<nav class="proto-bar">
+  <div class="proto-bar-inner">
+    <div class="proto-bar-top">
+      <span class="proto-bar-title">NCDS CLINIC · PROTOTYPE v1 · Admin: จัดการผู้ใช้งาน</span>
+      <div class="proto-bar-nav">
+        <a href="index.html">หน้ารวม</a>
+        <a href="login.html">เข้าสู่ระบบ</a>
+        <a href="signup.html">สมัครบัญชี</a>
+        <a href="verify-email-notice.html">ยืนยันอีเมล/รออนุมัติ</a>
+        <a href="forgot-password.html">ลืมรหัสผ่าน</a>
+        <a href="reset-password.html">ตั้งรหัสผ่านใหม่</a>
+        <a href="patient-list.html">ค้นหา/รายชื่อผู้ป่วย</a>
+        <a href="patient-detail-risk-found.html">ประวัติ+ความเสี่ยง (พบ)</a>
+        <a href="patient-detail-no-risk.html">ประวัติ+ความเสี่ยง (ไม่พบ)</a>
+        <a href="access-denied.html">ปฏิเสธการเข้าถึง</a>
+        <a href="pdpa-data-subject-request.html">PDPA คำขอใช้สิทธิ</a>
+        <a href="pdpa-audit-trail.html">PDPA audit trail</a>
+        <a href="admin-dashboard.html">Admin: หน้าหลัก</a>
+        <a href="admin-account-approval.html">Admin: อนุมัติบัญชี</a>
+        <a href="admin-user-directory.html" class="current">Admin: จัดการผู้ใช้งาน</a>
+        <a href="admin-patient-assignment.html">Admin: มอบหมายผู้ป่วย</a>
+        <a href="admin-patient-directory.html">Admin: ผู้ป่วยทุกราย</a>
+        <a href="admin-patient-detail-readonly.html">Admin: ดูประวัติ (read-only)</a>
+      </div>
+    </div>
+    <div class="proto-bar-codes">
+      <span class="proto-code">FR-12</span>
+      <span class="proto-code">FR-13</span>
+    </div>
+  </div>
+</nav>
+
+<div class="app-bg">
+<div class="container stack gap-section">
+
+  <a href="admin-dashboard.html" class="type-caption" style="display:inline-block;">← กลับไปแผงควบคุม Admin</a>
+
+  <header class="stack" style="gap:8px;">
+    <h1 class="type-page-title">เปลี่ยนบทบาท / ระงับ-เปิดใช้งานบัญชี</h1>
+    <p class="type-body" style="max-width:680px;">
+      รายชื่อผู้ใช้งานที่เคยอนุมัติแล้วทั้งหมด — เปลี่ยน role ได้ (FR-12) และระงับ/เปิดใช้งานบัญชีได้
+      (FR-13) ผู้ใช้งานที่ถูกระงับต้องไม่สามารถเข้าถึงข้อมูลผู้ป่วยใดๆ ได้ทันที
+    </p>
+  </header>
+
+  <section class="section-card">
+    <div class="trend-table-wrap">
+      <table class="trend-table" style="min-width:760px;">
+        <thead>
+          <tr>
+            <th>ชื่อ-นามสกุล</th>
+            <th>อีเมล</th>
+            <th>บทบาท (Role)</th>
+            <th>สถานะบัญชี</th>
+            <th>การดำเนินการ</th>
+          </tr>
+        </thead>
+        <tbody id="user-rows">
+          <tr data-user="self" data-self="true">
+            <td class="param-name">กานดา ตรวจตรา</td>
+            <td style="font-family:var(--font-sans); font-size:13px;">kanda@ncds-demo.local</td>
+            <td><span class="chip chip-neutral role-chip">Admin</span></td>
+            <td><span class="status-pill success">ใช้งานอยู่ (บัญชีของท่าน)</span></td>
+            <td>
+              <div style="display:flex; gap:var(--space-2); flex-wrap:wrap; align-items:center;">
+                <select class="select-input role-select" style="min-height:36px; max-width:140px;" disabled>
+                  <option value="admin" selected>Admin</option>
+                </select>
+                <button type="button" class="btn btn-secondary btn-sm apply-role-btn" disabled>เปลี่ยน role</button>
+                <button type="button" class="btn btn-secondary btn-sm toggle-status-btn" disabled>ระงับการใช้งาน</button>
+              </div>
+              <span class="type-caption" style="display:block; margin-top:var(--space-1);">ไม่สามารถแก้ไขสิทธิ์ของตนเองได้ (Op.12/Op.13)</span>
+            </td>
+          </tr>
+          <tr data-user="u1">
+            <td class="param-name">พญ. อรุณี ศรีสุข</td>
+            <td style="font-family:var(--font-sans); font-size:13px;">arunee@ncds-demo.local</td>
+            <td><span class="chip chip-chronic role-chip">แพทย์</span></td>
+            <td><span class="status-pill success">ใช้งานอยู่</span></td>
+            <td>
+              <div style="display:flex; gap:var(--space-2); flex-wrap:wrap; align-items:center;">
+                <select class="select-input role-select" style="min-height:36px; max-width:140px;">
+                  <option value="doctor" selected>แพทย์</option>
+                  <option value="nurse">พยาบาล</option>
+                  <option value="admin">Admin</option>
+                </select>
+                <button type="button" class="btn btn-secondary btn-sm apply-role-btn">เปลี่ยน role</button>
+                <button type="button" class="btn btn-secondary btn-sm toggle-status-btn">ระงับการใช้งาน</button>
+              </div>
+            </td>
+          </tr>
+          <tr data-user="u2">
+            <td class="param-name">นายวรรณะ ใจดี</td>
+            <td style="font-family:var(--font-sans); font-size:13px;">wanna@ncds-demo.local</td>
+            <td><span class="chip chip-ckd role-chip">พยาบาล</span></td>
+            <td><span class="status-pill success">ใช้งานอยู่</span></td>
+            <td>
+              <div style="display:flex; gap:var(--space-2); flex-wrap:wrap; align-items:center;">
+                <select class="select-input role-select" style="min-height:36px; max-width:140px;">
+                  <option value="doctor">แพทย์</option>
+                  <option value="nurse" selected>พยาบาล</option>
+                  <option value="admin">Admin</option>
+                </select>
+                <button type="button" class="btn btn-secondary btn-sm apply-role-btn">เปลี่ยน role</button>
+                <button type="button" class="btn btn-secondary btn-sm toggle-status-btn">ระงับการใช้งาน</button>
+              </div>
+            </td>
+          </tr>
+          <tr data-user="u3">
+            <td class="param-name">พญ. สุนีย์ แจ้งใส</td>
+            <td style="font-family:var(--font-sans); font-size:13px;">sunee@ncds-demo.local</td>
+            <td><span class="chip chip-chronic role-chip">แพทย์</span></td>
+            <td><span class="status-pill success">ใช้งานอยู่</span></td>
+            <td>
+              <div style="display:flex; gap:var(--space-2); flex-wrap:wrap; align-items:center;">
+                <select class="select-input role-select" style="min-height:36px; max-width:140px;">
+                  <option value="doctor" selected>แพทย์</option>
+                  <option value="nurse">พยาบาล</option>
+                  <option value="admin">Admin</option>
+                </select>
+                <button type="button" class="btn btn-secondary btn-sm apply-role-btn">เปลี่ยน role</button>
+                <button type="button" class="btn btn-secondary btn-sm toggle-status-btn">ระงับการใช้งาน</button>
+              </div>
+            </td>
+          </tr>
+          <tr data-user="u4">
+            <td class="param-name">นางพยาบาลรอ อนุมัติเดิม</td>
+            <td style="font-family:var(--font-sans); font-size:13px;">suspended-nurse@ncds-demo.local</td>
+            <td><span class="chip chip-ckd role-chip">พยาบาล</span></td>
+            <td><span class="status-pill rejected">ระงับการใช้งาน</span></td>
+            <td>
+              <div style="display:flex; gap:var(--space-2); flex-wrap:wrap; align-items:center;">
+                <select class="select-input role-select" style="min-height:36px; max-width:140px;">
+                  <option value="doctor">แพทย์</option>
+                  <option value="nurse" selected>พยาบาล</option>
+                  <option value="admin">Admin</option>
+                </select>
+                <button type="button" class="btn btn-secondary btn-sm apply-role-btn">เปลี่ยน role</button>
+                <button type="button" class="btn btn-secondary btn-sm toggle-status-btn">เปิดใช้งาน</button>
+              </div>
+            </td>
+          </tr>
+        </tbody>
+      </table>
+    </div>
+
+    <div id="action-note" hidden></div>
+  </section>
+
+</div>
+</div>
+
+<script>
+(function () {
+  var roleLabel = { doctor: "แพทย์", nurse: "พยาบาล", admin: "Admin" };
+  var roleChipClass = { doctor: "chip-chronic", nurse: "chip-ckd", admin: "chip-neutral" };
+  var actionNote = document.getElementById("action-note");
+
+  function showNote(type, title, message) {
+    actionNote.hidden = false;
+    actionNote.innerHTML =
+      '<div class="callout ' + type + '" role="status">' +
+        '<span class="callout-title">' + title + "</span>" +
+        '<p class="type-body" style="color:inherit;">' + message + "</p>" +
+      "</div>";
+  }
+
+  document.querySelectorAll("#user-rows > tr").forEach(function (row) {
+    if (row.getAttribute("data-self") === "true") { return; } // แถวของ Admin ที่เข้าสู่ระบบอยู่: ปุ่ม/select ถูก disabled ไว้แล้ว ไม่ต้องผูก event (ไม่สามารถแก้ไขสิทธิ์ของตนเองได้)
+    var select = row.querySelector(".role-select");
+    var chip = row.querySelector(".role-chip");
+    var applyBtn = row.querySelector(".apply-role-btn");
+    var toggleBtn = row.querySelector(".toggle-status-btn");
+    var statusPill = row.querySelector(".status-pill");
+    var name = row.children[0].textContent;
+
+    applyBtn.addEventListener("click", function () {
+      var newRole = select.value;
+      chip.className = "chip role-chip " + roleChipClass[newRole];
+      chip.textContent = roleLabel[newRole];
+      showNote("tip", "เปลี่ยนบทบาทสำเร็จ", "เปลี่ยน role ของ " + name + " เป็น " + roleLabel[newRole] + " เรียบร้อยแล้ว (FR-12)");
+    });
+
+    toggleBtn.addEventListener("click", function () {
+      var isSuspended = statusPill.classList.contains("rejected");
+      if (isSuspended) {
+        statusPill.className = "status-pill success";
+        statusPill.textContent = "ใช้งานอยู่";
+        toggleBtn.textContent = "ระงับการใช้งาน";
+        showNote("tip", "เปิดใช้งานบัญชีแล้ว", name + " กลับมาเข้าถึงข้อมูลผู้ป่วยที่ได้รับมอบหมายได้ตามปกติ (FR-13)");
+      } else {
+        statusPill.className = "status-pill rejected";
+        statusPill.textContent = "ระงับการใช้งาน";
+        toggleBtn.textContent = "เปิดใช้งาน";
+        showNote("warn", "ระงับบัญชีแล้ว", name + " จะไม่สามารถเข้าถึงข้อมูลผู้ป่วยใดๆ ได้ทันที (FR-13)");
+      }
+    });
+  });
+})();
+</script>
+
+</body>
+</html>

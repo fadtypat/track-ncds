@@ -39,6 +39,17 @@ Operation 4, 5 และ Audit Logging ผ่าน Cloud Functions จริง
 Access Control ใช้อยู่แล้ว (บัญชีที่ยังไม่มี `role` ไม่ผ่านอัตโนมัติ) ดู
 [[user-authentication-email-password]] ซึ่งเป็นฟีเจอร์ precondition ก่อนฟีเจอร์นี้ทั้งหมด
 
+**อัปเดต 2026-09-24 — ฟีเจอร์ที่ 7 (Admin, NFR-20): เพิ่ม attribute ใหม่ใน AuditLogRecord:**
+[[db-spec#บันทึกการเข้าถึงข้อมูล (AuditLogRecord)|AuditLogRecord]] เพิ่ม attribute
+`เข้าถึงในฐานะ Admin หรือไม่` (`isAdminAccess`, จริง/เท็จ, ดีฟอลต์เท็จ) — เขียนเป็นจริงเฉพาะเมื่อ
+Operation 1/2/3/15 ถูกเรียกโดยผู้ใช้ `role = "admin"` ผ่านข้อยกเว้น NFR-19 (ดู
+[[admin-role-account-management]]) **ไม่กระทบ sequence diagram ของ Operation 4 ในเอกสารนี้** (Admin
+ไม่มีสิทธิ์เรียก Operation 4) แต่กระทบ **Sequence Diagram 2 (Operation 5 — สืบค้น audit trail)**
+ทางอ้อม: ผลลัพธ์ AuditLogRecord ที่ Operation 5 คืนกลับมาอาจมี field `isAdminAccess = true` ปะปนอยู่
+ด้วยแล้ว (เจ้าหน้าที่ที่สืบค้น audit trail เห็นได้ว่ารายการใดเกิดจากการเข้าถึงของ Admin ผ่านข้อยกเว้น
+NFR-19) — ไม่ต้องเพิ่ม input/query parameter ใหม่ให้ Operation 5 เพราะ field นี้เป็นส่วนหนึ่งของ output
+เดิมอยู่แล้วตาม [[db-spec]]
+
 **อัปเดต 2026-09-22 (รอบสอง) — ตรวจสอบความสอดคล้องกับฟีเจอร์ที่ 5 (NFR-09–NFR-16):** ดูหัวข้อใหม่
 [[#Cross-cutting: คุณภาพเชิงปฏิบัติการของระบบ (NFR-09–NFR-16)|Cross-cutting: คุณภาพเชิงปฏิบัติการของระบบ]]
 ก่อนหัวข้อ Edge Case ด้านล่าง สำหรับผลกระทบของ
@@ -219,7 +230,7 @@ Sequence Diagram 1 (Operation 4 กรณี "ขอลบ" — การลบ�
 | 8 | [[api-spec#Operation ร่วม — ตรวจสอบสิทธิ์การเข้าถึงข้อมูลผู้ป่วย (Access Control)\|Operation ร่วม (role-level + email_verified)]] | [[db-spec#ผู้ใช้ (User)\|User]] | อ่าน | precondition ของ Operation 5 เสมอ — เพิ่มเงื่อนไข `email_verified` ในรอบ 2026-09-24 ตาม decision area 19 (FR-09) |
 | 9 | [[api-spec#Operation ร่วม — ตรวจสอบสิทธิ์การเข้าถึงข้อมูลผู้ป่วย (Access Control)\|Operation ร่วม (patient-level, ถ้าระบุรหัสผู้ป่วย)]] | [[db-spec#การมอบหมายผู้ป่วยในความดูแล (PatientAssignment)\|PatientAssignment]] | อ่าน | ตรวจสอบเพิ่มเติมเฉพาะเมื่อ Operation 5 ระบุรหัสผู้ป่วย |
 | 10 | [[api-spec#Operation ร่วม — บันทึกร่องรอยการเข้าถึงข้อมูลผู้ป่วย (Audit Logging)\|Operation ร่วม — Audit Logging]] | [[db-spec#บันทึกการเข้าถึงข้อมูล (AuditLogRecord)\|AuditLogRecord]] | สร้าง | บันทึกการเรียก Operation 5 เอง (การดำเนินการ = "ดูข้อมูลผู้ป่วย") เพื่อรักษา Accountability (NFR-06) |
-| 11 | [[api-spec#Operation 5 — สืบค้นบันทึกการเข้าถึงข้อมูล (Audit Trail Retrieval)\|Operation 5]] | [[db-spec#บันทึกการเข้าถึงข้อมูล (AuditLogRecord)\|AuditLogRecord]] | อ่าน | สืบค้นตามเงื่อนไข (ผู้ป่วย/ช่วงเวลา/ผู้ใช้ — ทั้งหมดไม่บังคับ) เรียงตามวันที่-เวลาที่เข้าถึง |
+| 11 | [[api-spec#Operation 5 — สืบค้นบันทึกการเข้าถึงข้อมูล (Audit Trail Retrieval)\|Operation 5]] | [[db-spec#บันทึกการเข้าถึงข้อมูล (AuditLogRecord)\|AuditLogRecord]] | อ่าน | สืบค้นตามเงื่อนไข (ผู้ป่วย/ช่วงเวลา/ผู้ใช้ — ทั้งหมดไม่บังคับ) เรียงตามวันที่-เวลาที่เข้าถึง — ผลลัพธ์อาจมี field `เข้าถึงในฐานะ Admin หรือไม่` = จริง ปะปนอยู่ด้วย (NFR-20 — เพิ่มใหม่ 2026-09-24 ดู [[admin-role-account-management]]) |
 | 12 | [[api-spec#Operation 6 — บังคับใช้นโยบายเก็บรักษาและลบข้อมูลที่พ้นระยะเวลา (Retention Enforcement)\|Operation 6]] | [[db-spec#นโยบายเก็บรักษาและลบข้อมูล (RetentionPolicy)\|RetentionPolicy]] | อ่าน | อ่านนโยบายที่จะบังคับใช้ในรอบนี้ก่อนเสมอ |
 | 13 | [[api-spec#Operation 6 — บังคับใช้นโยบายเก็บรักษาและลบข้อมูลที่พ้นระยะเวลา (Retention Enforcement)\|Operation 6]] | [[db-spec#ประวัติการวินิจฉัยโรค NCD (NcdDiagnosis)\|NcdDiagnosis]], [[db-spec#ผลตรวจ lab (LabResult)\|LabResult]] | ลบ | เมื่อประเภทข้อมูลที่บังคับใช้ = Primary Data Store และระเบียนพ้นระยะเวลาที่ RetentionPolicy กำหนด |
 | 14 | [[api-spec#Operation 6 — บังคับใช้นโยบายเก็บรักษาและลบข้อมูลที่พ้นระยะเวลา (Retention Enforcement)\|Operation 6]] | [[db-spec#บันทึกการเข้าถึงข้อมูล (AuditLogRecord)\|AuditLogRecord]] | ลบ | เมื่อประเภทข้อมูลที่บังคับใช้ = Audit Log Store และระเบียนพ้นระยะเวลาที่ RetentionPolicy กำหนด (นโยบายคนละรายการจาก Primary Data Store) |
@@ -401,3 +412,5 @@ attribute ใดรองรับ (ไม่ใช่ gap ของ db-spec —
 - [[patient-ncd-diagnosis-lab-history]]
 - [[complication-risk-analysis-alert]]
 - [[user-authentication-email-password]]
+- [[admin-role-account-management]]
+- [[20260924-01-admin-role-account-management]]

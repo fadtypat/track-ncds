@@ -5,13 +5,15 @@ Clickable HTML Prototype เวอร์ชันแรกของโปรเ�
 [[../../DESIGN.md|DESIGN.md]] เป็น single source of truth ด้าน visual design ทั้งหมด
 (สี/ตัวอักษร/ระยะห่าง/องค์ประกอบ UI/accessibility/responsive)
 
-บทบาทผู้ใช้ของทุกหน้าจอ: **แพทย์/พยาบาลผู้ดูแลผู้ป่วย NCD** เท่านั้น (ตาม NFR-02)
+บทบาทผู้ใช้: **แพทย์/พยาบาลผู้ดูแลผู้ป่วย NCD** (ตาม NFR-02) สำหรับหน้าจอ Journey 0–2 และ **Admin
+(ผู้ดูแลระบบ)** (ตาม NFR-19, NFR-20) สำหรับหน้าจอ Journey 3 (`admin-*.html`) — 2 บทบาทตาม
+[[../../user-journey|user-journey]] ล่าสุด
 
 **อัปเดตล่าสุด (20260922):** แก้ไข `patient-list.html` ให้ค้นหาด้วยเลข HN 7 หลักเท่านั้น (FR-06,
 เดิมเป็น free-text) และเพิ่มหน้าจอใหม่ 2 หน้ารองรับฟีเจอร์ที่ 4 "คุ้มครองข้อมูลส่วนบุคคลของผู้ป่วยตาม
 PDPA" (NFR-03–NFR-08) — ดูรายละเอียดในหัวข้อ "ขอบเขตที่ครอบคลุม (อัปเดต)" ด้านล่าง
 
-**อัปเดตล่าสุด (20260924):** เพิ่มหน้าจอใหม่ 5 หน้ารองรับฟีเจอร์ที่ 6 "สมัครบัญชี เข้าสู่ระบบ และ
+**อัปเดตล่าสุด (20260924, รอบที่ 1):** เพิ่มหน้าจอใหม่ 5 หน้ารองรับฟีเจอร์ที่ 6 "สมัครบัญชี เข้าสู่ระบบ และ
 จัดการรหัสผ่านด้วยอีเมล (Authentication)" (FR-07–FR-10, NFR-17, NFR-18) ตาม
 [[../../user-journey#Journey ผู้ใช้งานสมัครบัญชี เข้าสู่ระบบ และจัดการรหัสผ่านด้วยอีเมล (Authentication)|journey Authentication]]
 ซึ่งเป็น precondition ก่อน Journey ที่ 1 และ 2 เดิมทั้งหมด พร้อมอัปเดต proto-bar nav ของทุกหน้าจอเดิม
@@ -19,11 +21,25 @@ PDPA" (NFR-03–NFR-08) — ดูรายละเอียดในหัว�
 ใน `patient-list.html` เพื่อสาธิตจุดเชื่อมต่อกลับไปยัง `login.html` — ไม่ได้แก้ไข logic เดิมของ 7
 หน้าจอ Journey ที่ 1/2 นอกเหนือจาก proto-bar nav และ header ของ `patient-list.html`
 
+**อัปเดตล่าสุด (20260924, รอบที่ 3 — แก้บั๊ก):** แก้ไข 2 จุดใน `admin-user-directory.html` และ
+`admin-patient-detail-readonly.html` ตาม api-spec Operation 12/13 (ดูรายละเอียดในหมายเหตุ
+simplification ท้ายเอกสารนี้) — ไม่มีไฟล์ใหม่ ไม่มี class/สี/สไตล์ใหม่นอก DESIGN.md
+
+**อัปเดตล่าสุด (20260924, รอบที่ 2):** เพิ่มหน้าจอใหม่ 6 หน้ารองรับฟีเจอร์ที่ 7 "จัดการบัญชีผู้ใช้งาน
+สิทธิ์ และการมอบหมายผู้ป่วย (Admin)" (FR-11–FR-15, NFR-19, NFR-20) ตาม
+[[../../user-journey#Journey Admin อนุมัติบัญชีผู้ใช้งาน จัดการสิทธิ์ และดูประวัติผู้ป่วยทุกรายแบบอ่านอย่างเดียว|journey Admin]],
+เพิ่มส่วนยืนยัน/แก้ไขผลการประเมินความเสี่ยง (FR-16) ในหน้า `patient-detail-risk-found.html` และ
+`patient-detail-no-risk.html`, แก้ข้อความใน `verify-email-notice.html` จาก "รออนุมัติผ่าน Firebase
+Console/Firestore" เป็น "รอ Admin อนุมัติผ่านหน้าจอในระบบ" (FR-11 แทนที่กลไกเดิม), เพิ่มบัญชีจำลอง
+`admin@ncds-demo.local` ใน `login.html` ที่นำไปยัง `admin-dashboard.html` แทน `patient-list.html`,
+และอัปเดต proto-bar nav ของทุกหน้าจอเดิมทั้ง 12 หน้าให้เชื่อมโยงถึง 6 หน้าใหม่ครบ — ไม่ได้แก้ไข logic
+เดิมของหน้าจออื่นนอกเหนือจากที่ระบุนี้
+
 ## ขอบเขตที่ครอบคลุม (อัปเดต)
 
-ครอบคลุมทั้ง 6 ฟีเจอร์ Must have ใน [[../../feature-list|feature-list]] (ฟีเจอร์ 1–4 และ 6 มีหน้าจอ
+ครอบคลุมทั้ง 7 ฟีเจอร์ Must have ใน [[../../feature-list|feature-list]] (ฟีเจอร์ 1–4, 6 และ 7 มีหน้าจอ
 โดยตรง — ฟีเจอร์ 5 เป็น cross-cutting quality ที่สะท้อนผ่านพฤติกรรม/หมายเหตุในหน้าจออื่นแทนหน้าจอเฉพาะ)
-และทั้ง 3 journey ใน [[../../user-journey|user-journey]]:
+และทั้ง 4 journey ใน [[../../user-journey|user-journey]]:
 
 - **Journey 0** (precondition ก่อน journey อื่นทั้งหมด, ฟีเจอร์ 6): สมัครบัญชี (`signup.html`,
   แสดงกฎรหัสผ่านขั้นต่ำแบบ live ตาม NFR-17) → ยืนยันอีเมล/รออนุมัติบัญชี (`verify-email-notice.html`,
@@ -47,6 +63,22 @@ PDPA" (NFR-03–NFR-08) — ดูรายละเอียดในหัว�
     พร้อม validation หลังกดค้นหา (ช่วงเวลาไม่ถูกต้อง / HN รูปแบบผิด / ไม่มีสิทธิ์เข้าถึงผู้ป่วยรายนั้น
     ตาม NFR-02) และแสดงผลลัพธ์ audit log เป็นตาราง
 
+- **Journey 3** (บริหารจัดการ, ฟีเจอร์ 7 — Admin): Admin เข้าสู่ระบบสำเร็จ (บัญชีจำลอง
+  `admin@ncds-demo.local` ใน `login.html`) → แผงควบคุม (`admin-dashboard.html`) → เลือกงานอย่างใด
+  อย่างหนึ่งแล้ววนกลับมาเลือกงานอื่นต่อได้ (ไม่ใช่ flow เชิงเส้น):
+  - อนุมัติบัญชีใหม่ (`admin-account-approval.html`) — เลือก role (แพทย์/พยาบาล) แล้วอนุมัติ
+  - เปลี่ยนบทบาท/ระงับ-เปิดใช้งานบัญชี (`admin-user-directory.html`) — ตารางผู้ใช้งานที่อนุมัติแล้ว
+    พร้อมปุ่มเปลี่ยน role และสลับสถานะใช้งาน/ระงับ
+  - จัดการการมอบหมายผู้ป่วย (`admin-patient-assignment.html`) — มอบหมายผู้ป่วยรายใหม่ + ยกเลิก
+    การมอบหมายเดิม
+  - ดูประวัติผู้ป่วยทุกรายแบบอ่านอย่างเดียว (`admin-patient-directory.html` →
+    `admin-patient-detail-readonly.html`) — ไม่จำกัดด้วย PatientAssignment (NFR-19) พร้อมสาธิต
+    audit log แบบ fail-safe ทั้งสองแขนงผลลัพธ์ (สำเร็จ/ไม่สำเร็จ) ตาม NFR-20
+
+  นอกจากนี้ FR-16 (ยืนยัน/แก้ไขผลการประเมินความเสี่ยงของแพทย์/พยาบาล) ถูกเพิ่มเข้าไปในหน้า
+  `patient-detail-risk-found.html` และ `patient-detail-no-risk.html` เดิม (Journey 1) เป็น section
+  ท้ายหน้า ไม่ใช่หน้าจอแยก เพราะ FR-16 ผูกกับข้อมูลผู้ป่วยรายเดียวกันที่แสดงอยู่แล้วในหน้านั้น
+
 ## ตาราง journey/ฟีเจอร์ ↔ ไฟล์ ↔ รหัส FR/NFR
 
 | ไฟล์ | Journey step / ฟีเจอร์ (feature-list.md) | รหัส FR/NFR ที่ครอบคลุม |
@@ -58,12 +90,18 @@ PDPA" (NFR-03–NFR-08) — ดูรายละเอียดในหัว�
 | `forgot-password.html` | ฟีเจอร์ 6 — Journey 0 ขั้นตอนที่ 12–14 (ขอลิงก์รีเซ็ตรหัสผ่าน) | FR-10, NFR-18 |
 | `reset-password.html` | ฟีเจอร์ 6 — Journey 0 ขั้นตอนที่ 15–16 (ตั้งรหัสผ่านใหม่ + validation) | FR-10, NFR-17 |
 | `patient-list.html` | ฟีเจอร์ 3 — ค้นหา/เลือกผู้ป่วยในความดูแล (Journey 1 ขั้นตอนที่ 3–8, รวม validation D1–D5) + จุดเชื่อมต่อ logout/auto-logout กลับ Journey 0 | FR-05, FR-06, NFR-02, NFR-12 (ปุ่มจำลอง) |
-| `patient-detail-risk-found.html` | ฟีเจอร์ 1 (ขั้นตอนที่ 10–11) + ฟีเจอร์ 2 (ขั้นตอนที่ 12–13 แขนง "พบ") — ผู้ป่วยตัวอย่าง นายสมชาย ใจกล้า | FR-01, FR-02, FR-03, FR-04, NFR-01 |
-| `patient-detail-no-risk.html` | ฟีเจอร์ 1 (ขั้นตอนที่ 10–11) + ฟีเจอร์ 2 (ขั้นตอนที่ 12–13 แขนง "ไม่พบ") — ผู้ป่วยตัวอย่าง นายวิชัย ถุงลมดี | FR-01, FR-02, FR-03, FR-04, NFR-01 |
+| `patient-detail-risk-found.html` | ฟีเจอร์ 1 (ขั้นตอนที่ 10–11) + ฟีเจอร์ 2 (ขั้นตอนที่ 12–15 รวม override) — ผู้ป่วยตัวอย่าง นายสมชาย ใจกล้า | FR-01, FR-02, FR-03, FR-04, FR-16, NFR-01 |
+| `patient-detail-no-risk.html` | ฟีเจอร์ 1 (ขั้นตอนที่ 10–11) + ฟีเจอร์ 2 (ขั้นตอนที่ 12–15 รวม override) — ผู้ป่วยตัวอย่าง นายวิชัย ถุงลมดี | FR-01, FR-02, FR-03, FR-04, FR-16, NFR-01 |
 | `access-denied.html` | สถานะ guard ก่อนเข้าถึงข้อมูลผู้ป่วยรายบุคคล (Journey 1 ขั้นตอนที่ 1–2 แขนง "ไม่มีสิทธิ์") | NFR-02 |
 | `pdpa-data-subject-request.html` | ฟีเจอร์ 4 — Journey 2 เส้นทางคำขอใช้สิทธิของเจ้าของข้อมูล (ขั้นตอนที่ 2–3) | NFR-03, NFR-05, NFR-06, NFR-07 (precondition: FR-05, FR-06) |
 | `pdpa-audit-trail.html` | ฟีเจอร์ 4 — Journey 2 เส้นทางสงสัยข้อมูลรั่วไหล (ขั้นตอนที่ 4–5) | NFR-02, NFR-06, NFR-08 |
-| `style.css` | CSS custom properties + component class แปลงจาก DESIGN.md §2–§7 ทั้งหมด (รวม form control class ที่ประกอบเพิ่มสำหรับ 2 หน้าจอ PDPA และ class `.auth-shell`/`.auth-card`/`.password-rules` ที่ประกอบเพิ่มสำหรับ 5 หน้าจอ Authentication) | — |
+| `admin-dashboard.html` | ฟีเจอร์ 7 — Journey 3 ขั้นตอนที่ 1–2 (Admin เข้าสู่ระบบสำเร็จ + เมนูเลือกงาน) | FR-11, FR-12, FR-13, FR-14, FR-15, NFR-19, NFR-20 |
+| `admin-account-approval.html` | ฟีเจอร์ 7 — Journey 3 ขั้นตอนที่ 3–4 (อนุมัติบัญชีใหม่ + กำหนด role/isActive) | FR-11 |
+| `admin-user-directory.html` | ฟีเจอร์ 7 — Journey 3 ขั้นตอนที่ 5–7 (เปลี่ยน role + ระงับ/เปิดใช้งานบัญชี) | FR-12, FR-13 |
+| `admin-patient-assignment.html` | ฟีเจอร์ 7 — Journey 3 ขั้นตอนที่ 8 (มอบหมาย/ยกเลิกมอบหมายผู้ป่วย) | FR-14 |
+| `admin-patient-directory.html` | ฟีเจอร์ 7 — Journey 3 ขั้นตอนที่ 9 (เลือกผู้ป่วยรายใดก็ได้ในระบบ ไม่ต้องมี PatientAssignment) | FR-15, NFR-19 |
+| `admin-patient-detail-readonly.html` | ฟีเจอร์ 7 — Journey 3 ขั้นตอนที่ 10–11 (audit log แบบ fail-safe + แสดงข้อมูลอ่านอย่างเดียว ทั้งสองแขนงผลลัพธ์) | FR-15, NFR-19, NFR-20 |
+| `style.css` | CSS custom properties + component class แปลงจาก DESIGN.md §2–§7 ทั้งหมด (รวม form control class ที่ประกอบเพิ่มสำหรับ 2 หน้าจอ PDPA, class `.auth-shell`/`.auth-card`/`.password-rules` สำหรับ 5 หน้าจอ Authentication — ไม่มี class ใหม่เพิ่มสำหรับ 6 หน้าจอ Admin เพราะใช้ `.chip`/`.status-pill`/`.trend-table`/`.form-field`/`.radio-group`/`.textarea-input`/`.denied-shell` เดิมทั้งหมด) | — |
 
 ## หมายเหตุการตีความ/simplification ของ mockup data
 
@@ -124,6 +162,56 @@ PDPA" (NFR-03–NFR-08) — ดูรายละเอียดในหัว�
   ลิงก์ไป `login.html#session-expired` และ `login.html#logged-out` ตามลำดับ ใช้ URL fragment (`#...`)
   เพื่อสาธิตข้อความที่แตกต่างกันโดยไม่ต้องมี session state จริง — เป็นการจำลองปลายทางของ NFR-12
   (auto-logout) ไม่ใช่การ implement inactivity timer จริงในหน้านี้ (out of scope ของ prototype)
+- (ใหม่ 20260924 รอบที่ 2) DESIGN.md ไม่มี component สำเร็จรูปสำหรับหน้าจอบริหารจัดการ (ตาราง
+  ผู้ใช้งาน/badge บทบาท/สถานะบัญชี) จึงนำ component ที่มีอยู่แล้วมาใช้ซ้ำทั้งหมดโดยไม่เพิ่ม class/สีใหม่:
+  ใช้ `.chip.chip-chronic` (sky) แทนป้ายบทบาท "แพทย์", `.chip.chip-ckd` (purple) แทนป้ายบทบาท
+  "พยาบาล" และ `.chip.chip-neutral` (slate) แทนข้อความข้อมูลทั่วไป (เช่น "ผู้ดูแล: ...") — นำสีที่เดิมใช้
+  สื่อความหมาย "โรคเรื้อรัง/staging" มาสื่อความหมาย "บทบาทผู้ใช้งาน" แทน เพราะเป็นบริบทคนละหน้าจอกัน
+  (หน้าจอ Admin ไม่มีข้อมูลโรคของผู้ป่วยปะปนอยู่ จึงไม่ทำให้สับสน) ทุกจุดยังคงมีข้อความกำกับคู่กับสีเสมอ
+  ตาม NFR-13; ใช้ `.status-pill.pending/.success/.rejected` (เดิมออกแบบไว้สำหรับสถานะคำขอ PDPA) แทน
+  สถานะบัญชี "รออนุมัติ/ใช้งานอยู่/ระงับการใช้งาน" และสถานะการมอบหมายผู้ป่วย "มอบหมายอยู่/ยกเลิกแล้ว"
+  ด้วยเหตุผลเดียวกัน; ใช้ `.trend-table`/`.trend-table-wrap` (เดิมออกแบบสำหรับตารางค่า lab) เป็นตาราง
+  ผู้ใช้งาน/การมอบหมายผู้ป่วยทั่วไป เพราะโครงสร้างตาราง (thead sticky, responsive overflow-x) ตรงกับ
+  ความต้องการโดยไม่ต้องเพิ่ม CSS ใหม่; ใช้ `.denied-shell`/`.denied-card` เดิมแสดงสถานะปฏิเสธการเข้าถึง
+  เมื่อจำลอง audit log บันทึกไม่สำเร็จใน `admin-patient-detail-readonly.html` (NFR-20)
+- (ใหม่ 20260924 รอบที่ 2) ข้อมูลบัญชี/ผู้ป่วย/การมอบหมายทั้งหมดในหน้าจอ Admin เป็น mockup คงที่ตาม
+  NFR-01 ไม่เชื่อมกับข้อมูลในหน้าจออื่นของ prototype จริง (เช่น การอนุมัติบัญชีใน
+  `admin-account-approval.html` ไม่ทำให้บัญชีนั้นใช้ login ได้จริงใน `login.html`) — สาธิตเฉพาะรูปแบบ
+  การนำเสนอ/ปฏิสัมพันธ์เท่านั้น
+- (ใหม่ 20260924 รอบที่ 2) `admin-patient-directory.html`: การ์ดผู้ป่วยทั้ง 6 ใบเชื่อมไปยังหน้าตัวอย่าง
+  เดียวกัน (`admin-patient-detail-readonly.html`) ด้วยเหตุผล simplification แบบเดียวกับที่ทำใน
+  `patient-list.html` เดิม — ระบบจริงจะมีข้อมูลรายบุคคลของแต่ละคนแยกกัน
+- (ใหม่ 20260924 รอบที่ 2) FR-16 (ยืนยัน/แก้ไขผลการประเมินความเสี่ยง) แสดงเป็น section ท้ายหน้า
+  `patient-detail-risk-found.html`/`patient-detail-no-risk.html` แทนที่จะแยกหน้าใหม่ เพราะ user-journey
+  ระบุว่าขั้นตอนนี้เกิดขึ้นทันทีหลังดูผลวิเคราะห์ความเสี่ยงของผู้ป่วยรายเดียวกัน (ขั้นตอนที่ 15 ของ
+  Journey 1) ไม่ใช่ context switch ไปหน้าจอใหม่ — ปุ่ม "แก้ไขผลประเมิน (Override)" บังคับกรอกเหตุผลก่อน
+  บันทึกเสมอ (ปุ่ม "บันทึกการแก้ไข" ตรวจสอบ reason ว่างแล้วแจ้งเตือนด้วย `callout.note`)
+- (ใหม่ 20260924 รอบที่ 2) `verify-email-notice.html`: แก้ข้อความ panel "รอผู้ดูแลระบบอนุมัติบัญชี"
+  จาก "ผ่าน Firebase Console/Firestore ด้วยตนเอง ... ไม่มีหน้าจออนุมัติในระบบสำหรับ MVP" เป็น "Admin
+  อนุมัติผ่านหน้าจอในระบบ (FR-11)" ให้ตรงกับทิศทางใหม่ของ spec `20260924-01-admin-role-account-management`
+  ที่แทนที่การตัดสินใจเดิมใน spec authentication
+- (ใหม่ 20260924 รอบที่ 2) `login.html`: เพิ่มบัญชีจำลอง `admin@ncds-demo.local` / `Passw0rd1`
+  (`role: "admin"`) ในอาร์เรย์ `accounts` เดิม เข้าสู่ระบบสำเร็จแล้วนำไปยัง `admin-dashboard.html`
+  แทน `patient-list.html` เพื่อสาธิตการแยกเส้นทางตามบทบาทหลัง FR-07 สำเร็จ — เป็น mockup client-side
+  ไม่ใช่การตรวจสอบ Custom Claims/Firestore จริง
+- **(แก้บั๊ก 20260924 รอบที่ 3) `admin-user-directory.html`:** เพิ่มแถวของ Admin ที่เข้าสู่ระบบอยู่
+  (กานดา ตรวจตรา, `data-self="true"`) ไว้บนสุดของตาราง ตาม api-spec Operation 12/13 ที่ระบุว่า admin
+  แก้ไขสิทธิ์ (role/isActive) ของตัวเองไม่ได้ — select/ปุ่มของแถวนี้ใส่ `disabled` ทั้งหมดและมีข้อความ
+  กำกับ "ไม่สามารถแก้ไขสิทธิ์ของตนเองได้ (Op.12/Op.13)" ต่อท้าย (ไม่ใช้สีเป็นสัญญาณเดียวตาม NFR-13)
+  สคริปต์ข้ามการผูก event ให้แถวนี้ด้วยเงื่อนไข `data-self`; เพิ่มตัวเลือก `admin` ในทุก dropdown เปลี่ยน
+  role ของผู้ใช้อื่น (u1–u4) และเพิ่มค่า `admin` ใน `roleLabel`/`roleChipClass` ของ JS (ใช้
+  `.chip.chip-neutral` แบบเดียวกับที่ใช้แสดงบทบาท Admin ในหน้าจอ Admin อื่นอยู่แล้ว ไม่ใช่สีใหม่)
+- **(แก้บั๊ก 20260924 รอบที่ 3) `admin-patient-detail-readonly.html`:** พบว่า `#access-check`
+  (`class="callout tip"`) และ `#denied-panel` (`class="denied-shell"`) เดิมใส่ attribute `hidden` ไว้
+  บน element เดียวกับ class ที่กำหนด `display:flex` ตรงๆ — ตามกฎ cascade ของ CSS, author rule (class
+  ใน `style.css`) ชนะ user-agent rule `[hidden]{display:none}` เสมอไม่ว่าค่า specificity จะเท่ากัน ทำให้
+  `element.hidden = true` ทาง JS ไม่ซ่อน element จริง (กล่อง "บันทึก audit log สำเร็จ" ค้างแสดงคู่กับ
+  หน้าปฏิเสธหลังกด "จำลอง: บันทึก audit log ไม่สำเร็จ") แก้โดยห่อเนื้อหาเดิมด้วย wrapper `<div>` เปล่า
+  (ไม่มี class ที่กำหนด display ใดๆ) แล้วย้าย `id`/`hidden` ไปไว้ที่ wrapper แทน ส่วน class เดิม
+  (`.callout tip`, `.denied-shell`) ยังคงอยู่ที่ inner `<div>` เหมือนเดิมทุกประการ — ไม่มีการแก้ `style.css`
+  หรือเพิ่มสี/สไตล์ใหม่ใดๆ, ไม่แก้ JS (ยัง toggle `hidden` ที่ id เดิม `#access-check`/`#denied-panel`
+  ทำงานถูกต้องแล้วเพราะ wrapper ไม่มี class ขัดแย้ง) ปุ่ม "ลองบันทึก audit log อีกครั้ง" กลับสถานะเดิมได้
+  ถูกต้องแล้วด้วยเหตุผลเดียวกัน
 
 ## จุดที่เน้นตาม NFR/หลักการออกแบบ (DESIGN.md §1, §6, §7)
 
@@ -180,10 +268,34 @@ PDPA" (NFR-03–NFR-08) — ดูรายละเอียดในหัว�
   `.info`/`.pending`/`.success`, `.password-rules` + `.rule-met`/`.rule-unmet`) ใช้เฉพาะ CSS custom
   property ที่นิยามไว้แล้วใน `:root` ของไฟล์เดิม (รวมสี base scale sky/amber/emerald ที่มีอยู่แล้ว)
   ไม่มีค่าสี/ระยะห่างใหม่
+- **(20260924 รอบที่ 2)** อ่านไฟล์ใหม่ทั้ง 6 ไฟล์ (`admin-dashboard.html`, `admin-account-approval.html`,
+  `admin-user-directory.html`, `admin-patient-assignment.html`, `admin-patient-directory.html`,
+  `admin-patient-detail-readonly.html`) กลับมาตรวจแล้ว: แท็กเปิด/ปิดครบ, attribute ใส่ quote ครบคู่,
+  `<link rel="stylesheet" href="style.css">` ถูกต้องทุกไฟล์, proto-bar-nav มีลิงก์ครบทั้ง 18 หน้าจอ
+  (12 เดิม + 6 ใหม่) และ `class="current"` ตรงกับไฟล์ตัวเอง, ลิงก์ navigate ระหว่างหน้า
+  (`href="admin-dashboard.html"`, `href="admin-account-approval.html"`,
+  `href="admin-user-directory.html"`, `href="admin-patient-assignment.html"`,
+  `href="admin-patient-directory.html"`, `href="admin-patient-detail-readonly.html"`) ตรงกับชื่อไฟล์
+  จริงที่สร้าง ไม่มีลิงก์ตาย — ไม่มี class CSS ใหม่ในไฟล์เหล่านี้ (ใช้ `.chip`, `.status-pill`,
+  `.trend-table`, `.form-field`, `.radio-group`, `.textarea-input`, `.denied-shell`, `.callout`,
+  `.dx-item`, `.patient-card`, `.stat-grid`, `.section-card` เดิมทั้งหมด)
+- **(20260924 รอบที่ 2)** อ่าน `<script>` ของ 6 ไฟล์ใหม่กลับมาตรวจแล้ว: วงเล็บ/quote ปิดครบ, ทุก
+  `getElementById`/`querySelectorAll`/`querySelectorAll(...).forEach` อ้าง id/selector ที่มีอยู่จริงใน
+  ไฟล์เดียวกัน, มีฟังก์ชัน `escapeHtml` ในทุกไฟล์ที่ echo ข้อความที่มาจาก input/select ของผู้ใช้กลับ
+  (`admin-account-approval.html`, `admin-user-directory.html` ไม่ต้อง escape เพราะไม่ echo ค่าที่พิมพ์
+  อิสระ, `admin-patient-assignment.html`)
+- **(20260924 รอบที่ 2)** ตรวจการแก้ไขไฟล์เดิม 14 ไฟล์: proto-bar-nav ของทั้ง 12 หน้าจอเดิมเพิ่มลิงก์
+  6 หน้าใหม่ถูกต้อง (ตรวจด้วยการอ่านกลับหลังแก้ทุกไฟล์ รวมกรณี `class="current"` อยู่บนลิงก์ PDPA ใน
+  `pdpa-audit-trail.html`/`pdpa-data-subject-request.html` ที่ทำให้ old_string รอบแรกไม่ match แล้วแก้
+  ให้ตรงกับเนื้อหาจริง), `patient-detail-risk-found.html`/`patient-detail-no-risk.html` เพิ่ม section
+  FR-16 + proto-code ใหม่โดยไม่กระทบเนื้อหาเดิมด้านบน, `verify-email-notice.html` แก้ข้อความ panel
+  รออนุมัติ + เพิ่ม proto-code FR-11, `login.html` เพิ่มบัญชี admin ในอาร์เรย์ + แตกแขนงผลลัพธ์ role
+  admin ในฟังก์ชัน submit เดิมโดยไม่กระทบแขนงเดิม (ไม่ถูกต้อง/ยังไม่ยืนยัน/สำเร็จ), `index.html` เพิ่ม
+  section "Journey ที่ 3" และแถวตารางใหม่ 6 แถวโดยไม่ลบ/แก้เนื้อหา Journey อื่นเดิม
 - **ยังไม่ได้ตรวจด้วยเบราว์เซอร์จริง** (agent นี้ไม่มีเครื่องมือเปิดเบราว์เซอร์) — ตรวจได้เพียงอ่าน
   โครงสร้างไฟล์กลับเท่านั้น แนะนำให้เปิดไฟล์จริงในเบราว์เซอร์ (โดยเฉพาะ interactive JS ของทุกไฟล์
-  ข้างต้น, breakpoint มือถือ/แท็บเล็ต, และ URL fragment/query string ของหน้า auth) เป็น follow-up
-  ในเทรดหลัก
+  ข้างต้น, breakpoint มือถือ/แท็บเล็ต, URL fragment/query string ของหน้า auth, และ flow อนุมัติบัญชี/
+  เปลี่ยน role/มอบหมายผู้ป่วย/จำลอง audit log ไม่สำเร็จของหน้าจอ Admin) เป็น follow-up ในเทรดหลัก
 
 ## เอกสารที่เกี่ยวข้อง
 
@@ -195,3 +307,4 @@ PDPA" (NFR-03–NFR-08) — ดูรายละเอียดในหัว�
 - [[../../../01-requirements/01-spec/20260921-01-pdpa-data-protection-compliance|spec ต้นทาง (PDPA)]]
 - [[../../02-technical/detailed-design/pdpa-data-protection-compliance|detailed-design (PDPA)]]
 - [[../../../01-requirements/01-spec/20260923-01-user-authentication-email-password|spec ต้นทาง (Authentication)]]
+- [[../../../01-requirements/01-spec/20260924-01-admin-role-account-management|spec ต้นทาง (Admin role & account management)]]

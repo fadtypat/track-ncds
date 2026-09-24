@@ -182,6 +182,7 @@ generated column, JSON column type ถ้าเกี่ยวข้อง)
 ห้ามใส่หัวข้อนี้เด็ดขาด**
 
 ## กฎสำคัญ
+- `docs/02-design/02-technical/ACL.md` คือแหล่งความจริงหลักของบทบาทและสิทธิ์ (ใครเรียก operation ใดได้, เงื่อนไข PatientAssignment/email_verified/isActive, ข้อยกเว้น Admin, audit log, Security Rules) — อ่านก่อนเขียนเนื้อหาที่เกี่ยวกับสิทธิ์เสมอ ห้ามเขียนสิทธิ์ที่ขัดกับ ACL.md และห้ามแก้ ACL.md เอง ถ้างานต้องการสิทธิ์ที่ ACL.md ไม่มีหรือขัดกัน ให้รายงานให้ผู้ใช้แก้ ACL.md ก่อน
 - `architecture.md` คือแหล่งความจริงของ component ที่มีอยู่จริงเสมอ `feature-list.md`/
   `backlog.md` คือแหล่งความจริงของ "ต้องออกแบบอะไรบ้าง" — ห้ามแก้เอง ห้ามเขียนรหัส FR/NFR ใหม่
 - ห้ามระบุ HTTP method/path, protocol, SQL type, หรือชื่อ database engine ใดๆ ในเอกสารทั้งสอง

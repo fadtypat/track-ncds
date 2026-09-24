@@ -25,12 +25,19 @@
         <a href="access-denied.html">ปฏิเสธการเข้าถึง</a>
         <a href="pdpa-data-subject-request.html">PDPA คำขอใช้สิทธิ</a>
         <a href="pdpa-audit-trail.html">PDPA audit trail</a>
+        <a href="admin-dashboard.html">Admin: หน้าหลัก</a>
+        <a href="admin-account-approval.html">Admin: อนุมัติบัญชี</a>
+        <a href="admin-user-directory.html">Admin: จัดการผู้ใช้งาน</a>
+        <a href="admin-patient-assignment.html">Admin: มอบหมายผู้ป่วย</a>
+        <a href="admin-patient-directory.html">Admin: ผู้ป่วยทุกราย</a>
+        <a href="admin-patient-detail-readonly.html">Admin: ดูประวัติ (read-only)</a>
       </div>
     </div>
     <div class="proto-bar-codes">
       <span class="proto-code">FR-07</span>
       <span class="proto-code">NFR-18</span>
       <span class="proto-code">NFR-12 (ปลายทาง)</span>
+      <span class="proto-code">FR-11 (เส้นทาง Admin)</span>
     </div>
   </div>
 </nav>
@@ -73,9 +80,11 @@
       <span class="callout-title">ข้อมูลสาธิต (mockup ตาม NFR-01)</span>
       <p class="type-body" style="color:inherit;">
         ทดลองเข้าสู่ระบบด้วยบัญชีจำลอง: <span class="type-code">doctor@ncds-demo.local</span> /
-        <span class="type-code">Passw0rd1</span> (ยืนยันอีเมลแล้ว) หรือ
+        <span class="type-code">Passw0rd1</span> (แพทย์ ยืนยันอีเมลแล้ว), หรือ
         <span class="type-code">pending@ncds-demo.local</span> / <span class="type-code">Passw0rd1</span>
-        (ยังไม่ยืนยันอีเมล) — ค่าอื่นทั้งหมดจะแสดงข้อความผิดพลาดแบบทั่วไปตาม NFR-18
+        (แพทย์ ยังไม่ยืนยันอีเมล), หรือ <span class="type-code">admin@ncds-demo.local</span> /
+        <span class="type-code">Passw0rd1</span> (role = admin — ไปแผงควบคุม Admin แทน) — ค่าอื่นทั้งหมด
+        จะแสดงข้อความผิดพลาดแบบทั่วไปตาม NFR-18
       </p>
     </div>
   </div>
@@ -86,8 +95,9 @@
 <script>
 (function () {
   var accounts = [
-    { email: "doctor@ncds-demo.local", password: "Passw0rd1", verified: true },
-    { email: "pending@ncds-demo.local", password: "Passw0rd1", verified: false }
+    { email: "doctor@ncds-demo.local", password: "Passw0rd1", verified: true, role: "doctor" },
+    { email: "pending@ncds-demo.local", password: "Passw0rd1", verified: false, role: "doctor" },
+    { email: "admin@ncds-demo.local", password: "Passw0rd1", verified: true, role: "admin" }
   ];
 
   function escapeHtml(str) {
@@ -143,6 +153,15 @@
           '<span class="callout-title">ยังไม่ได้ยืนยันอีเมล</span>' +
           '<p class="type-body" style="color:inherit;">อีเมล ' + escapeHtml(matched.email) + ' ยังไม่ได้ยืนยันตัวตน กรุณายืนยันอีเมลก่อนจึงจะเข้าใช้งานฟีเจอร์อื่นของระบบได้ (FR-09)</p>' +
           '<a class="btn btn-primary btn-sm" href="verify-email-notice.html?state=pending-verify" style="margin-top:var(--space-2); align-self:flex-start;">ไปหน้ายืนยันอีเมล</a>' +
+        "</div>";
+      return;
+    }
+    if (matched.role === "admin") {
+      resultBox.innerHTML =
+        '<div class="callout tip" role="status">' +
+          '<span class="callout-title">เข้าสู่ระบบสำเร็จ (Admin)</span>' +
+          '<p class="type-body" style="color:inherit;">ยินดีต้อนรับ บัญชีนี้มี role = admin (ผู้ดูแลระบบ) — ไปยังแผงควบคุม Admin แทนรายชื่อผู้ป่วย (FR-11–FR-15, NFR-19)</p>' +
+          '<a class="btn btn-primary btn-sm" href="admin-dashboard.html" style="margin-top:var(--space-2); align-self:flex-start;">ไปแผงควบคุม Admin</a>' +
         "</div>";
       return;
     }

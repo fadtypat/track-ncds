@@ -19,10 +19,17 @@
 [[patient-search-selection#State Diagram — สถานะการตรวจสอบสิทธิ์และการเลือกผู้ป่วย|State Diagram ตรวจสอบสิทธิ์ของ patient-search-selection]]
 ต่อไป (การตรวจสอบ role/isActive/PatientAssignment หลังจากจุดนั้นไม่ได้ถูกอธิบายซ้ำในเอกสารนี้)
 
-ผู้ดูแลระบบ (system administrator) ที่ปรากฏใน sequence diagram ด้านล่างดำเนินการผ่าน Firebase
-Console/Firestore โดยตรง **ไม่ใช่ operation ในเอกสารนี้** (ยืนยันแล้วโดยผู้ใช้ — ดู
-[[20260923-01-user-authentication-email-password#นอกขอบเขต (Out of scope) ของเอกสารนี้|หัวข้อนอกขอบเขตของ spec Authentication]])
-แสดงไว้เป็น actor ภายนอกเพื่อความสมบูรณ์ของลำดับเหตุการณ์เท่านั้น
+**แก้ไข 2026-09-24 (รอบ sync ที่หก) — การอนุมัติบัญชีเปลี่ยนจาก Firebase Console เป็น Operation 11:**
+เดิมหัวข้อนี้เคยระบุว่า "ผู้ดูแลระบบ (system administrator) ดำเนินการอนุมัติบัญชีผ่าน Firebase
+Console/Firestore โดยตรง ไม่ใช่ operation ในเอกสารนี้" — ข้อความนี้**ถูกแทนที่แล้ว**โดย
+[[20260924-01-admin-role-account-management]] (FR-11): การอนุมัติบัญชี (กำหนด role + `isActive=true`)
+ดำเนินการโดยบทบาท **Admin** ผ่านหน้าจอในระบบ เรียก
+[[api-spec#Operation 11 — อนุมัติบัญชีผู้ใช้งานใหม่ผ่านหน้าจอในระบบ|Operation 11]] แทนแล้ว — ดู sequence
+diagram ฉบับเต็มฝั่ง Admin ที่
+[[admin-role-account-management#Sequence Diagram 1 — Admin ดูรายชื่อและอนุมัติบัญชีที่รอการอนุมัติ (Operation 10 + Operation 11)|admin-role-account-management]]
+sequence diagram ด้านล่างของเอกสารนี้ยังคงแสดง actor "ผู้ดูแลระบบ" ไว้เพื่อความสมบูรณ์ของลำดับเหตุการณ์
+จากมุมมองผู้สมัครบัญชีเท่านั้น (ไม่ซ้ำรายละเอียด Operation 11 ที่นี่) — **เฉพาะบัญชี Admin คนแรก/bootstrap
+เท่านั้น**ที่ยังคงตั้งผ่าน Firebase Console/Firestore โดยตรง อยู่นอกขอบเขตของทั้งสองเอกสารนี้
 
 ## Sequence Diagram — สมัครบัญชี ยืนยันอีเมล และรออนุมัติ (Operation 8, FR-08/FR-09)
 
@@ -33,7 +40,7 @@ sequenceDiagram
     participant Backend as บริการฝั่งเซิร์ฟเวอร์ (Backend Service — Account Onboarding Gateway)
     participant Auth as บริการยืนยันตัวตน (Authentication Service)
     participant Store as ที่เก็บข้อมูลหลัก (Primary Data Store — users/{uid})
-    actor Admin as ผู้ดูแลระบบ (นอกระบบ)
+    actor Admin as Admin (ผู้ดูแลระบบ — อนุมัติผ่าน Operation 11)
 
     User->>Client: กรอกอีเมลและรหัสผ่านเพื่อสมัครบัญชีใหม่ (FR-08)
     Client->>Backend: เรียก Operation 8 พร้อมอีเมล/รหัสผ่าน
@@ -58,8 +65,8 @@ sequenceDiagram
         User->>Auth: เปิดลิงก์ยืนยันตัวตนจากอีเมล (เฉพาะกรณีมีบัญชีจริง) (FR-09)
         Auth->>Auth: ตั้งค่าสถานะการยืนยันอีเมล = จริง (เก็บใน Firebase Authentication เอง)
         Note over Auth,Store: สถานะการยืนยันอีเมลไม่มี field คู่กันใน Firestore users/{uid} — อ่านได้จาก<br/>Firebase ID token (user.emailVerified) เท่านั้น ตาม db-spec Firestore Technical Binding ของ User
-        Admin->>Store: (นอกระบบ) กำหนด role (แพทย์/พยาบาล) + isActive=true ผ่าน Firebase Console/Firestore (FR-08)
-        Note over Admin,Store: ไม่มีลำดับก่อน-หลังบังคับระหว่างการยืนยันอีเมล (บนสุด) กับการอนุมัติของผู้ดูแลระบบ (ขั้นตอนนี้) —<br/>ทั้งสองเงื่อนไขถูกตรวจสอบแยกจุดกันคนละที่ (Client ตรวจ emailVerified, Operation ร่วม Access Control ตรวจ role/isActive)<br/>และต้องผ่านทั้งคู่ก่อนเข้าถึงข้อมูลผู้ป่วยได้ ไม่ว่าจะเกิดก่อน-หลังกันในลำดับใด
+        Admin->>Store: เรียก Operation 11 (`approveUserAccount`) กำหนด role (แพทย์/พยาบาล) + isActive=true ผ่านหน้าจอในระบบ (FR-11 — แทนที่ Firebase Console/Firestore เดิม)
+        Note over Admin,Store: รายละเอียดเต็มของ Operation 11 (การตรวจสอบสิทธิ์ Admin, audit log) ดู admin-role-account-management<br/>ไม่มีลำดับก่อน-หลังบังคับระหว่างการยืนยันอีเมล (บนสุด) กับการอนุมัติของ Admin (ขั้นตอนนี้) —<br/>ทั้งสองเงื่อนไขถูกตรวจสอบแยกจุดกันคนละที่ (Client ตรวจ emailVerified, Operation ร่วม Access Control ตรวจ role/isActive)<br/>และต้องผ่านทั้งคู่ก่อนเข้าถึงข้อมูลผู้ป่วยได้ ไม่ว่าจะเกิดก่อน-หลังกันในลำดับใด
     end
 ```
 
@@ -136,7 +143,7 @@ sequenceDiagram
 | 3 | [[api-spec#Operation 8 — สมัครบัญชีผู้ใช้งานด้วยตนเอง (Self Sign-up)\|Operation 8]] | [[db-spec#ผู้ใช้ (User)\|User]] — ส่วน `สถานะการยืนยันอีเมล` | เขียน (ตั้งค่าเริ่มต้นเป็นเท็จ, จัดการโดย Firebase Authentication เอง) | ค่าเริ่มต้นเท็จทันทีที่สมัคร — เปลี่ยนเป็นจริงในลำดับ 5 |
 | 4 | [[api-spec#Operation 7 — เข้าสู่ระบบด้วยอีเมลและรหัสผ่าน\|Operation 7]] | [[db-spec#ผู้ใช้ (User)\|User]] — ส่วน `อีเมล`/`รหัสผ่านที่จัดเก็บ` | อ่าน (เปรียบเทียบ ภายใน Authentication Service) | ไม่อ่าน/เขียน Firestore `users/{uid}` เลยใน operation นี้เอง (บทบาท/isActive ถูกตรวจแยกที่ Operation ร่วม Access Control ในภายหลัง) |
 | 5 | ยืนยันอีเมลผ่านลิงก์ (FR-09 — ไม่ใช่ operation แยกใน [[api-spec]] เพราะเป็นกลไกของ Authentication Service เอง) | [[db-spec#ผู้ใช้ (User)\|User]] — ส่วน `สถานะการยืนยันอีเมล` | แก้ไข (เท็จ → จริง, ภายใน Firebase Authentication) | ไม่มี field คู่กันใน Firestore `users/{uid}` — อ่านผ่าน Firebase ID token เท่านั้น |
-| 6 | อนุมัติบัญชีโดยผู้ดูแลระบบ (นอกระบบ — ไม่ใช่ operation ใน [[api-spec]]) | [[db-spec#ผู้ใช้ (User)\|User]] — ส่วน `บทบาท`/`สถานะการใช้งานบัญชี` ใน Firestore `users/{uid}` | แก้ไข | ผ่าน Firebase Console/Firestore โดยตรง ไม่มีลำดับก่อน-หลังบังคับกับลำดับ 5 |
+| 6 | [[api-spec#Operation 11 — อนุมัติบัญชีผู้ใช้งานใหม่ผ่านหน้าจอในระบบ\|Operation 11]] (Admin — ดูรายละเอียดเต็มที่ [[admin-role-account-management]]) | [[db-spec#ผู้ใช้ (User)\|User]] — ส่วน `บทบาท`/`สถานะการใช้งานบัญชี` ใน Firestore `users/{uid}` | แก้ไข | ผ่านหน้าจอในระบบของ Admin (แทนที่ Firebase Console/Firestore เดิม — FR-11) ไม่มีลำดับก่อน-หลังบังคับกับลำดับ 5 |
 | 7 | [[api-spec#Operation 9 — ขอรีเซ็ตรหัสผ่านทางอีเมล (Forgot Password)\|Operation 9a — `requestPasswordReset`]] | [[db-spec#ผู้ใช้ (User)\|User]] — ส่วน `อีเมล` | อ่าน (ตรวจสอบว่ามีบัญชีอยู่จริง ภายใน) | ผลการตรวจสอบไม่ถูกส่งต่อให้ Client (NFR-18) — ผ่าน Cloud Function เหมือน Operation 8 |
 | 8 | [[api-spec#Operation 9 — ขอรีเซ็ตรหัสผ่านทางอีเมล (Forgot Password)\|Operation 9b — `confirmPasswordReset`]] | [[db-spec#ผู้ใช้ (User)\|User]] — ส่วน `รหัสผ่านที่จัดเก็บ` | แก้ไข (ภายใน Firebase Authentication เอง หลังคลิกลิงก์ — ไม่ผ่าน Cloud Function) | ต้องผ่านนโยบายรหัสผ่านขั้นต่ำ (NFR-17) แต่บังคับด้วย **Google Cloud Identity Platform password policy** (backstop) แทน regex ในโค้ด เพราะไม่มี Cloud Function คั่นกลางในลำดับนี้ (decision area 13) |
 
@@ -155,8 +162,8 @@ stateDiagram-v2
         [*] --> รอยืนยันอีเมล
         รอยืนยันอีเมล --> ยืนยันอีเมลแล้ว : คลิกลิงก์ยืนยันจากอีเมล (FR-09)
         --
-        [*] --> รอผู้ดูแลระบบอนุมัติ
-        รอผู้ดูแลระบบอนุมัติ --> ผู้ดูแลระบบอนุมัติแล้ว : กำหนด role + isActive=true ผ่าน Firebase Console/Firestore (นอกระบบ, FR-08)
+        [*] --> รอAdminอนุมัติ
+        รอAdminอนุมัติ --> Adminอนุมัติแล้ว : Operation 11 กำหนด role + isActive=true ผ่านหน้าจอในระบบ (FR-11)
     }
 
     สมัครบัญชีสำเร็จ --> พร้อมเข้าถึงข้อมูลผู้ป่วย : ทั้งสองเงื่อนไขในกล่องด้านบนเสร็จสมบูรณ์ (ไม่ว่าจะเกิดก่อน-หลังกันในลำดับใด)
@@ -166,10 +173,12 @@ stateDiagram-v2
 หมายเหตุ: "พร้อมเข้าถึงข้อมูลผู้ป่วย" ในที่นี้หมายถึง **ผ่านระดับบทบาท+บัญชี+อีเมลยืนยันแล้วเท่านั้น** ยัง
 ไม่รวมการตรวจสอบระดับรายผู้ป่วย (PatientAssignment) ซึ่งเป็นอีกขั้นตอนหนึ่งที่อธิบายไว้ที่
 [[patient-search-selection#State Diagram — สถานะการตรวจสอบสิทธิ์และการเลือกผู้ป่วย|State Diagram ของ patient-search-selection]]
-สถานะ `สถานะการใช้งานบัญชี` ยังสามารถถูกผู้ดูแลระบบตั้งกลับเป็นเท็จได้ภายหลัง (ระงับบัญชี) ผ่าน Firebase
-Console/Firestore โดยตรงเช่นกัน แต่ไม่มี flow/journey ต้นทางที่อธิบาย trigger ของการระงับนี้ในเอกสาร
-spec ปัจจุบัน จึงไม่แสดงเป็น transition แยกในไดอะแกรมนี้ (ผลกระทบของบัญชีถูกระงับต่อ Access Control
-ถูกอธิบายไว้แล้วที่ [[patient-search-selection]])
+สถานะ `สถานะการใช้งานบัญชี` ยังสามารถถูก Admin ตั้งกลับเป็นเท็จได้ภายหลัง (ระงับบัญชี) ผ่าน
+[[api-spec#Operation 13 — ระงับ/เปิดใช้งานบัญชีผู้ใช้งาน|Operation 13]] (FR-13 — เพิ่มใหม่ 2026-09-24
+ตามฟีเจอร์ที่ 7) — ดูรายละเอียด transition นี้ที่
+[[admin-role-account-management#State Diagram — สถานะบัญชีผู้ใช้ (User) ตลอดวงจร Admin จัดการ (FR-11–FR-13)|admin-role-account-management]]
+แทนการวาดซ้ำที่นี่ (ผลกระทบของบัญชีถูกระงับต่อ Access Control ถูกอธิบายไว้แล้วที่
+[[patient-search-selection]])
 
 ## Cross-cutting: คุณภาพเชิงปฏิบัติการของระบบ (NFR-09–NFR-16)
 
@@ -201,7 +210,8 @@ spec ปัจจุบัน จึงไม่แสดงเป็น transit
 | ขอรีเซ็ตรหัสผ่านด้วยอีเมลที่ไม่มีในระบบ (Operation 9a) | ไม่ทำการใดๆ เพิ่มเติม แต่คืนข้อความ generic เดียวกับกรณีพบบัญชี (NFR-18) | [[api-spec#Operation 9 — ขอรีเซ็ตรหัสผ่านทางอีเมล (Forgot Password)\|Operation 9a]] |
 | ตั้งรหัสผ่านใหม่ผ่านลิงก์รีเซ็ต (Operation 9b) ไม่ผ่าน Identity Platform password policy | Firebase Authentication คืน error code มาตรฐานของ Identity Platform — Client แปลงเป็นข้อความแจ้งเตือนที่ชั้น UI (NFR-17 — ไม่ใช่กรณี generic เพราะไม่เกี่ยวกับ NFR-18) | [[api-spec#Operation 9 — ขอรีเซ็ตรหัสผ่านทางอีเมล (Forgot Password)\|Operation 9b]], [[technology-stack#13. กลไก Validate Password Policy ฝั่งเซิร์ฟเวอร์ (NFR-17, ฟีเจอร์ที่ 6) — Regex ใน Cloud Function + Identity Platform เป็น Backstop\|decision area 13]] |
 | เข้าสู่ระบบสำเร็จ แต่ยังไม่ยืนยันอีเมล (`emailVerified=false`) | Client บล็อกการเข้าถึงฟีเจอร์อื่นทั้งหมด แจ้งให้ยืนยันอีเมลก่อน — เป็นหน้าที่ของ Client เท่านั้น | [[backlog#สูง (MVP)\|FR-09]] |
-| เข้าสู่ระบบสำเร็จ ยืนยันอีเมลแล้ว แต่บัญชียังไม่ผ่านการอนุมัติ (`role`=ไม่มีค่า, `isActive=false`) | ผ่าน Operation 7 ได้ปกติ แต่ถูกปฏิเสธที่ Operation ร่วม Access Control ทันทีเมื่อเรียก Operation 0-6 ใดๆ (ตรวจสอบระดับบทบาทไม่ผ่านโดยอัตโนมัติ — ไม่ต้องเพิ่มเงื่อนไขใหม่) | [[api-spec#Operation ร่วม — ตรวจสอบสิทธิ์การเข้าถึงข้อมูลผู้ป่วย (Access Control)\|Operation ร่วม Access Control]], [[patient-search-selection]] |
+| เข้าสู่ระบบสำเร็จ ยืนยันอีเมลแล้ว แต่บัญชียังไม่ผ่านการอนุมัติ (`role`=ไม่มีค่า, `isActive=false`) | ผ่าน Operation 7 ได้ปกติ แต่ถูกปฏิเสธที่ Operation ร่วม Access Control ทันทีเมื่อเรียก Operation 0-6 ใดๆ (ตรวจสอบระดับบทบาทไม่ผ่านโดยอัตโนมัติ — ไม่ต้องเพิ่มเงื่อนไขใหม่) — ต้องรอ Admin อนุมัติผ่าน Operation 11 ก่อน (FR-11) | [[api-spec#Operation ร่วม — ตรวจสอบสิทธิ์การเข้าถึงข้อมูลผู้ป่วย (Access Control)\|Operation ร่วม Access Control]], [[patient-search-selection]], [[admin-role-account-management]] |
+| Admin พยายามอนุมัติบัญชีที่เคยถูกอนุมัติแล้ว (มี `role` อยู่ก่อน) ผ่าน Operation 11 | ปฏิเสธด้วย input ไม่ถูกต้อง — ให้ใช้ Operation 12 (เปลี่ยน role) หรือ Operation 13 (ระงับ/เปิดใช้งาน) แทน | [[backlog#สูง (MVP)\|FR-11]], [[admin-role-account-management]] |
 | **Client ที่ถูกดัดแปลง/บั๊ก ข้าม logic ตรวจสอบ `emailVerified` แล้วเรียก Operation 0-6 ตรง (ทั้งที่ role/isActive/PatientAssignment ผ่านครบ)** | **ปิดช่องว่างแล้วตั้งแต่ 2026-09-24** — Operation ร่วม Access Control ตรวจสอบ `email_verified` ซ้ำที่ฝั่งเซิร์ฟเวอร์ด้วยแล้ว (Security Rules ของ Operation 0 + shared helper module ของ Cloud Functions Operation 1-6) — ไม่ใช่ช่องว่างที่ยังไม่ถูกยืนยันอีกต่อไป | [[technology-stack#19. การตรวจสอบ `emailVerified` ซ้ำฝั่ง Backend (FR-09, ฟีเจอร์ที่ 6) — ตรวจทั้ง Cloud Functions และ Security Rules\|decision area 19 ใน technology-stack]] |
 | ผู้ดูแลระบบแก้ไข `role`/`isActive` ผ่าน Firestore โดยตรง | **ไม่มีปัญหา custom claims ค้างเก่าอีกต่อไป** — ตัดสินใจแล้วว่า**ไม่ sync `role`/`isActive` ไปยัง Custom Claims เลย** (decision area 18) ทุก operation อ่าน Firestore `users/{uid}` เป็น source of truth เดียวโดยตรงทุกครั้ง จึงเห็นผลการแก้ไขทันทีในคำขอถัดไป ไม่มี token/claims เก่าให้ค้าง | [[technology-stack#18. การ Sync role/isActive ระหว่าง Firestore กับ Custom Claims (ฟีเจอร์ที่ 6) — ไม่ Sync, Firestore เป็น Source of Truth เดียว\|decision area 18 ใน technology-stack]] |
 
@@ -245,6 +255,12 @@ spec ปัจจุบัน จึงไม่แสดงเป็น transit
   `decodedToken.email_verified` (Cloud Functions, Operation 1-6) และ
   `request.auth.token.email_verified == true` (Security Rules, Operation 0) — อ่านจาก Firebase ID
   token ที่ verify อยู่แล้วทุกครั้ง ไม่ต้องเพิ่ม Firestore read
+- **การอนุมัติบัญชี (FR-11 — เปลี่ยนจาก Firebase Console เป็น Operation 11 ในรอบ sync ที่หก):** Cloud
+  Functions (2nd gen, Node.js + TypeScript) — HTTPS Callable Function ชื่อ **`approveUserAccount`**
+  เขียน `users/{uid}` (`role`, `isActive = true`) ผ่าน Firebase Admin SDK เท่านั้น เรียกได้เฉพาะ Admin
+  — ดูรายละเอียดเต็มที่
+  [[admin-role-account-management#หมายเหตุการ Implement (จาก technology-stack)|admin-role-account-management]]
+  (ไม่ซ้ำรายละเอียดที่นี่)
 
 **รายการที่ยังไม่ถูกตัดสินใจใน `[[technology-stack]]` (ห้ามเดา — คงไว้เป็นประเด็นรอตัดสินใจ — เหลือ
 เฉพาะประเด็นที่ตัดสินใจแล้วว่า "ยังไม่ทำในรอบนี้โดยเจตนา" ไม่ใช่ประเด็นที่ยังไม่ได้พิจารณา):**
@@ -270,3 +286,5 @@ spec ปัจจุบัน จึงไม่แสดงเป็น transit
 - [[complication-risk-analysis-alert]]
 - [[pdpa-data-protection-compliance]]
 - [[20260923-01-user-authentication-email-password]]
+- [[admin-role-account-management]]
+- [[20260924-01-admin-role-account-management]]

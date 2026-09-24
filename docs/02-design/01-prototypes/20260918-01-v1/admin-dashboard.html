@@ -1,0 +1,143 @@
+<!DOCTYPE html>
+<html lang="th">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>NCDs History &amp; Risk — Prototype v1 — Admin: หน้าหลัก</title>
+<link rel="stylesheet" href="style.css">
+</head>
+<body>
+
+<nav class="proto-bar">
+  <div class="proto-bar-inner">
+    <div class="proto-bar-top">
+      <span class="proto-bar-title">NCDS CLINIC · PROTOTYPE v1 · Admin: หน้าหลัก</span>
+      <div class="proto-bar-nav">
+        <a href="index.html">หน้ารวม</a>
+        <a href="login.html">เข้าสู่ระบบ</a>
+        <a href="signup.html">สมัครบัญชี</a>
+        <a href="verify-email-notice.html">ยืนยันอีเมล/รออนุมัติ</a>
+        <a href="forgot-password.html">ลืมรหัสผ่าน</a>
+        <a href="reset-password.html">ตั้งรหัสผ่านใหม่</a>
+        <a href="patient-list.html">ค้นหา/รายชื่อผู้ป่วย</a>
+        <a href="patient-detail-risk-found.html">ประวัติ+ความเสี่ยง (พบ)</a>
+        <a href="patient-detail-no-risk.html">ประวัติ+ความเสี่ยง (ไม่พบ)</a>
+        <a href="access-denied.html">ปฏิเสธการเข้าถึง</a>
+        <a href="pdpa-data-subject-request.html">PDPA คำขอใช้สิทธิ</a>
+        <a href="pdpa-audit-trail.html">PDPA audit trail</a>
+        <a href="admin-dashboard.html" class="current">Admin: หน้าหลัก</a>
+        <a href="admin-account-approval.html">Admin: อนุมัติบัญชี</a>
+        <a href="admin-user-directory.html">Admin: จัดการผู้ใช้งาน</a>
+        <a href="admin-patient-assignment.html">Admin: มอบหมายผู้ป่วย</a>
+        <a href="admin-patient-directory.html">Admin: ผู้ป่วยทุกราย</a>
+        <a href="admin-patient-detail-readonly.html">Admin: ดูประวัติ (read-only)</a>
+      </div>
+    </div>
+    <div class="proto-bar-codes">
+      <span class="proto-code">FR-11</span>
+      <span class="proto-code">FR-12</span>
+      <span class="proto-code">FR-13</span>
+      <span class="proto-code">FR-14</span>
+      <span class="proto-code">FR-15</span>
+      <span class="proto-code">NFR-19</span>
+      <span class="proto-code">NFR-20</span>
+    </div>
+  </div>
+</nav>
+
+<div class="app-bg">
+<div class="container stack gap-section">
+
+  <header class="stack" style="gap:8px;">
+    <div class="flex-between">
+      <span class="type-eyebrow">ผู้ใช้งาน: กานดา ตรวจตรา · Admin (ผู้ดูแลระบบ)</span>
+      <div style="display:flex; gap:var(--space-2); flex-wrap:wrap;">
+        <a class="btn btn-secondary btn-sm" href="login.html#session-expired">จำลอง: เซสชันหมดอายุอัตโนมัติ (NFR-12)</a>
+        <a class="btn btn-secondary btn-sm" href="login.html#logged-out">ออกจากระบบ</a>
+      </div>
+    </div>
+    <h1 class="type-page-title">แผงควบคุมผู้ดูแลระบบ (Admin)</h1>
+    <p class="type-body" style="max-width:720px;">
+      Admin เป็นบทบาทใหม่ (role ที่ 3 ควบคู่แพทย์/พยาบาล) มีสิทธิ์อนุมัติบัญชี เปลี่ยนบทบาท ระงับ/เปิด
+      ใช้งานบัญชี มอบหมายผู้ป่วย และดูประวัติผู้ป่วยทุกรายแบบอ่านอย่างเดียวผ่านหน้าจอในระบบ (FR-11–FR-15)
+      — ไม่มีสิทธิ์แก้ไขข้อมูลทางคลินิกใดๆ สิทธิ์ยืนยัน/แก้ไขผลวิเคราะห์ความเสี่ยงยังคงเป็นของแพทย์/
+      พยาบาลเท่านั้น (FR-16)
+    </p>
+    <span class="chip chip-neutral" style="align-self:flex-start;">บทบาท: Admin — เข้าถึงผู้ป่วยทุกรายโดยไม่ต้องมี PatientAssignment (NFR-19)</span>
+  </header>
+
+  <section class="stat-grid">
+    <div class="stat-tile sky">
+      <span class="stat-label">บัญชีรออนุมัติ</span>
+      <span class="stat-value">2 บัญชี</span>
+    </div>
+    <div class="stat-tile rose">
+      <span class="stat-label">บัญชีที่ถูกระงับการใช้งาน</span>
+      <span class="stat-value">1 บัญชี</span>
+    </div>
+    <div class="stat-tile purple">
+      <span class="stat-label">ผู้ป่วยทั้งหมดในระบบ</span>
+      <span class="stat-value">6 คน</span>
+    </div>
+  </section>
+
+  <section class="stack" style="gap:12px;">
+    <div class="section-head">
+      <h2 class="type-section-title">เลือกงานที่ต้องการดำเนินการ</h2>
+      <span class="type-caption">ทำทีละงานแล้ววนกลับมาเลือกงานอื่นต่อได้ (ไม่ใช่ flow เชิงเส้น) ตาม user-journey</span>
+    </div>
+    <ol class="stack" style="gap:12px; padding-left:0;">
+      <li class="dx-item" style="border-color:var(--border-default);">
+        <div class="dx-item-main">
+          <span class="dx-item-name">1. อนุมัติบัญชีผู้ใช้งานใหม่</span>
+          <span class="dx-item-meta">ดูรายชื่อบัญชีที่สมัครเองแล้วรอการอนุมัติ กำหนด role (แพทย์/พยาบาล) และเปิดใช้งาน</span>
+        </div>
+        <a class="btn btn-primary btn-sm" href="admin-account-approval.html">เปิดหน้าอนุมัติบัญชี <span class="proto-code" style="margin-left:6px;">FR-11</span></a>
+      </li>
+      <li class="dx-item" style="border-color:var(--border-default);">
+        <div class="dx-item-main">
+          <span class="dx-item-name">2. เปลี่ยนบทบาท / ระงับ-เปิดใช้งานบัญชี</span>
+          <span class="dx-item-meta">จัดการผู้ใช้งานที่เคยอนุมัติแล้วทั้งหมด</span>
+        </div>
+        <a class="btn btn-primary btn-sm" href="admin-user-directory.html">เปิดหน้าจัดการผู้ใช้งาน <span class="proto-code" style="margin-left:6px;">FR-12·FR-13</span></a>
+      </li>
+      <li class="dx-item" style="border-color:var(--border-default);">
+        <div class="dx-item-main">
+          <span class="dx-item-name">3. จัดการการมอบหมายผู้ป่วย</span>
+          <span class="dx-item-meta">มอบหมาย/ยกเลิกการมอบหมายผู้ป่วยรายบุคคลให้แพทย์/พยาบาล (patientAssignments)</span>
+        </div>
+        <a class="btn btn-primary btn-sm" href="admin-patient-assignment.html">เปิดหน้ามอบหมายผู้ป่วย <span class="proto-code" style="margin-left:6px;">FR-14</span></a>
+      </li>
+      <li class="dx-item" style="border-color:var(--border-default);">
+        <div class="dx-item-main">
+          <span class="dx-item-name">4. ดูประวัติผู้ป่วยทุกรายในระบบ (อ่านอย่างเดียว)</span>
+          <span class="dx-item-meta">ไม่ต้องมี PatientAssignment เป็นของตนเอง ทุกครั้งที่เข้าถึงต้องบันทึก audit log แบบ fail-safe ก่อนเสมอ</span>
+        </div>
+        <a class="btn btn-primary btn-sm" href="admin-patient-directory.html">เปิดหน้าผู้ป่วยทุกราย <span class="proto-code" style="margin-left:6px;">FR-15·NFR-19</span></a>
+      </li>
+    </ol>
+  </section>
+
+  <div class="callout note">
+    <span class="callout-title">ขอบเขตสิทธิ์ของ Admin</span>
+    <p class="type-body" style="color:inherit; margin:0;">
+      Admin ไม่มีสิทธิ์แก้ไขข้อมูลทางคลินิกใดๆ (ประวัติวินิจฉัย, ผล lab, ผลวิเคราะห์ความเสี่ยง) สิทธิ์
+      ยืนยัน/แก้ไข (override) ผลวิเคราะห์ความเสี่ยงยังคงเป็นของแพทย์/พยาบาลผู้ดูแลผู้ป่วยรายนั้นเท่านั้น
+      (FR-16) การสร้างบัญชี Admin คนแรก (bootstrap) ยังคงดำเนินการผ่าน Firebase Console/Firestore
+      โดยตรง อยู่นอกขอบเขตของหน้าจอนี้
+    </p>
+  </div>
+
+  <div class="callout info">
+    <span class="callout-title">Audit log แบบ fail-safe (NFR-20)</span>
+    <p class="type-body" style="color:inherit; margin:0;">
+      ทุกครั้งที่ Admin เข้าถึงข้อมูลผู้ป่วยรายบุคคลตาม FR-15 ระบบต้องบันทึก audit log ก่อนคืนข้อมูลเสมอ
+      หากบันทึกไม่สำเร็จ ระบบต้องปฏิเสธการเข้าถึงข้อมูลผู้ป่วยรายนั้นทันที — ดูตัวอย่างที่หน้า
+      "ดูประวัติ (read-only)"
+    </p>
+  </div>
+
+</div>
+</div>
+</body>
+</html>

@@ -212,6 +212,7 @@ Likelihood (สูง/กลาง/ต่ำ) | Impact (สูง/กลาง/�
 ห้ามเงียบไว้), และหัวข้อ `## NEEDS_NEW_REQUIREMENT` ถ้าเข้าเงื่อนไข (ดูรูปแบบด้านบน)
 
 ## กฎสำคัญ
+- `docs/02-design/02-technical/ACL.md` คือแหล่งความจริงหลักของบทบาทและสิทธิ์ (ใครเรียก operation ใดได้, เงื่อนไข PatientAssignment/email_verified/isActive, ข้อยกเว้น Admin, audit log, Security Rules) — อ่านก่อนเขียนเนื้อหาที่เกี่ยวกับสิทธิ์เสมอ ห้ามเขียนสิทธิ์ที่ขัดกับ ACL.md และห้ามแก้ ACL.md เอง ถ้างานต้องการสิทธิ์ที่ ACL.md ไม่มีหรือขัดกัน ให้รายงานให้ผู้ใช้แก้ ACL.md ก่อน
 - **ห้ามเรียก `AskUserQuestion` เด็ดขาด** (จะ error) ใช้ `NEEDS_USER_INPUT` แทนเสมอ
 - `feature-list.md`/`user-journey.md` คือแหล่งความจริงของ "มีอะไรบ้างที่ต้องทดสอบ" เสมอ เอกสาร
   ทดสอบต้องตามให้ทัน ไม่ใช่กลับกัน

@@ -2,14 +2,45 @@
 
 เอกสารนี้ตรวจสอบว่า NFR ทุกตัวใน [[backlog#Non-Functional Requirements|backlog]] ถูกออกแบบมารองรับ
 จริงหรือไม่ในเอกสารเชิงเทคนิคทั้งหมด ได้แก่ [[architecture]], [[api-spec]], [[db-spec]], [[technology-stack]]
-และไฟล์ทั้ง 5 ใน `detailed-design/` ([[patient-search-selection]], [[patient-ncd-diagnosis-lab-history]],
+และไฟล์ทั้ง 6 ใน `detailed-design/` ([[patient-search-selection]], [[patient-ncd-diagnosis-lab-history]],
 [[complication-risk-analysis-alert]], [[pdpa-data-protection-compliance]],
-[[user-authentication-email-password]]) **เอกสารนี้เป็นผลการตรวจสอบเท่านั้น ไม่ใช่การออกแบบ** — ถ้าพบ
-ช่องว่าง ให้รัน skill ที่แนะนำในคอลัมน์สุดท้ายเพื่อแก้ไขเอกสารเชิงเทคนิคที่เกี่ยวข้อง ห้ามแก้ไข
-`architecture.md`/`api-spec.md`/`db-spec.md`/`technology-stack.md`/`detailed-design/*` จากเอกสารนี้
-โดยตรง
+[[user-authentication-email-password]], [[admin-role-account-management]]) **เอกสารนี้เป็นผลการตรวจสอบ
+เท่านั้น ไม่ใช่การออกแบบ** — ถ้าพบช่องว่าง ให้รัน skill ที่แนะนำในคอลัมน์สุดท้ายเพื่อแก้ไขเอกสารเชิงเทคนิค
+ที่เกี่ยวข้อง ห้ามแก้ไข `architecture.md`/`api-spec.md`/`db-spec.md`/`technology-stack.md`/
+`detailed-design/*` จากเอกสารนี้โดยตรง
 
-อัปเดตล่าสุด: 2026-09-24 (ตรวจสอบรอบที่แปด — ประเมินใหม่เฉพาะ **NFR-17, NFR-18** หลัง
+อัปเดตล่าสุด: 2026-09-24 (ตรวจสอบรอบที่เก้า — ประเมินใหม่ **NFR-01 ถึง NFR-20 ทั้งหมด** หลังเพิ่มบทบาท
+Admin (FR-11–FR-15, NFR-19, NFR-20) และไฟล์ใหม่ [[admin-role-account-management]]) อ่าน [[architecture]],
+[[api-spec]] (Operation 0–16), [[db-spec]], [[technology-stack]] และ `detailed-design/` ทั้ง 6 ไฟล์ใหม่
+ทั้งไฟล์ ผลสรุปรอบนี้:
+
+- **NFR-19 (ข้อยกเว้น Access Control ของ Admin) และ NFR-20 (Audit Log fail-safe ของ Admin) — สถานะ
+  "รองรับแล้ว (Addressed)"**: [[architecture]] (ตาราง Mapping NFR แถวใหม่), [[api-spec]] (Operation
+  ร่วม Access Control ข้อ 2 มีข้อยกเว้น NFR-19 ระบุขอบเขตชัดเจนว่าใช้ได้เฉพาะ Operation 1/2/3/15
+  เท่านั้น + Operation ร่วม Audit Logging เพิ่ม field `เข้าถึงในฐานะ Admin หรือไม่`), [[db-spec]]
+  (`User.บทบาท` เพิ่มค่า `"admin"`, `AuditLogRecord` เพิ่ม attribute `isAdminAccess` พร้อม test case
+  ใหม่ของ NFR-14 ที่ระบุชัดเจนแล้ว) และ [[admin-role-account-management]] (sequence diagram 4 + ตาราง
+  Operation↔Entity + หมายเหตุการ Implement ระบุชื่อ Cloud Function/field/error code จริงครบ) สอดคล้อง
+  กันครบทุกจุด — ดูรายละเอียดที่หัวข้อ NFR-19/NFR-20 ด้านล่าง
+- **พบความไม่สอดคล้องเล็กน้อยระหว่างเอกสาร (ไม่ถึงกับทำให้สถานะเป็น Partial แต่ควรแก้ไข)**:
+  [[architecture]] หัวข้อ "ประเด็นรอตัดสินใจ" ยังคงระบุว่า "กลไกจริงของ NFR-19", "กลไกจริงของ NFR-20"
+  และ "กรณีทดสอบใหม่ของ NFR-14 สำหรับข้อยกเว้น Admin" เป็นเรื่อง **ยังไม่ตัดสินใจ**/รอ
+  `technology-stack.md` — แต่ในความเป็นจริง [[api-spec]] และ [[db-spec]] (ทั้งสองไฟล์ระบุไว้ชัดเจนว่า
+  "ได้รับคำตอบยืนยันจากผู้ใช้แล้วผ่าน `NEEDS_USER_INPUT`") ได้ปิดคำถามเหล่านี้ไปแล้วอย่างเป็นรูปธรรม
+  (ใช้ `AuditLogRecord` เดิมเพิ่ม attribute, ข้าม `exists()` check ด้วย shared helper module เดิม, และ
+  db-spec เพิ่มรายการกรณีทดสอบ NFR-14 ใหม่ 4 ข้อสำหรับ Admin ไว้ครบแล้ว) กล่าวคือ **ข้อความ
+  "ประเด็นรอตัดสินใจ" ใน architecture.md ล้าสมัยกว่าที่ api-spec/db-spec ตัดสินใจไปแล้วจริง** — แนะนำรัน
+  `sync-architecture` เพื่อปรับปรุงหัวข้อนี้ให้ตรงกับสถานะล่าสุดของ api-spec/db-spec (ไม่ใช่การออกแบบใหม่
+  เพียงแค่ทำให้ 3 ชั้นเอกสารสอดคล้องกัน)
+- **ตรวจสอบการถดถอยของ NFR-02/NFR-06/NFR-14 จากการเพิ่มบทบาท Admin**: ไม่พบการถดถอย — [[NFR-02]]
+  (Operation 0 ของแพทย์/พยาบาลใน [[patient-search-selection]] ไม่ถูกแตะต้อง Admin ใช้ Operation 15
+  แยกต่างหาก), [[NFR-06]] (audit log ของแพทย์/พยาบาลยังคง fail-safe แบบเดิมทุกประการ มีเพียง field
+  ใหม่ที่เป็น optional เพิ่มเข้ามา) และ [[NFR-14]] (test case เดิมทั้งหมดยังคงอยู่ครบ มีเพียงเพิ่มกรณี
+  ทดสอบใหม่ ไม่ได้ลบ/แก้กรณีทดสอบเดิม) — ดูรายละเอียดที่หัวข้อ "หมายเหตุรวม" ท้ายเอกสาร
+
+ก่อนหน้านั้น ผลตรวจสอบรอบที่แปด (2026-09-24) สำหรับ NFR-17/NFR-18 มีดังนี้ (คงไว้เพื่อ traceability):
+
+อัปเดตรอบที่แปด: ประเมินใหม่เฉพาะ **NFR-17, NFR-18** หลัง
 `[[technology-stack]]` เพิ่ม decision area 13–19 และแก้ไข decision area 7 (เลิกใช้ Custom Claims เก็บ
 บทบาท/isActive, ตรวจ `email_verified` ซ้ำทั้ง Cloud Functions/Security Rules, ตัดสินใจกลไก password
 policy และ Email Enumeration Protection แบบเจาะจง) อ่าน [[architecture]], [[api-spec]], [[db-spec]],
@@ -72,11 +103,13 @@ Operation 4) NFR อื่นทั้งหมด (NFR-01, NFR-03–NFR-08) ต
 | NFR-11 | Clinical Safety Validation — ยืนยันการจับคู่โรค/threshold โดยแพทย์ผู้เชี่ยวชาญก่อน deploy ทุกครั้ง | **รองรับแล้ว (Addressed)** | [[architecture#ตาราง Mapping NFR ไปยัง Component\|architecture — ตาราง Mapping NFR (แถว NFR-11)]], [[db-spec#threshold มาตรฐานของโรคแทรกซ้อน (ComplicationRiskThreshold)\|db-spec — หมายเหตุ NFR-11 ใน ComplicationRiskThreshold]], [[complication-risk-analysis-alert#Cross-cutting: คุณภาพเชิงปฏิบัติการของระบบ (NFR-09–NFR-16)\|complication-risk-analysis-alert]] | ไม่มีช่องว่างเชิงออกแบบ — ถูกบันทึกไว้อย่างชัดเจนว่าเป็นกระบวนการเชิงองค์กร (deployment approval gate) นอกระบบ ไม่ใช่ behavior ที่ต้อง implement เป็นโค้ด/UI/attribute ใหม่ ค่า threshold จริงยังไม่ถูกกำหนด (ประเด็นรอยืนยันจากแพทย์ผู้เชี่ยวชาญ ไม่ใช่ gap ของเอกสารเทคนิค) | ไม่มี |
 | NFR-12 | Session Timeout — auto-logout เมื่อไม่ใช้งานเกิน 30 นาที | **รองรับแล้ว (Addressed — มีความเสี่ยงที่บันทึกไว้ชัดเจน)** | [[architecture#ขอบเขตความรับผิดชอบของแต่ละ Component\|architecture — หัวข้อ Client/Backend Service]], [[architecture#ตาราง Mapping NFR ไปยัง Component\|architecture — ตาราง Mapping NFR (แถว NFR-12)]], [[api-spec#Operation ร่วม — ตรวจสอบสิทธิ์การเข้าถึงข้อมูลผู้ป่วย (Access Control)\|api-spec — Operation ร่วม ข้อ 4]], [[db-spec#ผู้ใช้ (User)\|db-spec — หมายเหตุ NFR-12 ใน User]], [[patient-search-selection#Sequence Diagram\|patient-search-selection — loop inactivity ใน Sequence Diagram]] | ไม่มีช่องว่างเชิงออกแบบ — กลไก client custom inactivity timer (`setTimeout` + event listener เรียก `signOut()`) ถูกตัดสินใจแล้วใน `[[technology-stack]]` decision area 10 และระบุคู่กันในทุกชั้นเอกสาร **ความเสี่ยงด้านความปลอดภัย (ไม่มี server-side token revocation, token ยังใช้ได้ต่อจนถึง ~1 ชม.) ถูกบันทึกไว้อย่างเด่นชัดและผู้ใช้รับทราบ/ยืนยันให้ดำเนินการต่อแล้ว — เป็น mitigation ที่ควรทำก่อนใช้ข้อมูลผู้ป่วยจริง ไม่ใช่ gap ของการออกแบบเอกสารในรอบ MVP นี้** | ไม่มี (แนะนำเพิ่ม server-side token revocation ก่อนใช้ข้อมูลผู้ป่วยจริง — บันทึกไว้แล้วใน "ประเด็นรอตัดสินใจ" ของ architecture) |
 | NFR-13 | Accessibility — ห้ามใช้สีเป็นสัญญาณเดียว ต้องมีข้อความกำกับคู่กับสีเสมอ | **รองรับแล้ว (Addressed)** | [[architecture#ตาราง Mapping NFR ไปยัง Component\|architecture — ตาราง Mapping NFR (แถว NFR-13)]], [[db-spec#รายละเอียดผลการประเมินต่อโรคแทรกซ้อน (RiskFinding)\|db-spec RiskFinding — field ระดับความเสี่ยงที่ประเมินได้]], [[complication-risk-analysis-alert#Cross-cutting: คุณภาพเชิงปฏิบัติการของระบบ (NFR-09–NFR-16)\|complication-risk-analysis-alert]] | ไม่มีช่องว่าง — field ข้อความ (ไม่ใช่รหัสสี) พร้อมใช้งานแล้วใน db-spec, กลไกจริง (WCAG 2.1 AA + Heroicons + Lighthouse Audit) ถูกตัดสินใจแล้วใน `[[technology-stack]]` decision area 11 รายละเอียด mapping สี/ไอคอนเฉพาะจุดเป็นหน้าที่ของ [[DESIGN]] ต่อไปตามที่ระบุไว้แล้ว | ไม่มี |
-| NFR-14 | Security Rules Verification — automated test ผ่าน Firebase Emulator Suite ครอบคลุมทุกกรณีสิทธิ์ | **รองรับแล้ว (Addressed)** | [[architecture#ตาราง Mapping NFR ไปยัง Component\|architecture — ตาราง Mapping NFR (แถว NFR-14)]], [[patient-search-selection#หมายเหตุการ Implement\|patient-search-selection]], [[complication-risk-analysis-alert#Cross-cutting: คุณภาพเชิงปฏิบัติการของระบบ (NFR-09–NFR-16)\|complication-risk-analysis-alert]], [[user-authentication-email-password#Cross-cutting: คุณภาพเชิงปฏิบัติการของระบบ (NFR-09–NFR-16)\|user-authentication-email-password]] | ไม่มีช่องว่าง — รายการ collection/กรณีทดสอบ (ไม่มี assignment, assignment บางส่วน, บัญชีถูกระงับ, ไม่มี custom claims ที่ถูกต้อง, บัญชีที่เพิ่งสมัครยังไม่มี role) ถูกระบุครบใน db-spec และอ้างอิงตรงกันในทุกไฟล์ `detailed-design/` ที่เกี่ยวข้อง รวมไฟล์ Authentication ใหม่ | ไม่มี |
+| NFR-14 | Security Rules Verification — automated test ผ่าน Firebase Emulator Suite ครอบคลุมทุกกรณีสิทธิ์ | **รองรับแล้ว (Addressed)** | [[architecture#ตาราง Mapping NFR ไปยัง Component\|architecture — ตาราง Mapping NFR (แถว NFR-14)]], [[patient-search-selection#หมายเหตุการ Implement\|patient-search-selection]], [[complication-risk-analysis-alert#Cross-cutting: คุณภาพเชิงปฏิบัติการของระบบ (NFR-09–NFR-16)\|complication-risk-analysis-alert]], [[user-authentication-email-password#Cross-cutting: คุณภาพเชิงปฏิบัติการของระบบ (NFR-09–NFR-16)\|user-authentication-email-password]], [[db-spec#Firestore Security Rules (สรุปตาม Collection)\|db-spec — test case ใหม่ของ Admin (NFR-19/NFR-20)]] | ไม่มีช่องว่างเชิงเนื้อหา — รายการ collection/กรณีทดสอบเดิมยังอยู่ครบ (ไม่มี assignment, assignment บางส่วน, บัญชีถูกระงับ, บัญชียังไม่ยืนยันอีเมล) และ [[db-spec]] เพิ่มกรณีทดสอบใหม่ 4 ข้อสำหรับข้อยกเว้น Admin (NFR-19/NFR-20) ไว้แล้วอย่างเป็นรูปธรรม แต่ [[architecture]] หัวข้อ "ประเด็นรอตัดสินใจ" ยังระบุว่ากรณีทดสอบนี้ "ยังไม่มี decision area ระบุรายละเอียดที่แน่นอน" ซึ่งล้าสมัยกว่าที่ db-spec ตัดสินใจไปแล้วจริง (ไม่ถึงกับลด NFR-14 เป็น Partial เพราะเนื้อหาจริงมีอยู่แล้วใน db-spec) | `sync-architecture` (ปรับปรุงหัวข้อ "ประเด็นรอตัดสินใจ" ของฟีเจอร์ที่ 7 ให้ตรงกับ db-spec/api-spec ที่ปิดประเด็นนี้ไปแล้ว — ดูหัวข้อ NFR-14/NFR-19/NFR-20 ด้านล่าง) |
 | NFR-15 | Browser/Device Compatibility — Chrome/Edge/Firefox ล่าสุดบน desktop/tablet | **รองรับแล้ว (Addressed)** | [[architecture#ตาราง Mapping NFR ไปยัง Component\|architecture — ตาราง Mapping NFR (แถว NFR-15)]], [[complication-risk-analysis-alert#Cross-cutting: คุณภาพเชิงปฏิบัติการของระบบ (NFR-09–NFR-16)\|complication-risk-analysis-alert]] | ไม่มีช่องว่าง — browserslist config ถูกตัดสินใจแล้วใน `[[technology-stack]]` decision area 12 เป็นเรื่องของ Client build config ล้วนๆ ไม่กระทบ operation/entity | ไม่มี |
 | NFR-16 | Interoperability (future, Won't have เฟสนี้) — พิจารณา HL7/FHIR เมื่อเชื่อมต่อ HOSxP จริง | **รองรับแล้ว (Addressed — Won't have โดยเจตนา)** | [[architecture#ตาราง Mapping NFR ไปยัง Component\|architecture — ตาราง Mapping NFR (แถว NFR-16)]] | ไม่มีช่องว่าง — ยืนยันแล้วว่าเป็น Won't have ของเฟสนี้ ไม่ต้องออกแบบ component/operation เพิ่มเติมจนกว่าจะเชื่อมต่อ HOSxP จริงในอนาคต | ไม่มี |
 | NFR-17 | Security / Password Policy — รหัสผ่านขั้นต่ำ 8 ตัวอักษร มีทั้งตัวอักษรและตัวเลข | **รองรับแล้ว (Addressed)** | [[architecture#ขอบเขตความรับผิดชอบของแต่ละ Component\|architecture — หัวข้อ Client/Backend Service ฟีเจอร์ที่ 6]], [[architecture#ตาราง Mapping NFR ไปยัง Component\|architecture — ตาราง Mapping NFR (แถว NFR-17)]], [[api-spec#Operation 8 — สมัครบัญชีผู้ใช้งานด้วยตนเอง (Self Sign-up)\|api-spec Operation 8]], [[api-spec#Operation 9 — ขอรีเซ็ตรหัสผ่านทางอีเมล (Forgot Password)\|Operation 9]], [[db-spec#ผู้ใช้ (User)\|db-spec User — attribute รหัสผ่านที่จัดเก็บ]], [[user-authentication-email-password#Sequence Diagram — สมัครบัญชี ยืนยันอีเมล และรออนุมัติ (Operation 8, FR-08/FR-09)\|user-authentication-email-password — Sequence Diagram Operation 8/9]], [[technology-stack#13. กลไก Validate Password Policy ฝั่งเซิร์ฟเวอร์ (NFR-17, ฟีเจอร์ที่ 6) — Regex ใน Cloud Function + Identity Platform เป็น Backstop\|technology-stack decision area 13]] | ไม่มีช่องว่าง — กลไกทางเทคนิคจริงถูกตัดสินใจแล้วในรอบ 2026-09-24: **regex ในโค้ด Cloud Function `signUpUser`** (Operation 8) + **Google Cloud Identity Platform password policy เป็น backstop** สำหรับ Operation 9 (`confirmPasswordReset` ที่ไม่ผ่าน Cloud Function) — ตรวจสอบแล้วว่า [[architecture]] (หัวข้อ Client/Backend Service ฟีเจอร์ที่ 6 + ประเด็นรอตัดสินใจ), [[api-spec]] (Operation 8/9 Technical Binding), [[db-spec]] (attribute รหัสผ่านที่จัดเก็บ) และ [[user-authentication-email-password]] (sequence diagram Operation 8/9 + หมายเหตุการ Implement) อ้างอิงกลไกเดียวกันนี้ตรงกันครบทุกไฟล์แล้ว ไม่มีข้อความ "ยังไม่ตัดสินใจ" หลงเหลืออยู่ | ไม่มี |
 | NFR-18 | Security / Account Enumeration Prevention — ไม่เปิดเผยว่าอีเมลมีบัญชีในระบบหรือไม่ | **รองรับแล้ว (Addressed — มีความเสี่ยงคงเหลือที่บันทึกไว้ชัดเจน)** | [[architecture#ขอบเขตความรับผิดชอบของแต่ละ Component\|architecture — หัวข้อ Client/Backend Service ฟีเจอร์ที่ 6]], [[architecture#ตาราง Mapping NFR ไปยัง Component\|architecture — ตาราง Mapping NFR (แถว NFR-18)]], [[api-spec#Operation 7 — เข้าสู่ระบบด้วยอีเมลและรหัสผ่าน\|api-spec Operation 7]], [[api-spec#Operation 8 — สมัครบัญชีผู้ใช้งานด้วยตนเอง (Self Sign-up)\|Operation 8]], [[api-spec#Operation 9 — ขอรีเซ็ตรหัสผ่านทางอีเมล (Forgot Password)\|Operation 9]], [[user-authentication-email-password#Edge Case และวิธีจัดการ\|user-authentication-email-password — Edge Case]], [[technology-stack#14. กลไกป้องกัน Account Enumeration (NFR-18, ฟีเจอร์ที่ 6) — Firebase Email Enumeration Protection\|technology-stack decision area 14]] | ไม่มีช่องว่างเชิงออกแบบ — กลไกทางเทคนิคจริงถูกตัดสินใจแล้ว: เปิด **Firebase "Email Enumeration Protection"** ระดับโปรเจกต์ ปิด error code ที่แยกแยะได้ของ Operation 7 ตรงกับที่ [[architecture]]/[[api-spec]]/[[user-authentication-email-password]] อ้างอิงกลไกเดียวกันครบแล้ว **ความเสี่ยง timing side-channel ที่ยังไม่ถูกปิด (ไม่มี fixed minimum delay) ถูกบันทึกไว้อย่างเด่นชัดในทุกชั้นเอกสาร (technology-stack หัวข้อ "ความเสี่ยงเพิ่มเติม", architecture หัวข้อ "ประเด็นรอตัดสินใจ") ว่าผู้ใช้รับทราบและยืนยันให้ดำเนินการต่อในรอบ MVP นี้แล้ว — ไม่ใช่ gap ที่ตกหล่น แต่เป็น mitigation ที่ควรทำก่อนใช้ข้อมูลผู้ป่วยจริง** เช่นเดียวกับรูปแบบที่ใช้กับ NFR-12 | ไม่มี (แนะนำเพิ่ม fixed minimum delay ใน Cloud Function ก่อนใช้ข้อมูลผู้ป่วยจริง — บันทึกไว้แล้วใน "ประเด็นรอตัดสินใจ"/"ความเสี่ยงที่ต้องพิจารณาเพิ่มเติม" ของ technology-stack) |
+| NFR-19 | Security / Access Control ข้อยกเว้นสำหรับบทบาท Admin — เข้าถึงผู้ป่วยทุกรายโดยไม่ต้องมี PatientAssignment (เฉพาะอ่าน) | **รองรับแล้ว (Addressed)** | [[architecture#ตาราง Mapping NFR ไปยัง Component\|architecture — ตาราง Mapping NFR (แถว NFR-19)]], [[api-spec#Operation ร่วม — ตรวจสอบสิทธิ์การเข้าถึงข้อมูลผู้ป่วย (Access Control)\|api-spec — Operation ร่วม Access Control ข้อ 2 (ข้อยกเว้น NFR-19)]], [[api-spec#Operation 15 — ค้นหา/แสดงรายชื่อผู้ป่วยทั้งหมดในระบบ (สำหรับ Admin)\|Operation 15]], [[db-spec#ผู้ใช้ (User)\|db-spec User — ค่า role เพิ่ม "admin"]], [[admin-role-account-management#Sequence Diagram 4 — Admin ดูข้อมูลผู้ป่วยทุกรายแบบอ่านอย่างเดียว (Operation 15 + Operation 1/2/3 ผ่านข้อยกเว้น NFR-19)\|admin-role-account-management — Sequence Diagram 4]], [[patient-ncd-diagnosis-lab-history#ตาราง Operation ↔ Entity ที่กระทบ\|patient-ncd-diagnosis-lab-history]], [[complication-risk-analysis-alert]] | ไม่มีช่องว่างเชิงออกแบบ — ขอบเขตข้อยกเว้นถูกจำกัดชัดเจน (เฉพาะ Operation 1/2/3/15, ไม่รวม Operation 16/4/5/8/9) และสอดคล้องกันครบทุกชั้นเอกสารรวมไฟล์ Admin ใหม่ มีเพียงข้อสังเกตว่า [[architecture]] หัวข้อ "ประเด็นรอตัดสินใจ" ยังเขียนว่า "ยังไม่มี decision area ใน technology-stack ระบุไว้โดยตรง" ทั้งที่ api-spec/db-spec ได้ข้อสรุปที่เป็นรูปธรรมแล้ว (ไม่ใช่ gap เชิงพฤติกรรม แต่เป็นข้อความล้าสมัยที่ควรปรับปรุง) | `sync-architecture` (ปรับปรุงหัวข้อ "ประเด็นรอตัดสินใจ" ของฟีเจอร์ที่ 7 ให้ตรงกับข้อสรุปที่ api-spec/db-spec ยืนยันไปแล้ว — ไม่บังคับเพราะไม่กระทบ behavior ที่ออกแบบไว้) |
+| NFR-20 | PDPA / Audit Log แบบ fail-safe สำหรับการเข้าถึงข้อมูลผู้ป่วยของ Admin | **รองรับแล้ว (Addressed)** | [[architecture#ตาราง Mapping NFR ไปยัง Component\|architecture — ตาราง Mapping NFR (แถว NFR-20)]], [[api-spec#Operation ร่วม — บันทึกร่องรอยการเข้าถึงข้อมูลผู้ป่วย (Audit Logging)\|api-spec — Operation ร่วม Audit Logging]], [[db-spec#บันทึกการเข้าถึงข้อมูล (AuditLogRecord)\|db-spec AuditLogRecord — attribute `isAdminAccess`]], [[admin-role-account-management#Sequence Diagram 4 — Admin ดูข้อมูลผู้ป่วยทุกรายแบบอ่านอย่างเดียว (Operation 15 + Operation 1/2/3 ผ่านข้อยกเว้น NFR-19)\|admin-role-account-management — Sequence Diagram 4]] | ไม่มีช่องว่างเชิงออกแบบ — ใช้ `AuditLogRecord`/collection `auditLogRecords` เดียวกับ NFR-06 เพิ่ม attribute `isAdminAccess` (optional, default false) ตาม fail-safe pattern เดียวกันทุกประการ (ปฏิเสธการเข้าถึงทันทีถ้าบันทึกไม่สำเร็จ) สอดคล้องกันครบทุกชั้นเอกสาร เช่นเดียวกับ NFR-19 มีเพียงข้อความ "ประเด็นรอตัดสินใจ" ใน [[architecture]] ที่ล้าสมัยกว่าที่ api-spec/db-spec ตัดสินใจไปแล้ว | `sync-architecture` (ปรับปรุงหัวข้อ "ประเด็นรอตัดสินใจ" เช่นเดียวกับ NFR-19 — ไม่บังคับ) |
 
 ## รายละเอียดการตรวจสอบ
 
@@ -341,6 +374,85 @@ HOSxP/mockup โดยตรง มีเพียงการเพิ่ม co
   ต่อแล้วอย่างมีเจตนา (บันทึกไว้สอดคล้องกันทุกชั้นเอกสาร) เช่นเดียวกับรูปแบบที่ใช้ประเมิน NFR-12 ไม่ใช่
   gap ที่ตกหล่นของการออกแบบเอกสารเชิงเทคนิค
 
+### NFR-19 — Security / Access Control ข้อยกเว้นสำหรับบทบาท Admin
+
+**ตรวจสอบรอบที่เก้า (2026-09-24) — NFR ใหม่จากฟีเจอร์ที่ 7 (Admin):**
+
+- [[architecture]]: ตาราง Mapping NFR แถว NFR-19 ระบุ Backend Service (Access Control + การจัดการบัญชี
+  ผู้ใช้และสิทธิ์) เป็นผู้รับผิดชอบ พร้อมเงื่อนไขครบ (ตรวจ `role = admin` ก่อนข้ามการตรวจสอบระดับราย
+  ผู้ป่วย, ยังคงตรวจ role/isActive/emailVerified ตามปกติ, ไม่มีสิทธิ์แก้ไขข้อมูลทางคลินิก/Operation 16)
+  — หัวข้อ "ประเด็นรอตัดสินใจ" ระบุว่า "ยังไม่มี decision area ใน technology-stack ระบุไว้โดยตรง" ซึ่ง
+  **ล้าสมัยกว่าที่ api-spec/db-spec ตัดสินใจไปแล้วจริง** (ดูข้อสังเกตด้านล่าง)
+- [[api-spec]]: Operation ร่วม "ตรวจสอบสิทธิ์การเข้าถึงข้อมูลผู้ป่วย" ข้อ 2 มีอนุข้อ "ข้อยกเว้นสำหรับ
+  บทบาท Admin (NFR-19)" ระบุขอบเขตที่จำกัดและชัดเจนมาก: ใช้ได้เฉพาะเมื่อเรียกผ่าน Operation 1, 2, 3
+  หรือ 15 เท่านั้น, ยังคง**ไม่มีสิทธิ์**เรียก Operation 16/4/5/8/9, และต้องเรียก Audit Logging (NFR-20)
+  ก่อนคืนข้อมูลเสมอ — Operation 15 (`listAllPatientsForAdmin`) ก็ระบุไว้ครบว่าไม่กรองด้วย
+  PatientAssignment
+- [[db-spec]]: `User.บทบาท` เพิ่มค่าที่เป็นไปได้ `"admin"` และหัวข้อ Security Rules Verification (NFR-14)
+  เพิ่มกรณีทดสอบใหม่ที่ครอบคลุม NFR-19 โดยตรง (Admin ต้องเข้าถึง Operation 1/2/3/15/16 ได้สำเร็จโดยไม่มี
+  PatientAssignment ต่างจากแพทย์/พยาบาลที่ต้องถูกปฏิเสธในกรณีเดียวกัน)
+- `detailed-design/`: [[admin-role-account-management]] Sequence Diagram 4 แสดงลำดับเต็ม (ตรวจ role,
+  ข้าม patient-level check, บันทึก audit log fail-safe, แล้วจึงอ่านข้อมูล) พร้อมตาราง Operation↔Entity
+  และ edge case ครบ (รวมกรณี Admin พยายามเรียก Operation 16/4/5/8/9 ที่ต้องถูกปฏิเสธ);
+  [[patient-ncd-diagnosis-lab-history]] และ [[complication-risk-analysis-alert]] ถูกแก้ไขให้ระบุข้อ
+  ยกเว้นนี้ในตาราง Operation↔Entity และ edge case ตรงกัน; [[patient-search-selection]] ยืนยันว่า Admin
+  ไม่เรียก Operation 0 (ใช้ Operation 15 แทน) จึงไม่กระทบเอกสารนั้นเลย
+- **ข้อสังเกต (ไม่บล็อกสถานะ Addressed):** [[architecture]] หัวข้อ "ประเด็นรอตัดสินใจ" ยังคงมีข้อความว่า
+  "กลไกจริงของ FR-15/NFR-19 ... ยังไม่ระบุว่าจะเขียนเป็น shared helper module เดียวกัน ... หรือเป็น
+  logic แยกต่างหาก" แต่ [[admin-role-account-management]] หัวข้อ "หมายเหตุการ Implement" ได้ระบุคำตอบ
+  ที่ชัดเจนแล้วว่า "shared helper module เดียวกับที่ Operation 1-6 ใช้" — สรุปได้ว่า architecture.md
+  ยังไม่ถูกปรับปรุงให้ตรงกับข้อสรุปล่าสุดของ api-spec/db-spec/detailed-design
+- สรุป: **รองรับแล้ว (Addressed)** — ออกแบบครบทุกชั้นเอกสารสอดคล้องกัน มีเพียงข้อความ "ประเด็นรอตัดสินใจ"
+  ใน architecture.md ที่ล้าสมัย ควรปรับปรุงด้วย `sync-architecture` (ไม่บังคับเพราะไม่กระทบ behavior)
+
+### NFR-20 — PDPA / Audit Log แบบ fail-safe สำหรับการเข้าถึงข้อมูลผู้ป่วยของ Admin
+
+**ตรวจสอบรอบที่เก้า (2026-09-24) — NFR ใหม่จากฟีเจอร์ที่ 7 (Admin):**
+
+- [[architecture]]: ตาราง Mapping NFR แถว NFR-20 ระบุ Backend Service (Audit Logging & Accountability +
+  การจัดการบัญชีผู้ใช้และสิทธิ์) + Audit Log Store เป็นผู้รับผิดชอบ ระบุ fail-safe รูปแบบเดียวกับ NFR-06
+  ชัดเจน (ปฏิเสธการเข้าถึงทันทีถ้าบันทึกไม่สำเร็จ)
+- [[api-spec]]: Operation ร่วม "บันทึกร่องรอยการเข้าถึงข้อมูลผู้ป่วย" เพิ่ม field `เข้าถึงในฐานะ Admin
+  หรือไม่` และระบุว่าต้องตั้งเป็นจริงเสมอเมื่อ Operation 1/2/3/15 ถูกเรียกผ่านข้อยกเว้น NFR-19 — Error
+  code เขียนไม่สำเร็จเหมือน NFR-06 ทุกประการ
+- [[db-spec]]: `AuditLogRecord` เพิ่ม attribute `isAdminAccess` (boolean, optional, default false) โดย
+  ยืนยันชัดเจนว่าใช้ collection `auditLogRecords` เดียวกับ NFR-06 (ไม่แยก collection ใหม่ — คำตอบยืนยัน
+  จากผู้ใช้ผ่าน `NEEDS_USER_INPUT`) Security Rules ของ `auditLogRecords` ไม่เปลี่ยนแปลง
+  (`allow read, write: if false;` สำหรับ Client ทั้งหมด)
+- `detailed-design/`: [[admin-role-account-management]] Sequence Diagram 4 แสดง fail-safe เต็มรูปแบบ
+  (บันทึก audit log ก่อน แล้วค่อยอ่านข้อมูลจริง, ถ้าบันทึกไม่สำเร็จปฏิเสธการเข้าถึงทันที);
+  [[pdpa-data-protection-compliance]] ระบุว่า Operation 5 (audit trail retrieval) อาจคืนระเบียนที่มี
+  `isAdminAccess = true` ปะปนอยู่ด้วย — ไม่กระทบ sequence diagram เดิมของ Operation 4/5;
+  [[patient-ncd-diagnosis-lab-history]]/[[complication-risk-analysis-alert]] ระบุการตั้ง
+  `isAdminAccess = true` ในหัวข้อหมายเหตุการ Implement ตรงกัน
+- **ข้อสังเกต (ไม่บล็อกสถานะ Addressed):** เช่นเดียวกับ NFR-19 — [[architecture]] หัวข้อ "ประเด็นรอ
+  ตัดสินใจ" ยังคงเขียนว่า "กลไกจริงของ NFR-20 ... ยังไม่ระบุว่าจะใช้ collection เดียวกับ NFR-06 ... หรือ
+  แยก collection ใหม่" ทั้งที่ [[db-spec]] ระบุคำตอบที่ยืนยันแล้วชัดเจนว่าใช้ collection เดิม
+- สรุป: **รองรับแล้ว (Addressed)** — กลไก fail-safe และโครงสร้างข้อมูลสอดคล้องกันครบทุกชั้นเอกสาร มีเพียง
+  ข้อความ "ประเด็นรอตัดสินใจ" ใน architecture.md ที่ล้าสมัย ควรปรับปรุงด้วย `sync-architecture`
+  (ไม่บังคับ)
+
+### หมายเหตุรวม — ผลกระทบของการเพิ่มบทบาท Admin (FR-11–FR-15, NFR-19, NFR-20) ต่อ NFR-02/NFR-06/NFR-14 (ตรวจสอบรอบที่เก้า 2026-09-24)
+
+ตรวจสอบซ้ำครบทุกจุดที่ NFR-02 (Access Control), NFR-06 (Audit Log ของแพทย์/พยาบาล) และ NFR-14
+(Security Rules Verification) เคยถูกออกแบบไว้ในรอบก่อนหน้า พบว่า:
+
+- **NFR-02**: กลไก role-level + patient-level เดิมของแพทย์/พยาบาลไม่ถูกแก้ไขเลย มีเพียงการเพิ่มค่า
+  `role = "admin"` เป็นอีกหนึ่งค่าที่ผ่านการตรวจสอบระดับบทบาทได้ (เหมือนเพิ่มตัวเลือกใหม่ ไม่ใช่การลด
+  เงื่อนไขเดิม) และ Admin ใช้ Operation 15 แยกต่างหาก ไม่ยุ่งกับ Operation 0/[[patient-search-selection]]
+  ของแพทย์/พยาบาลเลย — ไม่ถดถอย
+- **NFR-06**: ทุก sequence diagram fail-safe เดิมของ Operation 1/2/3 (เมื่อผู้เรียกเป็นแพทย์/พยาบาล)
+  ไม่ถูกแก้ไขพฤติกรรม มีเพียงการเพิ่ม field `isAdminAccess` แบบ optional (default false) ที่ไม่กระทบ
+  ระเบียนเดิมที่เขียนไปแล้วหรือ query pattern เดิม — ไม่ถดถอย
+- **NFR-14**: กรณีทดสอบเดิมทั้งหมด (ไม่มี assignment, assignment บางส่วน, บัญชีถูกระงับ,
+  emailVerified=false) ยังคงอยู่ครบใน [[db-spec]] ไม่มีการลบ/แก้ไขกรณีทดสอบเดิม มีเพียงการเพิ่มกรณี
+  ทดสอบใหม่ 4 ข้อสำหรับ Admin ต่อท้าย — ไม่ถดถอย (มีเพียงข้อสังเกตเรื่อง architecture.md ล้าสมัยตามที่
+  ระบุไว้ในหัวข้อ NFR-14/NFR-19/NFR-20 ด้านบน ซึ่งไม่ใช่การถดถอยของการออกแบบเชิงพฤติกรรม)
+
+**สรุป: ไม่มี NFR ใดใน NFR-01–NFR-18 ถดถอยจากการเพิ่มบทบาท Admin** มีเพียงข้อสังเกตเรื่องเอกสาร
+`architecture.md` ล้าสมัยกว่าที่ api-spec/db-spec ตัดสินใจไปแล้วจริง ซึ่งควรแก้ไขด้วย `sync-architecture`
+แต่ไม่ใช่ gap เชิงพฤติกรรมของระบบ
+
 ### หมายเหตุรวม — ผลกระทบของการแก้ไข decision area 7/18 (ยกเลิก Custom Claims) ต่อ NFR อื่น (ตรวจสอบรอบที่แปด 2026-09-24)
 
 `[[technology-stack]]` แก้ไข decision area 7 และเพิ่ม decision area 18 ให้เลิกเก็บ `role`/`isActive`
@@ -395,6 +507,7 @@ NFR-03 ถึง NFR-08 (หมวด PDPA) ไม่มีการอ้าง
 - [[complication-risk-analysis-alert]]
 - [[pdpa-data-protection-compliance]]
 - [[user-authentication-email-password]]
+- [[admin-role-account-management]]
 - [[backlog]]
 - [[feature-list]]
 - [[user-journey]]

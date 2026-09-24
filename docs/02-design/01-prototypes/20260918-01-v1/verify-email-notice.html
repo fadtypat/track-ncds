@@ -25,11 +25,18 @@
         <a href="access-denied.html">ปฏิเสธการเข้าถึง</a>
         <a href="pdpa-data-subject-request.html">PDPA คำขอใช้สิทธิ</a>
         <a href="pdpa-audit-trail.html">PDPA audit trail</a>
+        <a href="admin-dashboard.html">Admin: หน้าหลัก</a>
+        <a href="admin-account-approval.html">Admin: อนุมัติบัญชี</a>
+        <a href="admin-user-directory.html">Admin: จัดการผู้ใช้งาน</a>
+        <a href="admin-patient-assignment.html">Admin: มอบหมายผู้ป่วย</a>
+        <a href="admin-patient-directory.html">Admin: ผู้ป่วยทุกราย</a>
+        <a href="admin-patient-detail-readonly.html">Admin: ดูประวัติ (read-only)</a>
       </div>
     </div>
     <div class="proto-bar-codes">
       <span class="proto-code">FR-09</span>
       <span class="proto-code">FR-08 (รออนุมัติ)</span>
+      <span class="proto-code">FR-11 (Admin อนุมัติ)</span>
     </div>
   </div>
 </nav>
@@ -60,12 +67,13 @@
 
     <div id="step-pending-approval" hidden class="auth-icon-row">
       <div class="auth-icon pending" aria-hidden="true">⏳</div>
-      <h1 class="type-section-title">ยืนยันอีเมลสำเร็จ — รอผู้ดูแลระบบอนุมัติบัญชี</h1>
+      <h1 class="type-section-title">ยืนยันอีเมลสำเร็จ — รอผู้ดูแลระบบ (Admin) อนุมัติบัญชี</h1>
       <p class="type-body">
         ท่านยืนยันความเป็นเจ้าของอีเมลเรียบร้อยแล้ว แต่บัญชีของท่านยังมี <span class="type-code">isActive = false</span>
-        และยังไม่มี role กำหนด จนกว่าผู้ดูแลระบบจะอนุมัติ (กำหนด role แพทย์/พยาบาล และเปลี่ยน
-        <span class="type-code">isActive = true</span>) ผ่าน Firebase Console/Firestore ด้วยตนเอง
-        ขั้นตอนนี้ไม่มีหน้าจออนุมัติในระบบสำหรับ MVP เป็นกระบวนการเชิงองค์กรที่อยู่นอกระบบ
+        และยังไม่มี role กำหนด จนกว่า <strong>Admin (ผู้ดูแลระบบ)</strong> จะอนุมัติผ่านหน้าจอในระบบ
+        (กำหนด role แพทย์/พยาบาล และเปลี่ยน <span class="type-code">isActive = true</span> — FR-11)
+        แทนที่กลไกเดิมที่เคยดำเนินการผ่าน Firebase Console/Firestore โดยตรง ระบบจะแจ้งผลเมื่อ Admin
+        อนุมัติแล้ว ท่านจึงจะเข้าสู่ระบบและใช้งานฟีเจอร์อื่นได้
       </p>
       <a class="btn btn-primary" href="login.html">ไปหน้าเข้าสู่ระบบ</a>
     </div>

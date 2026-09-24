@@ -25,6 +25,12 @@
         <a href="access-denied.html">ปฏิเสธการเข้าถึง</a>
         <a href="pdpa-data-subject-request.html">PDPA คำขอใช้สิทธิ</a>
         <a href="pdpa-audit-trail.html">PDPA audit trail</a>
+        <a href="admin-dashboard.html">Admin: หน้าหลัก</a>
+        <a href="admin-account-approval.html">Admin: อนุมัติบัญชี</a>
+        <a href="admin-user-directory.html">Admin: จัดการผู้ใช้งาน</a>
+        <a href="admin-patient-assignment.html">Admin: มอบหมายผู้ป่วย</a>
+        <a href="admin-patient-directory.html">Admin: ผู้ป่วยทุกราย</a>
+        <a href="admin-patient-detail-readonly.html">Admin: ดูประวัติ (read-only)</a>
       </div>
     </div>
     <div class="proto-bar-codes">
@@ -42,14 +48,20 @@
     <p class="type-body" style="max-width:720px;">
       Prototype เวอร์ชัน v1 ของฟีเจอร์ตาม
       <span class="type-code">20260917-01-patient-ncd-history-lab-complication-risk</span>,
-      <span class="type-code">20260921-01-pdpa-data-protection-compliance</span> และ
-      <span class="type-code">20260923-01-user-authentication-email-password</span>
-      ครอบคลุมฟีเจอร์ Must have ใน feature-list.md สำหรับผู้ใช้บทบาทเดียว:
-      <strong>แพทย์/พยาบาลผู้ดูแลผู้ป่วย NCD</strong>
+      <span class="type-code">20260921-01-pdpa-data-protection-compliance</span>,
+      <span class="type-code">20260923-01-user-authentication-email-password</span> และ
+      <span class="type-code">20260924-01-admin-role-account-management</span>
+      ครอบคลุมฟีเจอร์ Must have ใน feature-list.md สำหรับผู้ใช้ 2 บทบาท:
+      <strong>แพทย์/พยาบาลผู้ดูแลผู้ป่วย NCD</strong> และ <strong>Admin (ผู้ดูแลระบบ)</strong>
       (อัปเดต 20260924: เพิ่มฟีเจอร์ที่ 6 — สมัครบัญชี/เข้าสู่ระบบ/จัดการรหัสผ่านด้วยอีเมล เป็น
-      precondition ก่อน Journey ที่ 1 และ 2 ด้านล่าง)
+      precondition ก่อน Journey ที่ 1 และ 2 ด้านล่าง, เพิ่มฟีเจอร์ที่ 7 — Admin อนุมัติบัญชี/จัดการสิทธิ์/
+      มอบหมายผู้ป่วย/ดูประวัติผู้ป่วยทุกรายแบบอ่านอย่างเดียว และเพิ่ม FR-16 — ยืนยัน/แก้ไขผลประเมิน
+      ความเสี่ยงในหน้าประวัติ+ความเสี่ยงของแพทย์/พยาบาล)
     </p>
-    <span class="chip chip-neutral" style="align-self:flex-start;">บทบาทผู้ใช้: แพทย์/พยาบาลผู้ดูแลผู้ป่วย NCD (NFR-02)</span>
+    <div style="display:flex; gap:var(--space-2); flex-wrap:wrap;">
+      <span class="chip chip-neutral">บทบาทผู้ใช้: แพทย์/พยาบาลผู้ดูแลผู้ป่วย NCD (NFR-02)</span>
+      <span class="chip chip-neutral">บทบาทผู้ใช้: Admin ผู้ดูแลระบบ (NFR-19, NFR-20)</span>
+    </div>
   </header>
 
   <section class="section-card">
@@ -67,8 +79,8 @@
       </li>
       <li class="dx-item" style="border-color:var(--border-default);">
         <div class="dx-item-main">
-          <span class="dx-item-name">2. ยืนยันอีเมล / รอผู้ดูแลระบบอนุมัติบัญชี</span>
-          <span class="dx-item-meta">สาธิตทั้งสถานะ "ส่งอีเมลยืนยันแล้ว" และ "ยืนยันสำเร็จ รออนุมัติผ่าน Firebase Console/Firestore"</span>
+          <span class="dx-item-name">2. ยืนยันอีเมล / รอ Admin อนุมัติบัญชีผ่านหน้าจอในระบบ</span>
+          <span class="dx-item-meta">สาธิตทั้งสถานะ "ส่งอีเมลยืนยันแล้ว" และ "ยืนยันสำเร็จ รอ Admin อนุมัติผ่านหน้าจอในระบบ (FR-11, ดู Journey ที่ 3)"</span>
         </div>
         <a class="btn btn-secondary btn-sm" href="verify-email-notice.html">เปิดหน้ายืนยันอีเมล <span class="proto-code" style="margin-left:6px;">FR-09</span></a>
       </li>
@@ -152,6 +164,51 @@
 
   <section class="section-card">
     <div class="section-head">
+      <h2 class="type-section-title">Journey ที่ 3 — Admin อนุมัติบัญชี จัดการสิทธิ์ และดูประวัติผู้ป่วยทุกรายแบบอ่านอย่างเดียว (ฟีเจอร์ 7)</h2>
+      <span class="type-caption">บทบาทใหม่: Admin (ผู้ดูแลระบบ) — เข้าสู่ระบบด้วยกลไกเดียวกับแพทย์/พยาบาล (FR-07) แต่มีสิทธิ์ต่างออกไป · งานบริหารจัดการ 4 อย่าง ทำทีละงานแล้ววนกลับมาเลือกงานอื่นต่อได้</span>
+    </div>
+    <ol class="stack" style="gap:12px; padding-left:0;">
+      <li class="dx-item" style="border-color:var(--border-default);">
+        <div class="dx-item-main">
+          <span class="dx-item-name">3ก. อนุมัติบัญชีผู้ใช้งานใหม่</span>
+          <span class="dx-item-meta">ดูรายชื่อบัญชีที่รออนุมัติ กำหนด role (แพทย์/พยาบาล) และเปิดใช้งาน — แทนที่กลไก Firebase Console/Firestore เดิม</span>
+        </div>
+        <a class="btn btn-primary btn-sm" href="admin-account-approval.html">เปิดหน้าอนุมัติบัญชี <span class="proto-code" style="margin-left:6px;">FR-11</span></a>
+      </li>
+      <li class="dx-item" style="border-color:var(--border-default);">
+        <div class="dx-item-main">
+          <span class="dx-item-name">3ข. เปลี่ยนบทบาท / ระงับ-เปิดใช้งานบัญชี</span>
+          <span class="dx-item-meta">จัดการผู้ใช้งานที่เคยอนุมัติแล้วทั้งหมด</span>
+        </div>
+        <a class="btn btn-primary btn-sm" href="admin-user-directory.html">เปิดหน้าจัดการผู้ใช้งาน <span class="proto-code" style="margin-left:6px;">FR-12·FR-13</span></a>
+      </li>
+      <li class="dx-item" style="border-color:var(--border-default);">
+        <div class="dx-item-main">
+          <span class="dx-item-name">3ค. จัดการการมอบหมายผู้ป่วย (Patient Assignment)</span>
+          <span class="dx-item-meta">มอบหมาย/ยกเลิกการมอบหมายผู้ป่วยให้แพทย์/พยาบาล — ควบคุมการมองเห็นผู้ป่วยตาม FR-05</span>
+        </div>
+        <a class="btn btn-primary btn-sm" href="admin-patient-assignment.html">เปิดหน้ามอบหมายผู้ป่วย <span class="proto-code" style="margin-left:6px;">FR-14</span></a>
+      </li>
+      <li class="dx-item" style="border-color:var(--border-default);">
+        <div class="dx-item-main">
+          <span class="dx-item-name">3ง. ดูประวัติผู้ป่วยทุกรายในระบบ (อ่านอย่างเดียว)</span>
+          <span class="dx-item-meta">ไม่ต้องมี PatientAssignment เป็นของตนเอง (NFR-19) ทุกครั้งที่เข้าถึงต้องบันทึก audit log แบบ fail-safe ก่อนเสมอ (NFR-20)</span>
+        </div>
+        <a class="btn btn-primary btn-sm" href="admin-patient-directory.html">เปิดหน้าผู้ป่วยทุกราย <span class="proto-code" style="margin-left:6px;">FR-15·NFR-19</span></a>
+        <a class="btn btn-secondary btn-sm" href="admin-patient-detail-readonly.html">เปิดตัวอย่างหน้ารายละเอียด <span class="proto-code" style="margin-left:6px;">FR-15·NFR-20</span></a>
+      </li>
+      <li class="dx-item" style="border-color:var(--border-default);">
+        <div class="dx-item-main">
+          <span class="dx-item-name">3จ. เมนูหลักของ Admin</span>
+          <span class="dx-item-meta">หน้ารวมทางเข้าสู่ทั้ง 4 งานข้างต้น เข้าถึงหลัง Admin เข้าสู่ระบบสำเร็จ (FR-07)</span>
+        </div>
+        <a class="btn btn-secondary btn-sm" href="admin-dashboard.html">เปิดแผงควบคุม Admin <span class="proto-code" style="margin-left:6px;">FR-11–FR-15</span></a>
+      </li>
+    </ol>
+  </section>
+
+  <section class="section-card">
+    <div class="section-head">
       <h2 class="type-section-title">แผนที่หน้าจอ ↔ ฟีเจอร์ ↔ รหัส FR/NFR</h2>
       <span class="type-caption">รายละเอียดเพิ่มเติมดูที่ prototype.md ในโฟลเดอร์นี้</span>
     </div>
@@ -197,13 +254,13 @@
           </tr>
           <tr>
             <td class="param-name"><a href="patient-detail-risk-found.html">patient-detail-risk-found.html</a></td>
-            <td style="font-family:var(--font-sans); font-size:14px;">1. ดูประวัติวินิจฉัย/ผล lab · 2. วิเคราะห์และแจ้งเตือนความเสี่ยง</td>
-            <td>FR-01, FR-02, FR-03, FR-04, NFR-01</td>
+            <td style="font-family:var(--font-sans); font-size:14px;">1. ดูประวัติวินิจฉัย/ผล lab · 2. วิเคราะห์ แจ้งเตือน และยืนยัน/แก้ไขผลประเมินความเสี่ยง</td>
+            <td>FR-01, FR-02, FR-03, FR-04, FR-16, NFR-01</td>
           </tr>
           <tr>
             <td class="param-name"><a href="patient-detail-no-risk.html">patient-detail-no-risk.html</a></td>
-            <td style="font-family:var(--font-sans); font-size:14px;">1. ดูประวัติวินิจฉัย/ผล lab · 2. วิเคราะห์และแจ้งเตือนความเสี่ยง</td>
-            <td>FR-01, FR-02, FR-03, FR-04, NFR-01</td>
+            <td style="font-family:var(--font-sans); font-size:14px;">1. ดูประวัติวินิจฉัย/ผล lab · 2. วิเคราะห์ แจ้งเตือน และยืนยัน/แก้ไขผลประเมินความเสี่ยง</td>
+            <td>FR-01, FR-02, FR-03, FR-04, FR-16, NFR-01</td>
           </tr>
           <tr>
             <td class="param-name"><a href="access-denied.html">access-denied.html</a></td>
@@ -219,6 +276,36 @@
             <td class="param-name"><a href="pdpa-audit-trail.html">pdpa-audit-trail.html</a></td>
             <td style="font-family:var(--font-sans); font-size:14px;">4. คุ้มครองข้อมูลส่วนบุคคลของผู้ป่วยตาม PDPA (เส้นทางสืบสวนข้อมูลรั่วไหล)</td>
             <td>NFR-02, NFR-06, NFR-08</td>
+          </tr>
+          <tr>
+            <td class="param-name"><a href="admin-dashboard.html">admin-dashboard.html</a></td>
+            <td style="font-family:var(--font-sans); font-size:14px;">7. จัดการบัญชีผู้ใช้งาน สิทธิ์ และการมอบหมายผู้ป่วย (Admin)</td>
+            <td>FR-11, FR-12, FR-13, FR-14, FR-15, NFR-19, NFR-20</td>
+          </tr>
+          <tr>
+            <td class="param-name"><a href="admin-account-approval.html">admin-account-approval.html</a></td>
+            <td style="font-family:var(--font-sans); font-size:14px;">7. จัดการบัญชีผู้ใช้งาน สิทธิ์ และการมอบหมายผู้ป่วย (Admin)</td>
+            <td>FR-11</td>
+          </tr>
+          <tr>
+            <td class="param-name"><a href="admin-user-directory.html">admin-user-directory.html</a></td>
+            <td style="font-family:var(--font-sans); font-size:14px;">7. จัดการบัญชีผู้ใช้งาน สิทธิ์ และการมอบหมายผู้ป่วย (Admin)</td>
+            <td>FR-12, FR-13</td>
+          </tr>
+          <tr>
+            <td class="param-name"><a href="admin-patient-assignment.html">admin-patient-assignment.html</a></td>
+            <td style="font-family:var(--font-sans); font-size:14px;">7. จัดการบัญชีผู้ใช้งาน สิทธิ์ และการมอบหมายผู้ป่วย (Admin)</td>
+            <td>FR-14</td>
+          </tr>
+          <tr>
+            <td class="param-name"><a href="admin-patient-directory.html">admin-patient-directory.html</a></td>
+            <td style="font-family:var(--font-sans); font-size:14px;">7. จัดการบัญชีผู้ใช้งาน สิทธิ์ และการมอบหมายผู้ป่วย (Admin)</td>
+            <td>FR-15, NFR-19</td>
+          </tr>
+          <tr>
+            <td class="param-name"><a href="admin-patient-detail-readonly.html">admin-patient-detail-readonly.html</a></td>
+            <td style="font-family:var(--font-sans); font-size:14px;">7. จัดการบัญชีผู้ใช้งาน สิทธิ์ และการมอบหมายผู้ป่วย (Admin)</td>
+            <td>FR-15, NFR-19, NFR-20</td>
           </tr>
         </tbody>
       </table>

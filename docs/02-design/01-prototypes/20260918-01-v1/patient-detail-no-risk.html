@@ -25,6 +25,12 @@
         <a href="access-denied.html">ปฏิเสธการเข้าถึง</a>
         <a href="pdpa-data-subject-request.html">PDPA คำขอใช้สิทธิ</a>
         <a href="pdpa-audit-trail.html">PDPA audit trail</a>
+        <a href="admin-dashboard.html">Admin: หน้าหลัก</a>
+        <a href="admin-account-approval.html">Admin: อนุมัติบัญชี</a>
+        <a href="admin-user-directory.html">Admin: จัดการผู้ใช้งาน</a>
+        <a href="admin-patient-assignment.html">Admin: มอบหมายผู้ป่วย</a>
+        <a href="admin-patient-directory.html">Admin: ผู้ป่วยทุกราย</a>
+        <a href="admin-patient-detail-readonly.html">Admin: ดูประวัติ (read-only)</a>
       </div>
     </div>
     <div class="proto-bar-codes">
@@ -32,6 +38,7 @@
       <span class="proto-code">FR-02</span>
       <span class="proto-code">FR-03</span>
       <span class="proto-code">FR-04</span>
+      <span class="proto-code">FR-16</span>
       <span class="proto-code">NFR-01</span>
     </div>
   </div>
@@ -218,7 +225,93 @@
     </div>
   </section>
 
+  <!-- ฟีเจอร์ 2: ยืนยัน/แก้ไขผลการประเมินความเสี่ยง (FR-16) -->
+  <section class="section-card">
+    <div class="section-head">
+      <h2 class="type-section-title">ยืนยัน/แก้ไขผลการประเมินความเสี่ยง</h2>
+      <span class="type-caption">เฉพาะแพทย์/พยาบาลผู้ดูแลผู้ป่วยรายนี้ · ต้องทำไม่ว่าผลประเมินจะพบหรือไม่พบความเสี่ยง · ไม่ครอบคลุมการแก้ไขประวัติวินิจฉัย (FR-01) หรือผล lab (FR-02) · Admin ไม่มีสิทธิ์นี้ (ดูฟีเจอร์ที่ 7)</span>
+    </div>
+
+    <div id="fr16-actions" style="display:flex; gap:var(--space-2); flex-wrap:wrap;">
+      <button type="button" class="btn btn-primary btn-sm" id="fr16-confirm-btn">ยืนยันผลเดิม</button>
+      <button type="button" class="btn btn-secondary btn-sm" id="fr16-override-btn">แก้ไขผลประเมิน (Override)</button>
+    </div>
+
+    <div id="fr16-override-form" hidden class="form-field">
+      <label for="fr16-reason">เหตุผลในการแก้ไข (บังคับกรอก)</label>
+      <textarea id="fr16-reason" class="textarea-input" placeholder="เช่น พบปัจจัยเสี่ยงเพิ่มเติมจากการซักประวัติที่ระบบยังไม่ครอบคลุม เนื่องจาก..."></textarea>
+      <div style="display:flex; gap:var(--space-2); margin-top:var(--space-2);">
+        <button type="button" class="btn btn-primary btn-sm" id="fr16-submit-override-btn">บันทึกการแก้ไข</button>
+        <button type="button" class="btn btn-secondary btn-sm" id="fr16-cancel-override-btn">ยกเลิก</button>
+      </div>
+    </div>
+
+    <div id="fr16-result" hidden></div>
+  </section>
+
 </div>
 </div>
+
+<script>
+(function () {
+  var confirmBtn = document.getElementById("fr16-confirm-btn");
+  var overrideBtn = document.getElementById("fr16-override-btn");
+  var overrideForm = document.getElementById("fr16-override-form");
+  var submitOverrideBtn = document.getElementById("fr16-submit-override-btn");
+  var cancelOverrideBtn = document.getElementById("fr16-cancel-override-btn");
+  var reasonInput = document.getElementById("fr16-reason");
+  var resultBox = document.getElementById("fr16-result");
+  var actions = document.getElementById("fr16-actions");
+
+  function escapeHtml(str) {
+    return String(str).replace(/[&<>"']/g, function (c) {
+      return { "&": "&amp;", "<": "&lt;", ">": "&gt;", '"': "&quot;", "'": "&#39;" }[c];
+    });
+  }
+
+  confirmBtn.addEventListener("click", function () {
+    overrideForm.hidden = true;
+    actions.hidden = true;
+    resultBox.hidden = false;
+    resultBox.innerHTML =
+      '<div class="callout tip" role="status">' +
+        '<span class="callout-title">บันทึกการยืนยันผลเดิมแล้ว</span>' +
+        '<p class="type-body" style="color:inherit;">นายวรรณะ ใจดี (พยาบาล) ยืนยันผลการประเมินความเสี่ยงเดิมของผู้ป่วยรายนี้แล้ว ระบบบันทึก audit log ประกอบการยืนยันเรียบร้อยแล้ว (FR-16, NFR-06)</p>' +
+      "</div>";
+  });
+
+  overrideBtn.addEventListener("click", function () {
+    overrideForm.hidden = false;
+  });
+
+  cancelOverrideBtn.addEventListener("click", function () {
+    overrideForm.hidden = true;
+    reasonInput.value = "";
+  });
+
+  submitOverrideBtn.addEventListener("click", function () {
+    var reason = reasonInput.value.trim();
+    if (!reason) {
+      resultBox.hidden = false;
+      resultBox.innerHTML =
+        '<div class="callout note" role="alert">' +
+          '<span class="callout-title">กรุณาระบุเหตุผล</span>' +
+          '<p class="type-body" style="color:inherit;">ต้องระบุเหตุผลในการแก้ไข (override) ผลการประเมินความเสี่ยงทุกครั้งก่อนบันทึก (FR-16)</p>' +
+        "</div>";
+      return;
+    }
+    overrideForm.hidden = true;
+    actions.hidden = true;
+    resultBox.hidden = false;
+    resultBox.innerHTML =
+      '<div class="callout tip" role="status">' +
+        '<span class="callout-title">บันทึกการแก้ไขผลประเมินความเสี่ยงแล้ว</span>' +
+        '<p class="type-body" style="color:inherit;">นายวรรณะ ใจดี (พยาบาล) แก้ไขผลการประเมินความเสี่ยงของผู้ป่วยรายนี้ พร้อมเหตุผล: "' +
+        escapeHtml(reason) + '" ระบบบันทึก audit log ประกอบการแก้ไขเรียบร้อยแล้ว (FR-16, NFR-06)</p>' +
+      "</div>";
+  });
+})();
+</script>
+
 </body>
 </html>
