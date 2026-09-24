@@ -18,6 +18,12 @@ Backlog รวม FR/NFR ทั้งหมดจากทุกเอกสา�
 | FR-08 | สมัครบัญชีผู้ใช้งานด้วยตนเอง (Self Sign-up) | [[20260923-01-user-authentication-email-password#ความต้องการเชิงฟังก์ชัน (Functional Requirements)\|FR-08]] | Backlog |
 | FR-09 | ยืนยันอีเมลก่อนเข้าใช้งาน (Email Verification) | [[20260923-01-user-authentication-email-password#ความต้องการเชิงฟังก์ชัน (Functional Requirements)\|FR-09]] | Backlog |
 | FR-10 | ขอรีเซ็ตรหัสผ่านทางอีเมล (Forgot Password) | [[20260923-01-user-authentication-email-password#ความต้องการเชิงฟังก์ชัน (Functional Requirements)\|FR-10]] | Backlog |
+| FR-11 | อนุมัติบัญชีผู้ใช้งานใหม่ผ่านหน้าจอในระบบ (Admin) | [[20260924-01-admin-role-account-management#ความต้องการเชิงฟังก์ชัน (Functional Requirements)\|FR-11]] | Backlog |
+| FR-12 | เปลี่ยนบทบาท (Role) ของผู้ใช้งานที่มีอยู่ (Admin) | [[20260924-01-admin-role-account-management#ความต้องการเชิงฟังก์ชัน (Functional Requirements)\|FR-12]] | Backlog |
+| FR-13 | ระงับ/เปิดใช้งานบัญชีผู้ใช้งาน (Admin) | [[20260924-01-admin-role-account-management#ความต้องการเชิงฟังก์ชัน (Functional Requirements)\|FR-13]] | Backlog |
+| FR-14 | จัดการการมอบหมายผู้ป่วย (Patient Assignment) (Admin) | [[20260924-01-admin-role-account-management#ความต้องการเชิงฟังก์ชัน (Functional Requirements)\|FR-14]] | Backlog |
+| FR-15 | ดูประวัติการรักษาของผู้ป่วยทุกรายในระบบ (Admin) | [[20260924-01-admin-role-account-management#ความต้องการเชิงฟังก์ชัน (Functional Requirements)\|FR-15]] | Backlog |
+| FR-16 | ยืนยัน/แก้ไขผลการประเมินความเสี่ยงโรคแทรกซ้อน (Override Risk Assessment) | [[20260917-01-patient-ncd-history-lab-complication-risk#ความต้องการเชิงฟังก์ชัน (Functional Requirements)\|FR-16]] | Backlog |
 
 ## กลาง
 
@@ -49,3 +55,5 @@ _(ยังไม่มีรายการ)_
 | NFR-16 | Interoperability (future — พิจารณา HL7/FHIR เมื่อเชื่อมต่อ HOSxP จริง) — ต่ำ | [[20260922-01-operational-quality-nfr#ความต้องการที่ไม่ใช่เชิงฟังก์ชัน (Non-Functional Requirements)\|NFR-16]] | Backlog |
 | NFR-17 | Security / Password Policy (รหัสผ่านขั้นต่ำ 8 ตัวอักษร มีทั้งตัวอักษรและตัวเลข) — สูง | [[20260923-01-user-authentication-email-password#ความต้องการที่ไม่ใช่เชิงฟังก์ชัน (Non-Functional Requirements)\|NFR-17]] | Backlog |
 | NFR-18 | Security / Account Enumeration Prevention (ไม่เปิดเผยว่าอีเมลมีบัญชีในระบบหรือไม่) — สูง | [[20260923-01-user-authentication-email-password#ความต้องการที่ไม่ใช่เชิงฟังก์ชัน (Non-Functional Requirements)\|NFR-18]] | Backlog |
+| NFR-19 | Security / Access Control ข้อยกเว้นสำหรับบทบาท Admin (เข้าถึงผู้ป่วยทุกรายโดยไม่ต้องมี PatientAssignment) — สูง | [[20260924-01-admin-role-account-management#ความต้องการที่ไม่ใช่เชิงฟังก์ชัน (Non-Functional Requirements)\|NFR-19]] | Backlog |
+| NFR-20 | PDPA / บันทึกการเข้าถึงข้อมูล (Audit Log แบบ fail-safe สำหรับการเข้าถึงข้อมูลผู้ป่วยของ Admin) — สูง | [[20260924-01-admin-role-account-management#ความต้องการที่ไม่ใช่เชิงฟังก์ชัน (Non-Functional Requirements)\|NFR-20]] | Backlog |
