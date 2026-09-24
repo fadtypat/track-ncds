@@ -1,0 +1,32 @@
+rules_version = '2';
+
+// กฎตาม docs/02-design/02-technical/db-spec.md หัวข้อ Security Rules Verification (NFR-14)
+// collection ใดที่ไม่มี match ด้านล่าง Client อ่าน/เขียนไม่ได้ทั้งหมด (เข้าถึงผ่าน Cloud Functions เท่านั้น)
+// หมายเหตุ: Firestore demo (docs/02-design/01-prototypes/20260922-01-firestore-demo) ใช้งานไม่ได้กับกฎนี้
+service cloud.firestore {
+  match /databases/{database}/documents {
+
+    function currentUser() {
+      return get(/databases/$(database)/documents/users/$(request.auth.uid)).data;
+    }
+
+    function isApprovedStaff() {
+      return request.auth != null
+        && request.auth.token.email_verified == true
+        && currentUser().role in ['แพทย์', 'พยาบาล']
+        && currentUser().isActive == true;
+    }
+
+    // อ่านได้เฉพาะเอกสารของตนเอง — เขียนผ่าน Cloud Function signUpUser/ผู้ดูแลระบบเท่านั้น
+    match /users/{userId} {
+      allow get: if request.auth != null && request.auth.uid == userId;
+      allow list, create, update, delete: if false;
+    }
+
+    // Operation 0 — รายชื่อผู้ป่วยในความดูแล
+    match /patientAssignments/{assignmentId} {
+      allow list, get: if isApprovedStaff() && resource.data.userId == request.auth.uid;
+      allow create, update, delete: if false;
+    }
+  }
+}

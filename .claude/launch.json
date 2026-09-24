@@ -4,8 +4,30 @@
     {
       "name": "docs-static",
       "runtimeExecutable": "npx",
-      "runtimeArgs": ["--yes", "http-server", "docs", "-p", "4873", "-c-1"],
+      "runtimeArgs": [
+        "--yes",
+        "http-server",
+        "docs",
+        "-p",
+        "4873",
+        "-c-1"
+      ],
       "port": 4873
+    },
+    {
+      "name": "web-emulator",
+      "runtimeExecutable": "npm",
+      "runtimeArgs": [
+        "--prefix",
+        "web",
+        "run",
+        "dev:emulator",
+        "--",
+        "--port",
+        "5173",
+        "--strictPort"
+      ],
+      "port": 5173
     }
   ]
 }
