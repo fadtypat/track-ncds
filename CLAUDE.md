@@ -10,16 +10,16 @@ This file provides guidance to Claude Code (claude.ai/code) when working with co
 
 โค้ดที่มีอยู่ตอนนี้มีเพียง:
 - **Firestore demo** (`docs/02-design/01-prototypes/20260922-01-firestore-demo/`) — static HTML ที่อ่าน/เขียน Firestore project `track-ncds` ตรงผ่าน Firebase compat SDK จาก CDN (ไม่มี build step) **ตั้งใจข้ามสถาปัตยกรรมใน technology-stack.md** (ไม่ผ่าน Cloud Functions, ไม่มี audit log, ใช้ rules แบบเปิดกว้าง) ดูข้อจำกัดทั้งหมดใน `prototype.md` ของโฟลเดอร์นั้น ห้ามนำแนวทางนี้ไปใช้เป็นต้นแบบของ production และ demo นี้ไม่ใช่ prototype มาตรฐานของ pipeline (`prototype-auditor`/`build-prototype` ไม่ควรตรวจ/แก้)
-- **Firebase scaffold ที่ root** (`functions/`, `dataconnect/`, `firestore.rules`, `firestore.indexes.json`) — สร้างจาก `firebase init` แต่ยังไม่มี `firebase.json`/`.firebaserc` คำสั่ง emulator/deploy จึงยังใช้ไม่ได้จนกว่าจะ init ให้ครบ `functions/src/index.ts` ยังไม่มี function จริง
+- **แอปจริง Phase 1 (Authentication)** — `web/` (Vite + React + TypeScript: หน้าเข้าสู่ระบบ/สมัคร/ยืนยันอีเมล/รออนุมัติ/ลืมรหัสผ่าน/`/auth/action`) และ `functions/` (callable `signUpUser`, `requestPasswordReset` region `asia-southeast1` ส่งอีเมลผ่าน Identity Toolkit REST `accounts:sendOobCode` เพราะ Admin SDK ส่งอีเมลเองไม่ได้) ตาม `docs/01-requirements/03-task/phase-1-authentication-tasks.md`; `firebase.json` ที่ root กำหนด functions/firestore/hosting (`web/dist`)/emulators แล้ว แต่ยังไม่มี `.firebaserc` (ห้าม commit)
   - `dataconnect/` เป็น schema ตัวอย่างที่ generate มา (User/VitalsLog/Medication บน Cloud SQL PostgreSQL) **ไม่ตรงกับ `db-spec.md` และขัดกับการเลือก Firestore** ใน technology-stack.md — อย่าอ้างอิงเป็นโมเดลข้อมูลของระบบ
-  - `firestore.rules` ที่ root เป็น test-mode rule (เปิด read/write ทั้งหมด หมดอายุ 2026-10-22) ไม่ใช่กฎตาม `db-spec.md`
+  - `firestore.rules` ที่ root เป็นกฎตาม `db-spec.md` แล้ว (`users` อ่านได้เฉพาะของตนเอง, `patientAssignments` ตาม Operation 0, ที่เหลือปฏิเสธทั้งหมด) แต่**ยังไม่มี automated test ตาม NFR-14** จึงห้าม deploy และถ้า deploy แล้ว Firestore demo จะใช้งานไม่ได้
 
 ## คำสั่งที่ใช้
 
-ไม่มี lint หรือ test suite ในโปรเจกต์
-
 - เปิดดูเอกสาร/prototype ผ่าน browser: ใช้ preview config `docs-static` ใน `.claude/launch.json` (เสิร์ฟโฟลเดอร์ `docs/` ที่พอร์ต 4873 ด้วย `http-server`) — เช่น `http://localhost:4873/02-design/01-prototypes/20260922-01-firestore-demo/patient-list.html`
-- Cloud Functions (รันในโฟลเดอร์ `functions/`, Node engine ตั้งไว้ที่ 24): `npm run build` (tsc → `lib/`), `npm run build:watch`; `npm run serve`/`npm run deploy` ต้องมี `firebase.json` ก่อน
+- Cloud Functions (รันในโฟลเดอร์ `functions/`, Node engine ตั้งไว้ที่ 24): `npm run build` (tsc → `lib/`), `npm test` (Vitest, unit test ใน `functions/test/`), `npm run build:watch`; ต้องตั้ง `WEB_API_KEY` ใน `functions/.env` (ดู `.env.example`)
+- Web (รันในโฟลเดอร์ `web/`): `npm run dev` (ใช้ `.env.local` — ดู `.env.example`), `npm run dev:emulator` (ค่า demo ใน `.env.emulator` ต่อ Emulator Suite), `npm test` (Vitest), `npm run build`, `npm run lint` (oxlint) — preview config `web-emulator` ที่พอร์ต 5173
+- Emulator Suite (`firebase emulators:start --project demo-track-ncds`) ต้องใช้ Java 11+ ซึ่งเครื่องนี้ยังไม่มี
 
 ## สถานะของแต่ละส่วน (ตรวจล่าสุด 2026-09-24 — ตรวจซ้ำก่อนอ้างอิงเสมอ)
 
@@ -34,7 +34,7 @@ This file provides guidance to Claude Code (claude.ai/code) when working with co
 | `01-requirements/02-plan/`, `03-task/` | `release-plan.md` 6 phase (P1 Authentication → P2 ค้นหาผู้ป่วย+data protection → P3 ประวัติ/lab → P4 ความเสี่ยง → P5 PDPA ส่วนขยาย → P6 hardening) + task 6 ไฟล์ (20260924) |
 | Prototype `20260918-01-v1` | Clickable HTML mockup มาตรฐานของ pipeline (ข้อมูล hardcode) |
 | Prototype `20260922-01-firestore-demo` | Technical spike ต่อ Firestore จริง อยู่นอก pipeline (ดูหัวข้อสถานะโปรเจกต์ด้านบน) |
-| Firebase scaffold ที่ root | init ไม่ครบ (ไม่มี `firebase.json`/`.firebaserc`) และยังไม่ถูก track ใน git |
+| โค้ด Phase 1 (`web/`, `functions/`, `firebase.json`, `firestore.rules`) | เขียนแล้ว unit test ผ่าน แต่ยังไม่ได้ทดสอบกับ Emulator/โปรเจกต์จริง และยังไม่ deploy; `dataconnect/` ยังไม่ถูก track ใน git |
 
 ## Firestore collections
 
