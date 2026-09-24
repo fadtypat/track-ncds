@@ -1,0 +1,145 @@
+<!DOCTYPE html>
+<html lang="th">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>NCDs History &amp; Risk — Prototype v1 — สมัครบัญชี</title>
+<link rel="stylesheet" href="style.css">
+</head>
+<body>
+
+<nav class="proto-bar">
+  <div class="proto-bar-inner">
+    <div class="proto-bar-top">
+      <span class="proto-bar-title">NCDS CLINIC · PROTOTYPE v1 · สมัครบัญชี</span>
+      <div class="proto-bar-nav">
+        <a href="index.html">หน้ารวม</a>
+        <a href="login.html">เข้าสู่ระบบ</a>
+        <a href="signup.html" class="current">สมัครบัญชี</a>
+        <a href="verify-email-notice.html">ยืนยันอีเมล/รออนุมัติ</a>
+        <a href="forgot-password.html">ลืมรหัสผ่าน</a>
+        <a href="reset-password.html">ตั้งรหัสผ่านใหม่</a>
+        <a href="patient-list.html">ค้นหา/รายชื่อผู้ป่วย</a>
+        <a href="patient-detail-risk-found.html">ประวัติ+ความเสี่ยง (พบ)</a>
+        <a href="patient-detail-no-risk.html">ประวัติ+ความเสี่ยง (ไม่พบ)</a>
+        <a href="access-denied.html">ปฏิเสธการเข้าถึง</a>
+        <a href="pdpa-data-subject-request.html">PDPA คำขอใช้สิทธิ</a>
+        <a href="pdpa-audit-trail.html">PDPA audit trail</a>
+      </div>
+    </div>
+    <div class="proto-bar-codes">
+      <span class="proto-code">FR-08</span>
+      <span class="proto-code">NFR-17</span>
+      <span class="proto-code">NFR-18</span>
+    </div>
+  </div>
+</nav>
+
+<div class="app-bg">
+<div class="container auth-shell">
+
+  <div class="auth-card">
+    <div class="auth-card-header">
+      <span class="type-eyebrow">NCDS CLINIC · AUTHENTICATION</span>
+      <h1 class="type-section-title">สมัครบัญชีใหม่ (Self Sign-up)</h1>
+      <p class="type-body">
+        สมัครบัญชีด้วยอีเมลและรหัสผ่านของท่านเอง (FR-08) บัญชีที่สร้างใหม่จะมี <span class="type-code">isActive = false</span>
+        และยังไม่มี role กำหนด จนกว่าผู้ดูแลระบบจะอนุมัติผ่าน Firebase Console/Firestore ด้วยตนเอง
+      </p>
+    </div>
+
+    <form id="signup-form" class="auth-form" novalidate>
+      <div class="form-field">
+        <label for="signup-email">อีเมล</label>
+        <input id="signup-email" class="text-input" type="email" autocomplete="username"
+               placeholder="เช่น somchai.doctor@hospital.go.th" />
+      </div>
+      <div class="form-field">
+        <label for="signup-password">รหัสผ่าน</label>
+        <input id="signup-password" class="text-input" type="password" autocomplete="new-password"
+               placeholder="ตั้งรหัสผ่าน" />
+        <ul class="password-rules" id="signup-rules">
+          <li data-rule="length">อย่างน้อย 8 ตัวอักษร</li>
+          <li data-rule="letter">มีตัวอักษรอย่างน้อย 1 ตัว</li>
+          <li data-rule="digit">มีตัวเลขอย่างน้อย 1 ตัว</li>
+        </ul>
+      </div>
+      <button type="submit" class="btn btn-primary">สมัครบัญชี</button>
+    </form>
+
+    <div id="signup-result" hidden></div>
+
+    <p class="auth-footer">มีบัญชีอยู่แล้ว? <a href="login.html">เข้าสู่ระบบ</a></p>
+  </div>
+
+</div>
+</div>
+
+<script>
+(function () {
+  var passwordInput = document.getElementById("signup-password");
+  var rulesList = document.getElementById("signup-rules");
+
+  function checkRules(value) {
+    return {
+      length: value.length >= 8,
+      letter: /[A-Za-zก-๙]/.test(value),
+      digit: /[0-9]/.test(value)
+    };
+  }
+
+  function renderRules(state, showUnmet) {
+    var items = rulesList.querySelectorAll("li");
+    items.forEach(function (li) {
+      var key = li.getAttribute("data-rule");
+      li.classList.remove("rule-met", "rule-unmet");
+      if (state[key]) {
+        li.classList.add("rule-met");
+      } else if (showUnmet) {
+        li.classList.add("rule-unmet");
+      }
+    });
+  }
+
+  passwordInput.addEventListener("input", function () {
+    renderRules(checkRules(passwordInput.value), false);
+  });
+
+  var form = document.getElementById("signup-form");
+  var resultBox = document.getElementById("signup-result");
+
+  form.addEventListener("submit", function (e) {
+    e.preventDefault();
+    var email = document.getElementById("signup-email").value.trim();
+    var state = checkRules(passwordInput.value);
+    var allPass = state.length && state.letter && state.digit;
+
+    resultBox.hidden = false;
+    if (!email) {
+      resultBox.innerHTML =
+        '<div class="callout note" role="alert"><span class="callout-title">กรอกอีเมลให้ครบ</span>' +
+        '<p class="type-body" style="color:inherit;">กรุณากรอกอีเมลที่ใช้สมัครบัญชี</p></div>';
+      return;
+    }
+    if (!allPass) {
+      renderRules(state, true);
+      resultBox.innerHTML =
+        '<div class="callout note" role="alert">' +
+          '<span class="callout-title">รหัสผ่านไม่เป็นไปตามเงื่อนไข</span>' +
+          '<p class="type-body" style="color:inherit;">กรุณาแก้ไขรหัสผ่านให้ครบตามเงื่อนไขด้านบนก่อนสมัครบัญชี (NFR-17)</p>' +
+        "</div>";
+      return;
+    }
+    // FR-08 + NFR-18: ข้อความเดียวกันเสมอ ไม่ยืนยัน/ปฏิเสธว่าอีเมลนี้มีบัญชีอยู่แล้วหรือไม่
+    resultBox.innerHTML =
+      '<div class="callout tip" role="status">' +
+        '<span class="callout-title">ดำเนินการสมัครบัญชีแล้ว</span>' +
+        '<p class="type-body" style="color:inherit;">หากอีเมลนี้ยังไม่มีบัญชีอยู่ในระบบ ระบบได้สร้างบัญชีใหม่ให้แล้ว และส่งอีเมลยืนยันตัวตนไปยังอีเมลที่กรอก (ไม่เปิดเผยว่าอีเมลนี้มีบัญชีอยู่ก่อนหรือไม่ — NFR-18)</p>' +
+        '<a class="btn btn-primary btn-sm" href="verify-email-notice.html?state=just-signed-up" style="margin-top:var(--space-2); align-self:flex-start;">ไปขั้นตอนถัดไป: ยืนยันอีเมล</a>' +
+      "</div>";
+  });
+})();
+</script>
+
+</body>
+</html>

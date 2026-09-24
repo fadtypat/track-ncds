@@ -14,6 +14,10 @@ Backlog รวม FR/NFR ทั้งหมดจากทุกเอกสา�
 | FR-04 | แสดง/แจ้งผลการประเมินความเสี่ยงโรคแทรกซ้อนแก่ผู้ดูแล | [[20260917-01-patient-ncd-history-lab-complication-risk#ความต้องการเชิงฟังก์ชัน (Functional Requirements)\|FR-04]] | Backlog |
 | FR-05 | ค้นหา/แสดงรายชื่อผู้ป่วย NCD ที่อยู่ในความดูแล | [[20260917-01-patient-ncd-history-lab-complication-risk#ความต้องการเชิงฟังก์ชัน (Functional Requirements)\|FR-05]] | Backlog |
 | FR-06 | ค้นหาผู้ป่วยด้วยเลข HN แบบ 7 หลัก พร้อม validation | [[20260917-01-patient-ncd-history-lab-complication-risk#ความต้องการเชิงฟังก์ชัน (Functional Requirements)\|FR-06]] | Backlog |
+| FR-07 | เข้าสู่ระบบด้วยอีเมลและรหัสผ่าน | [[20260923-01-user-authentication-email-password#ความต้องการเชิงฟังก์ชัน (Functional Requirements)\|FR-07]] | Backlog |
+| FR-08 | สมัครบัญชีผู้ใช้งานด้วยตนเอง (Self Sign-up) | [[20260923-01-user-authentication-email-password#ความต้องการเชิงฟังก์ชัน (Functional Requirements)\|FR-08]] | Backlog |
+| FR-09 | ยืนยันอีเมลก่อนเข้าใช้งาน (Email Verification) | [[20260923-01-user-authentication-email-password#ความต้องการเชิงฟังก์ชัน (Functional Requirements)\|FR-09]] | Backlog |
+| FR-10 | ขอรีเซ็ตรหัสผ่านทางอีเมล (Forgot Password) | [[20260923-01-user-authentication-email-password#ความต้องการเชิงฟังก์ชัน (Functional Requirements)\|FR-10]] | Backlog |
 
 ## กลาง
 
@@ -43,3 +47,5 @@ _(ยังไม่มีรายการ)_
 | NFR-14 | Security Rules Verification (automated test ผ่าน Firebase Emulator Suite ครอบคลุมทุกกรณีสิทธิ์) — สูง | [[20260922-01-operational-quality-nfr#ความต้องการที่ไม่ใช่เชิงฟังก์ชัน (Non-Functional Requirements)\|NFR-14]] | Backlog |
 | NFR-15 | Browser/Device Compatibility (Chrome/Edge/Firefox ล่าสุด บน desktop/tablet) — กลาง | [[20260922-01-operational-quality-nfr#ความต้องการที่ไม่ใช่เชิงฟังก์ชัน (Non-Functional Requirements)\|NFR-15]] | Backlog |
 | NFR-16 | Interoperability (future — พิจารณา HL7/FHIR เมื่อเชื่อมต่อ HOSxP จริง) — ต่ำ | [[20260922-01-operational-quality-nfr#ความต้องการที่ไม่ใช่เชิงฟังก์ชัน (Non-Functional Requirements)\|NFR-16]] | Backlog |
+| NFR-17 | Security / Password Policy (รหัสผ่านขั้นต่ำ 8 ตัวอักษร มีทั้งตัวอักษรและตัวเลข) — สูง | [[20260923-01-user-authentication-email-password#ความต้องการที่ไม่ใช่เชิงฟังก์ชัน (Non-Functional Requirements)\|NFR-17]] | Backlog |
+| NFR-18 | Security / Account Enumeration Prevention (ไม่เปิดเผยว่าอีเมลมีบัญชีในระบบหรือไม่) — สูง | [[20260923-01-user-authentication-email-password#ความต้องการที่ไม่ใช่เชิงฟังก์ชัน (Non-Functional Requirements)\|NFR-18]] | Backlog |

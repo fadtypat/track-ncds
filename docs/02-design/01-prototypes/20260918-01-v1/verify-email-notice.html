@@ -1,0 +1,103 @@
+<!DOCTYPE html>
+<html lang="th">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>NCDs History &amp; Risk — Prototype v1 — ยืนยันอีเมล/รออนุมัติ</title>
+<link rel="stylesheet" href="style.css">
+</head>
+<body>
+
+<nav class="proto-bar">
+  <div class="proto-bar-inner">
+    <div class="proto-bar-top">
+      <span class="proto-bar-title">NCDS CLINIC · PROTOTYPE v1 · ยืนยันอีเมล/รออนุมัติ</span>
+      <div class="proto-bar-nav">
+        <a href="index.html">หน้ารวม</a>
+        <a href="login.html">เข้าสู่ระบบ</a>
+        <a href="signup.html">สมัครบัญชี</a>
+        <a href="verify-email-notice.html" class="current">ยืนยันอีเมล/รออนุมัติ</a>
+        <a href="forgot-password.html">ลืมรหัสผ่าน</a>
+        <a href="reset-password.html">ตั้งรหัสผ่านใหม่</a>
+        <a href="patient-list.html">ค้นหา/รายชื่อผู้ป่วย</a>
+        <a href="patient-detail-risk-found.html">ประวัติ+ความเสี่ยง (พบ)</a>
+        <a href="patient-detail-no-risk.html">ประวัติ+ความเสี่ยง (ไม่พบ)</a>
+        <a href="access-denied.html">ปฏิเสธการเข้าถึง</a>
+        <a href="pdpa-data-subject-request.html">PDPA คำขอใช้สิทธิ</a>
+        <a href="pdpa-audit-trail.html">PDPA audit trail</a>
+      </div>
+    </div>
+    <div class="proto-bar-codes">
+      <span class="proto-code">FR-09</span>
+      <span class="proto-code">FR-08 (รออนุมัติ)</span>
+    </div>
+  </div>
+</nav>
+
+<div class="app-bg">
+<div class="container auth-shell">
+
+  <div class="auth-card">
+
+    <div id="pending-verify-note" hidden class="callout warn">
+      <span class="callout-title">จากการเข้าสู่ระบบ</span>
+      <p class="type-body" style="color:inherit;">อีเมลของท่านยังไม่ได้ยืนยันตัวตน กรุณายืนยันก่อนจึงจะเข้าใช้งานฟีเจอร์อื่นของระบบได้ (FR-09)</p>
+    </div>
+
+    <div id="step-verify" class="auth-icon-row">
+      <div class="auth-icon info" aria-hidden="true">✉</div>
+      <h1 class="type-section-title">ตรวจสอบอีเมลของท่าน</h1>
+      <p class="type-body">
+        ระบบได้ส่งลิงก์ยืนยันตัวตน (verification link) ไปยังอีเมลที่ใช้สมัคร/เข้าสู่ระบบแล้ว กรุณาเปิดอีเมล
+        และกดลิงก์เพื่อยืนยันความเป็นเจ้าของอีเมลก่อนใช้งานฟีเจอร์อื่นของระบบ (FR-09)
+      </p>
+      <div class="stack" style="gap:var(--space-2); width:100%;">
+        <button type="button" class="btn btn-secondary" id="resend-btn">ส่งอีเมลยืนยันอีกครั้ง</button>
+        <button type="button" class="btn btn-primary" id="simulate-verify-btn">จำลอง: กดลิงก์ยืนยันจากอีเมลแล้ว</button>
+      </div>
+      <div id="resend-note" hidden class="type-caption">ส่งอีเมลยืนยันอีกครั้งแล้ว (จำลอง)</div>
+    </div>
+
+    <div id="step-pending-approval" hidden class="auth-icon-row">
+      <div class="auth-icon pending" aria-hidden="true">⏳</div>
+      <h1 class="type-section-title">ยืนยันอีเมลสำเร็จ — รอผู้ดูแลระบบอนุมัติบัญชี</h1>
+      <p class="type-body">
+        ท่านยืนยันความเป็นเจ้าของอีเมลเรียบร้อยแล้ว แต่บัญชีของท่านยังมี <span class="type-code">isActive = false</span>
+        และยังไม่มี role กำหนด จนกว่าผู้ดูแลระบบจะอนุมัติ (กำหนด role แพทย์/พยาบาล และเปลี่ยน
+        <span class="type-code">isActive = true</span>) ผ่าน Firebase Console/Firestore ด้วยตนเอง
+        ขั้นตอนนี้ไม่มีหน้าจออนุมัติในระบบสำหรับ MVP เป็นกระบวนการเชิงองค์กรที่อยู่นอกระบบ
+      </p>
+      <a class="btn btn-primary" href="login.html">ไปหน้าเข้าสู่ระบบ</a>
+    </div>
+
+    <p class="auth-footer">เข้าสู่ระบบด้วยบัญชีอื่น? <a href="login.html">กลับไปหน้าเข้าสู่ระบบ</a></p>
+  </div>
+
+</div>
+</div>
+
+<script>
+(function () {
+  var params = new URLSearchParams(location.search);
+  var state = params.get("state");
+
+  if (state === "pending-verify") {
+    document.getElementById("pending-verify-note").hidden = false;
+  }
+
+  var resendBtn = document.getElementById("resend-btn");
+  var resendNote = document.getElementById("resend-note");
+  resendBtn.addEventListener("click", function () {
+    resendNote.hidden = false;
+  });
+
+  var simulateBtn = document.getElementById("simulate-verify-btn");
+  simulateBtn.addEventListener("click", function () {
+    document.getElementById("step-verify").hidden = true;
+    document.getElementById("step-pending-approval").hidden = false;
+  });
+})();
+</script>
+
+</body>
+</html>

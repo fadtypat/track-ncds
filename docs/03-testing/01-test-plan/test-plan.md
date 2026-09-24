@@ -9,9 +9,10 @@
 
 ### ในขอบเขต
 
-ทดสอบทั้ง 5 ฟีเจอร์ Must have ใน [[feature-list]] ครบทุกรหัส FR/NFR ที่อยู่ในขอบเขต (FR-01–FR-06,
-NFR-01–NFR-15 — **ไม่รวม NFR-16** ซึ่งถูกกำหนดเป็น Won't have ยืนยันโดยผู้ใช้แล้ว ดูหัวข้อ "นอกขอบเขต"
-ด้านล่าง):
+ทดสอบทั้ง 6 ฟีเจอร์ Must have ใน [[feature-list]] ครบทุกรหัส FR/NFR ที่อยู่ในขอบเขต (FR-01–FR-10,
+NFR-01–NFR-15, NFR-17, NFR-18 — **ไม่รวม NFR-16** ซึ่งถูกกำหนดเป็น Won't have ยืนยันโดยผู้ใช้แล้ว
+ดูหัวข้อ "นอกขอบเขต" ด้านล่าง — **อัปเดต 2026-09-23:** เพิ่มฟีเจอร์ที่ 6 (Authentication) ที่
+`feature-list.md`/`user-journey.md` เพิ่งเพิ่มใหม่):
 
 | # | ฟีเจอร์ | รหัส FR/NFR | MoSCoW |
 | --- | --- | --- | --- |
@@ -20,11 +21,15 @@ NFR-01–NFR-15 — **ไม่รวม NFR-16** ซึ่งถูกกำห
 | 3 | [[feature-list#3. ค้นหา/เลือกผู้ป่วยในความดูแล\|ค้นหา/เลือกผู้ป่วยในความดูแล]] | FR-05, FR-06, NFR-02 | Must have |
 | 4 | [[feature-list#4. คุ้มครองข้อมูลส่วนบุคคลของผู้ป่วยตาม PDPA\|คุ้มครองข้อมูลส่วนบุคคลของผู้ป่วยตาม PDPA]] | NFR-03, NFR-04, NFR-05, NFR-06, NFR-07, NFR-08 | Must have |
 | 5 | [[feature-list#5. รับประกันคุณภาพเชิงปฏิบัติการของระบบ (Performance, Availability, Clinical Safety, Session Security, Accessibility, Compatibility, Interoperability)\|รับประกันคุณภาพเชิงปฏิบัติการของระบบ]] | NFR-09, NFR-10, NFR-11, NFR-12, NFR-13, NFR-14, NFR-15 (NFR-16 นอกขอบเขต — Won't have) | Must have |
+| 6 | [[feature-list#6. สมัครบัญชี เข้าสู่ระบบ และจัดการรหัสผ่านด้วยอีเมล (Authentication)\|สมัครบัญชี เข้าสู่ระบบ และจัดการรหัสผ่านด้วยอีเมล (Authentication)]] | FR-07, FR-08, FR-09, FR-10, NFR-17, NFR-18 | Must have |
 
 บทบาทผู้ใช้ในขอบเขตของการทดสอบทั้งหมด: **แพทย์/พยาบาลผู้ดูแลผู้ป่วย NCD** (บทบาทเดียวในขอบเขตของ
 โปรเจกต์นี้ ตาม [[user-journey]] — ไม่มีบทบาท Manager/Owner หรือบทบาทอื่นที่ต้องทดสอบเพิ่มเติมในระบบนี้)
 ฟีเจอร์ที่ 5 เป็นข้อกำหนดเชิง cross-cutting ที่ครอบคลุมการใช้งานของบทบาทเดียวกันนี้ในทุกฟีเจอร์ (1-4)
-ไม่ได้เพิ่มบทบาทใหม่
+ไม่ได้เพิ่มบทบาทใหม่ ฟีเจอร์ที่ 6 (Authentication) เป็น precondition ก่อนฟีเจอร์ที่ 1-5 ทั้งหมด (ต้อง
+เข้าสู่ระบบและยืนยันอีเมลสำเร็จก่อน) ผู้ใช้ที่ทดสอบยังคงเป็นแพทย์/พยาบาลบทบาทเดียวกัน มีเพียงผู้ดูแล
+ระบบ (system administrator) เข้ามาเกี่ยวข้องเฉพาะขั้นตอนอนุมัติบัญชีนอกระบบผ่าน Firebase Console/
+Firestore โดยตรง ไม่ใช่บทบาทใหม่ในระบบที่มี UI ของตัวเอง
 
 ### นอกขอบเขต (Out of scope)
 
@@ -65,6 +70,11 @@ NFR-01–NFR-15 — **ไม่รวม NFR-16** ซึ่งถูกกำห
   checklist การยืนยันก่อน deploy เท่านั้น ไม่ทดสอบกระบวนการองค์กรจริง
 - การตั้งค่า SLA เชิงตัวเลขที่เข้มงวดกว่ามาตรฐานของ Firebase/Google Cloud (NFR-10) — ไม่กำหนด/ทดสอบ SLA
   เพิ่มเติมนอกเหนือจากที่ผู้ให้บริการ platform รับประกันไว้เอง
+- **อัปเดต 2026-09-23 (ฟีเจอร์ที่ 6 — Authentication):** หน้าจอ/ฟีเจอร์อนุมัติบัญชีภายในระบบ (การอนุมัติ
+  บัญชีใหม่ดำเนินการโดยผู้ดูแลระบบผ่าน Firebase Console/Firestore โดยตรง ไม่มีหน้าจออนุมัติในระบบสำหรับ
+  MVP), การเข้าสู่ระบบผ่านผู้ให้บริการอื่น (SSO/Google/SAML), และการกำหนด/แก้ไขบทบาทของผู้ใช้งานหลัง
+  อนุมัติครั้งแรก — ทั้งหมดนี้ระบุไว้ใน [[20260923-01-user-authentication-email-password|spec ต้นทาง
+  (Authentication)]] ว่าเป็น "นอกขอบเขต" ของ spec เอง จึงนอกขอบเขตการทดสอบด้วย
 
 ## 2. ประเภทการทดสอบ
 
@@ -75,6 +85,7 @@ NFR-01–NFR-15 — **ไม่รวม NFR-16** ซึ่งถูกกำห
 | FR-01, FR-02 | Functional Testing (การแสดงผลข้อมูล, boundary ของ ICD-10/ช่วงเวลา) | [[test-cases/patient-ncd-diagnosis-lab-history]] |
 | FR-03, FR-04 | Functional Testing (rule-based logic, การจัดประเภทผลลัพธ์ 3 แบบ) | [[test-cases/complication-risk-analysis-alert]] |
 | FR-05, FR-06 | Functional Testing (ค้นหา/แสดงรายชื่อ, input validation ของ HN) | [[test-cases/patient-search-selection]] |
+| FR-07, FR-08, FR-09, FR-10 | Functional Testing (เข้าสู่ระบบ, สมัครบัญชี, ยืนยันอีเมล, รีเซ็ตรหัสผ่าน) + Security Testing (account enumeration prevention, password policy) | [[test-cases/user-authentication-email-password]] |
 
 ### Non-Functional Testing (ต่อ NFR แต่ละตัว)
 
@@ -96,6 +107,8 @@ NFR-01–NFR-15 — **ไม่รวม NFR-16** ซึ่งถูกกำห
 | NFR-14 | Security Rules Verification | Security Testing (automated test ผ่าน Firebase Emulator Suite) | [[test-cases/operational-quality-nfr]] |
 | NFR-15 | Browser/Device Compatibility | Compatibility Testing (Chrome/Edge/Firefox บน desktop/tablet **+ ยืนยัน browserslist config `">0.5%, last 2 versions, Firefox ESR, not dead"` ตรงตาม [[technology-stack#12. Browserslist/Matrix การทดสอบสำหรับ Browser Compatibility (NFR-15)\|technology-stack]] และทดสอบ tablet ผ่าน Chrome DevTools device emulation**) | [[test-cases/operational-quality-nfr]] |
 | NFR-16 | Interoperability (future) | **ไม่ทดสอบ** — Won't have, out of scope เฟสนี้ทั้งหมด (ยืนยันโดยผู้ใช้แล้ว) | — |
+| NFR-17 | Security / Password Policy | Security Testing (validation ความยาว/ความซับซ้อนขั้นต่ำของรหัสผ่านตอนสมัคร/รีเซ็ต) | [[test-cases/user-authentication-email-password]] |
+| NFR-18 | Security / Account Enumeration Prevention | Security Testing (ยืนยันข้อความตอบกลับเหมือนกันทุกกรณีที่เข้าสู่ระบบผิดพลาด/สมัครซ้ำ/ขอรีเซ็ตรหัสผ่าน) | [[test-cases/user-authentication-email-password]] |
 
 ## 3. Environment
 
@@ -131,13 +144,20 @@ NFR-01–NFR-15 — **ไม่รวม NFR-16** ซึ่งถูกกำห
   — ทีมทดสอบต้องทดสอบทั้งพฤติกรรม happy path และบันทึกผล security awareness test (TC-05-16) ไว้เป็น
   หลักฐานความเสี่ยงที่ยังไม่ถูกปิดใน MVP นี้เสมอ
 
+- **Firebase Authentication Emulator** (`@firebase/rules-unit-testing`/`firebase-tools emulators`)
+  สำหรับทดสอบ FR-07–FR-10, NFR-17, NFR-18 (เข้าสู่ระบบ, สมัครบัญชี, ยืนยันอีเมล, รีเซ็ตรหัสผ่าน, นโยบาย
+  รหัสผ่าน, account enumeration prevention) ตามที่
+  [[technology-stack#7. Authentication/Authorization — Firebase Authentication (ไม่ใช้ Custom Claims เก็บบทบาท — แก้ไขในรอบสาม 2026-09-24)|decision area 7]]
+  ระบุไว้ โดยไม่ต้องส่งอีเมลจริงระหว่างทดสอบอัตโนมัติ (ใช้ Emulator UI ตรวจสอบลิงก์ยืนยัน/รีเซ็ตแทน)
+
 รายละเอียด environment ส่วนที่เหลือ (runtime/CI pipeline เต็มรูปแบบ) ยังต้องรอการตัดสินใจเพิ่มเติมก่อน
 เริ่มพัฒนาจริง
 
 ## 4. Risk Management
 
 Risk Register ด้านล่างประเมินความเสี่ยงถ้าไม่ทดสอบ/ทดสอบไม่ผ่านของแต่ละรหัส FR/NFR ครอบคลุมทุกฟีเจอร์
-Must have ทั้ง 5 ฟีเจอร์ และทุก NFR ระดับ "สูง" ตาม [[backlog]] (NFR-16 ไม่มีแถวเพราะเป็น Won't have
+Must have ทั้ง 6 ฟีเจอร์ (อัปเดต 2026-09-23: เพิ่มฟีเจอร์ที่ 6 — Authentication) และทุก NFR ระดับ "สูง"
+ตาม [[backlog]] (NFR-16 ไม่มีแถวเพราะเป็น Won't have
 นอกขอบเขตการทดสอบทั้งหมด) Impact ผูกกับระดับความสำคัญใน
 [[backlog]] เสมอ (รหัส "สูง" → Impact อย่างน้อย "สูง") Likelihood ประเมินจากความซับซ้อนของ
 requirement/จำนวน edge case ที่ spec หรือ [[../../02-design/02-technical/detailed-design/|detailed-design]]
@@ -167,6 +187,12 @@ requirement/จำนวน edge case ที่ spec หรือ [[../../02-des
 | NFR-13 (กลาง) — ฟีเจอร์ 5 | ใช้สีเป็นสัญญาณเดียวในการแสดง flag ความเสี่ยง ทำให้ผู้ใช้ที่มีภาวะมองเห็นสีผิดปกติตีความผลลัพธ์ผิดพลาด พลาดสังเกตความเสี่ยงโรคแทรกซ้อนที่ระบบตรวจพบแล้ว — เพิ่มเติม (อัปเดต 2026-09-22): [[technology-stack]] ยืนยันกลไกจริงคือ WCAG 2.1 AA + Heroicons ตรวจสอบด้วย Lighthouse Accessibility Audit ก่อน deploy | กลาง (3 AC ครอบคลุม happy path + ทุกผลลัพธ์ 3 แบบ + Lighthouse audit ตรงไปตรงมา แต่ขึ้นกับการปฏิบัติตามจริงของทีมออกแบบ UI/prototype และการรัน Lighthouse สม่ำเสมอก่อน deploy ทุกครั้ง) | กลาง (ตรงกับระดับความสำคัญ "กลาง" ใน [[backlog]] แต่กระทบความปลอดภัยทางคลินิกทางอ้อมผ่าน FR-04) | กลาง | ทดสอบครบทั้ง 3 AC ([[test-cases/operational-quality-nfr]] — TC-05-09/10 สำหรับข้อความกำกับคู่กับสี, **TC-05-17 สำหรับ Lighthouse Accessibility Audit จริง**) ตรวจสอบทุกผลลัพธ์ 3 แบบของ FR-04 ว่ามีข้อความกำกับคู่กับสีเสมอ และผ่านเกณฑ์ Lighthouse ก่อน deploy ทุกครั้ง ทวนกับ [[DESIGN]] ก่อน deploy prototype |
 | NFR-14 (สูง) — ฟีเจอร์ 5 | Firestore Security Rules ตั้งค่าผิดพลาดโดยไม่มี automated test ครอบคลุม ทำให้ข้อมูลผู้ป่วยรั่วไหลข้ามสิทธิ์ (โดยเฉพาะ Operation 0 ที่ Client อ่าน Firestore ตรง) กระทบ PDPA และความเป็นส่วนตัวของผู้ป่วยอย่างร้ายแรง | สูง (technology-stack ระบุไว้แล้วว่า Security Rules เขียน logic 2 ระดับได้ยากกว่าโค้ด backend ปกติมาก เสี่ยงตั้งค่าผิดพลาดสูง) | สูง (เชื่อมโยงโดยตรงกับ NFR-02 ซึ่งเป็นความเสี่ยงร้ายแรงที่สุดในระบบ เป็น Must have/MVP) | วิกฤต | ทดสอบครบทั้ง 2 AC ([[test-cases/operational-quality-nfr]]) ด้วย Firebase Emulator Suite ครอบคลุมอย่างน้อย 4 กรณีตาม technology-stack ก่อน deploy จริงทุกครั้ง ผนวกเป็นส่วนหนึ่งของ CI/CD pipeline ในอนาคต |
 | NFR-15 (กลาง) — ฟีเจอร์ 5 | ระบบแสดงผล/ทำงานผิดพลาดบน browser/อุปกรณ์ที่คลินิก/รพ.สต. ใช้งานจริง ทำให้แพทย์/พยาบาลใช้งานระบบไม่ได้ในหน้างานจริง — เพิ่มเติม (อัปเดต 2026-09-22): [[technology-stack]] ยืนยัน browserslist config `">0.5%, last 2 versions, Firefox ESR, not dead"` เป็นกลไกจริงที่ควบคุม build target | ต่ำ (2 AC ตรงไปตรงมา ใช้ browser หลักที่ได้รับความนิยม/รองรับมาตรฐานเว็บอยู่แล้ว บวก config review ที่ตรวจสอบง่าย) | กลาง (ตรงกับระดับความสำคัญ "กลาง" ใน [[backlog]]) | กลาง | ทดสอบ TC-05-13/TC-05-18 ([[test-cases/operational-quality-nfr]]) บน Chrome/Edge/Firefox เวอร์ชันล่าสุด บน desktop/tablet และยืนยัน browserslist config ตรงตามที่กำหนดก่อนปล่อยแต่ละรอบ |
+| FR-07 (สูง) — ฟีเจอร์ 6 | เข้าสู่ระบบผิดพลาด (ปฏิเสธผู้ใช้ที่ควรผ่าน หรือปล่อยให้ผู้ใช้ที่ยังไม่ยืนยันอีเมลเข้าถึงฟีเจอร์อื่นได้) ทำให้ผู้ใช้ที่มีสิทธิ์เข้าใช้งานไม่ได้ หรือผู้ใช้ที่ยังไม่ผ่านเงื่อนไขเข้าถึงข้อมูลผู้ป่วยได้ก่อนเวลาอันควร | กลาง (3 AC ครอบคลุม happy path + ข้อความรวมไม่เปิดเผยข้อมูล + เงื่อนไขยังไม่ยืนยันอีเมล) | สูง (เป็น precondition ก่อนฟีเจอร์ที่ 1-5 ทั้งหมด เป็น Must have/MVP) | สูง | ทดสอบครบทั้ง 3 AC ([[test-cases/user-authentication-email-password]]) ยืนยันข้อความรวมและการบล็อกก่อนยืนยันอีเมล |
+| FR-08 (สูง) — ฟีเจอร์ 6 | สมัครบัญชีผิดพลาด (สร้างบัญชีที่มี role/isActive ไม่ตรงตามที่กำหนด, เปิดเผยว่าอีเมลซ้ำ, หรือเกิด orphaned Auth account เมื่อเขียน Firestore ล้มเหลว) ทำให้ผู้ใช้เข้าถึงข้อมูลผู้ป่วยก่อนได้รับอนุมัติ รั่วไหลข้อมูลว่าอีเมลใดมีบัญชีอยู่แล้ว หรือมีบัญชี Authentication ค้างที่ไม่มีสิทธิ์ใดๆ | กลาง (5 AC รวม edge case อีเมลซ้ำ, รหัสผ่านไม่ผ่านนโยบาย, เงื่อนไขบัญชีที่ยังไม่อนุมัติ, และ rollback เมื่อเขียน Firestore ล้มเหลว — เพิ่มใหม่ 2026-09-24 ตาม technology-stack decision area 17) | สูง (เป็นจุดเริ่มต้นของการควบคุมสิทธิ์ทั้งระบบ เป็น Must have/MVP) | สูง | ทดสอบครบทั้ง 5 AC ([[test-cases/user-authentication-email-password]]) เน้นยืนยัน `isActive=false`/ไม่มี role หลังสมัคร, ข้อความเดียวกันไม่ว่าอีเมลจะซ้ำหรือไม่ และ rollback ลบ Auth user เมื่อเขียน Firestore ล้มเหลว |
+| FR-09 (สูง) — ฟีเจอร์ 6 | ไม่บล็อกผู้ใช้ที่ยังไม่ยืนยันอีเมล ไม่ส่งอีเมลยืนยันตัวตน หรือ Client ที่ถูกดัดแปลง/บั๊กข้ามการตรวจสอบแล้วเรียก Operation ตรง ทำให้ผู้ใช้ที่ยังไม่ยืนยันตัวตนเข้าถึงฟีเจอร์อื่นของระบบได้ | กลาง (4 AC ครอบคลุมการส่งอีเมล, ยืนยันสำเร็จ, บล็อกจนกว่าจะยืนยัน, และตรวจสอบ `email_verified` ซ้ำฝั่งเซิร์ฟเวอร์ที่ Operation 0/1-6 — เพิ่มใหม่ 2026-09-24 ตาม technology-stack decision area 19) | สูง (เป็นกลไกยืนยันตัวตนพื้นฐานก่อนเข้าถึงข้อมูลผู้ป่วยใดๆ เป็น Must have/MVP) | สูง | ทดสอบครบทั้ง 4 AC ([[test-cases/user-authentication-email-password]]) ยืนยันการบล็อกฟีเจอร์อื่นทั้งหมดจนกว่าจะยืนยันอีเมลสำเร็จ และการปฏิเสธที่ Security Rules/Cloud Functions เมื่อ `email_verified=false` แม้ role/isActive/PatientAssignment ผ่านครบ |
+| FR-10 (สูง) — ฟีเจอร์ 6 | ขอรีเซ็ตรหัสผ่านเปิดเผยว่าอีเมลมีบัญชีอยู่หรือไม่ หรือยอมให้ตั้งรหัสผ่านใหม่ที่ไม่ผ่านนโยบาย ทำให้เสี่ยงรั่วไหลข้อมูลบัญชี/ตั้งรหัสผ่านไม่ปลอดภัย | กลาง (3 AC รวม edge case รหัสผ่านใหม่ไม่ผ่านนโยบาย) | สูง (เกี่ยวข้องโดยตรงกับความปลอดภัยของบัญชีผู้ใช้ เป็น Must have/MVP) | สูง | ทดสอบครบทั้ง 3 AC ([[test-cases/user-authentication-email-password]]) เน้นข้อความเดียวกันเสมอและการบังคับใช้นโยบายรหัสผ่านใหม่ |
+| NFR-17 (สูง) — ฟีเจอร์ 6 | รหัสผ่านที่ไม่ผ่านนโยบายขั้นต่ำหลุดผ่านการตรวจสอบที่ Operation 8 (regex) หรือ Operation 9b (Identity Platform backstop) ทำให้บัญชีผู้ใช้เสี่ยงถูกเดา/โจมตีด้วยรหัสผ่านอ่อนแอ | กลาง (3 AC รวมกลไกที่ต่างกัน 2 จุด — regex ในโค้ดที่ Operation 8 และ Identity Platform password policy backstop ที่ Operation 9b เพราะไม่มี Cloud Function คั่นกลาง — เพิ่มใหม่ 2026-09-24 ตาม technology-stack decision area 13) | สูง (เป็นกลไกความปลอดภัยพื้นฐานที่ FR-08/FR-10 ซึ่งเป็น MVP ต้องพึ่งพา เป็น Must have/MVP) | สูง | ทดสอบครบทั้ง 3 AC ([[test-cases/user-authentication-email-password]]) ทั้งฝั่งสมัครบัญชี (regex) และรีเซ็ตรหัสผ่าน (Identity Platform backstop ที่ Operation 9b) |
+| NFR-18 (สูง) — ฟีเจอร์ 6 | ข้อความแจ้งเตือนเปิดเผยว่าอีเมลใดมีบัญชีอยู่ในระบบหรือไม่ (account enumeration) ทำให้ผู้ไม่ประสงค์ดีสำรวจหา/โจมตีบัญชีที่มีอยู่จริงในระบบได้ | สูง (ต้องตรวจสอบให้ข้อความเหมือนกันทุกประการใน 3 จุด — เข้าสู่ระบบผิดพลาด, สมัครซ้ำ, รีเซ็ตรหัสผ่าน — เสี่ยงหลุดพลาดได้ง่ายถ้า implement แยกกัน) | สูง (เป็นความเสี่ยงด้านความปลอดภัยบัญชีผู้ใช้ระดับระบบ เป็น Must have/MVP) | วิกฤต | ทดสอบครบทั้ง 1 AC ครอบคลุมทั้ง 3 จุด ([[test-cases/user-authentication-email-password]]) ยืนยันข้อความเหมือนกันทุกประการในทุกสถานการณ์ |
 
 ## 5. Entry / Exit Criteria
 
@@ -205,11 +231,17 @@ PDPA (เป็นบทบาทเดียวกัน ไม่ใช่บ�
 | 3 | ค้นหา/เลือกผู้ป่วยในความดูแล | [[test-cases/patient-search-selection]] | FR-05 (3 AC), FR-06 (3 AC), NFR-02 (2 AC: AC-1 cross-ref, AC-5 ใหม่) = 8 AC | 10 |
 | 4 | คุ้มครองข้อมูลส่วนบุคคลของผู้ป่วยตาม PDPA | [[test-cases/pdpa-data-protection-compliance]] | NFR-03 (2 AC), NFR-04 (2 AC), NFR-05 (4 AC), NFR-06 (3 AC), NFR-07 (5 AC), NFR-08 (4 AC) = 20 AC | 20 |
 | 5 | รับประกันคุณภาพเชิงปฏิบัติการของระบบ | [[test-cases/operational-quality-nfr]] | NFR-09 (4 AC), NFR-10 (1 AC), NFR-11 (2 AC), NFR-12 (4 AC), NFR-13 (3 AC), NFR-14 (2 AC), NFR-15 (2 AC) = 18 AC (NFR-16 ไม่มี AC — Won't have) | 18 |
+| 6 | สมัครบัญชี เข้าสู่ระบบ และจัดการรหัสผ่านด้วยอีเมล (Authentication) | [[test-cases/user-authentication-email-password]] | FR-07 (3 AC), FR-08 (5 AC), FR-09 (4 AC), FR-10 (3 AC), NFR-17 (3 AC), NFR-18 (1 AC) = 19 AC | 19 |
 
-**รวม:** 5 ฟีเจอร์, 21 รหัส FR/NFR ที่อยู่ในขอบเขต (ไม่รวม NFR-16), 66 test case —
-[[acceptance-criteria]] มี AC ทั้งหมด 65 ข้อ (รวม NFR-01, NFR-02 ที่ถูกอ้างอิงซ้ำข้ามฟีเจอร์ — อัปเดต
-2026-09-22: เพิ่มขึ้นจาก 60 เป็น 65 ข้อ เนื่องจากเพิ่ม AC ใหม่ 5 ข้อใน NFR-09/NFR-12/NFR-13/NFR-15
-เพื่อทดสอบกลไกจริงตาม [[technology-stack]]) ครอบคลุมครบทุกข้อโดย test case อย่างน้อย 1 รายการต่อ AC
+**รวม:** 6 ฟีเจอร์, 27 รหัส FR/NFR ที่อยู่ในขอบเขต (ไม่รวม NFR-16), 85 test case —
+[[acceptance-criteria]] มี AC ทั้งหมด 84 ข้อ (รวม NFR-01, NFR-02 ที่ถูกอ้างอิงซ้ำข้ามฟีเจอร์ — อัปเดต
+2026-09-23: เพิ่มขึ้นจาก 65 เป็น 81 ข้อ เนื่องจากเพิ่มหัวข้อ "6. สมัครบัญชี เข้าสู่ระบบ และจัดการรหัสผ่าน
+ด้วยอีเมล (Authentication)" ที่ขาดหายไปทั้งหมด 16 AC ใหม่ (FR-07–FR-10, NFR-17, NFR-18); **อัปเดต
+2026-09-24:** เพิ่มขึ้นอีกจาก 81 เป็น 84 ข้อ เนื่องจากเทียบกับ [[technology-stack]] รอบสาม (decision
+area 13–19) พบ AC ที่ขาดหายไป 3 ข้อใหม่ — FR-08 AC-5 (rollback ลบ Auth user เมื่อเขียน Firestore
+ล้มเหลว), FR-09 AC-4 (ตรวจสอบ `email_verified` ซ้ำฝั่งเซิร์ฟเวอร์ที่ Operation 0/1-6), NFR-17 AC-3
+(กลไก Identity Platform password policy backstop ที่ Operation 9b) — ครอบคลุมครบทุกข้อโดย test case
+อย่างน้อย 1 รายการต่อ AC
 
 ## เอกสารที่เกี่ยวข้อง
 
@@ -226,4 +258,6 @@ PDPA (เป็นบทบาทเดียวกัน ไม่ใช่บ�
 - [[test-cases/complication-risk-analysis-alert]]
 - [[test-cases/pdpa-data-protection-compliance]]
 - [[test-cases/operational-quality-nfr]]
+- [[test-cases/user-authentication-email-password]]
+- [[20260923-01-user-authentication-email-password]]
 - [[../../02-design/01-prototypes/20260918-01-v1/prototype|prototype v1]]

@@ -45,6 +45,15 @@ partial match) เลข HN ต้องเป็นตัวเลขล้ว�
 [[#Cross-cutting: คุณภาพเชิงปฏิบัติการของระบบ (NFR-09–NFR-16)|Cross-cutting: คุณภาพเชิงปฏิบัติการของระบบ]]
 ก่อนหัวข้อ Edge Case ด้านล่าง
 
+**อัปเดต 2026-09-23 — ตรวจสอบความสอดคล้องกับฟีเจอร์ที่ 6 (Authentication):** `[[db-spec]]` ปรับ entity
+[[db-spec#ผู้ใช้ (User)|User]] ให้ `บทบาท` เป็น**ไม่บังคับ**และเพิ่ม `อีเมล`/`รหัสผ่านที่จัดเก็บ`/
+`สถานะการยืนยันอีเมล` (ฟีเจอร์ที่ 6 — ดู [[user-authentication-email-password]]) — ตรวจสอบแล้วว่า
+**ไม่กระทบ sequence/state diagram ของเอกสารนี้** เพราะเงื่อนไข "ตรวจสอบระดับบทบาท" ที่ใช้อยู่แล้ว
+(`role in ['แพทย์','พยาบาล']`) ปฏิเสธบัญชีที่ยังไม่มี `role` โดยอัตโนมัติอยู่แล้วโดยไม่ต้องเพิ่มเงื่อนไข
+ใหม่ (ตามที่ [[api-spec#Operation ร่วม — ตรวจสอบสิทธิ์การเข้าถึงข้อมูลผู้ป่วย (Access Control)|Operation ร่วม Access Control ใน api-spec]]
+ยืนยันไว้แล้ว) ฟีเจอร์ที่ 6 เป็น precondition ก่อนฟีเจอร์นี้ทั้งหมด (ผ่าน Operation 7 เข้าสู่ระบบ +
+ยืนยันอีเมลก่อน) — ดูรายละเอียดขั้นตอนก่อนหน้าไฟล์นี้ที่ [[user-authentication-email-password]]
+
 **อัปเดต 2026-09-22 (รอบสาม) — ตรวจสอบความสอดคล้องกับ `[[technology-stack]]`/`[[architecture]]` ฉบับ
 ล่าสุด:** เพิ่ม `loop` block ตรวจสอบ inactivity/auto-logout (NFR-12) เข้าไปใน Sequence Diagram ด้านล่าง
 ให้ตรงกับที่ [[architecture#Data Flow Diagram — Journey หลัก|architecture — Sequence Diagram ของ
@@ -72,11 +81,12 @@ sequenceDiagram
     Note over Client,Store: หมายเหตุเทคโนโลยีจริง (ตาม technology-stack): ทุกขั้นตอนตั้งแต่บรรทัดถัดไปจนถึงก่อน เลือกผู้ป่วยรายบุคคล ด้านล่าง ในทางเทคนิคคือ Client อ่าน Store ตรงผ่าน Firebase SDK และ Firestore Security Rules เท่านั้น ไม่มี Backend Service หรือ Cloud Functions จริงในเส้นทางนี้ — ลูกศร Client-Backend-Store ที่เห็นแสดงเพื่อคงความสอดคล้องเชิง logical กับ architecture และ api-spec เท่านั้น (Security Rules ประเมินเงื่อนไขบทบาท/สถานะบัญชีอัตโนมัติทุกครั้งที่ query โดยไม่มี round-trip แยกไปอ่าน User ก่อน) ดูรายละเอียดจริงที่หัวข้อ หมายเหตุการ Implement ท้ายเอกสาร
     User->>Client: เปิดหน้าจอค้นหา/รายชื่อผู้ป่วยในความดูแล
     Client->>Backend: ส่งคำขอพร้อมข้อมูลยืนยันตัวตน (auth context)
-    Backend->>Backend: [Access Control] ตรวจสอบสิทธิ์ระดับบทบาท (role-level) — ไม่มีรหัสผู้ป่วยในขั้นนี้ (NFR-02, NFR-03)
+    Backend->>Backend: [Access Control] ตรวจสอบสิทธิ์ระดับบทบาท (role-level) + สถานะยืนยันอีเมล (email_verified) — ไม่มีรหัสผู้ป่วยในขั้นนี้ (NFR-02, NFR-03, FR-09 — เพิ่มเงื่อนไข email_verified ในรอบ 2026-09-24 ตาม decision area 19)
     Backend->>Store: อ่าน User (บทบาท, สถานะการใช้งานบัญชี)
     Store-->>Backend: ส่งข้อมูล User
-    alt บทบาทไม่ใช่แพทย์/พยาบาล หรือบัญชีถูกระงับ
-        Backend-->>Client: ปฏิเสธการเข้าถึง (NFR-02)
+    Note over Backend: เงื่อนไข email_verified อ่านจาก Firebase ID token ที่ verify อยู่แล้ว (request.auth.token.email_verified) ไม่ต้องเพิ่ม Firestore read (decision area 19)
+    alt บทบาทไม่ใช่แพทย์/พยาบาล หรือบัญชีถูกระงับ หรือ email_verified เป็นเท็จ
+        Backend-->>Client: ปฏิเสธการเข้าถึง (NFR-02, FR-09)
         Client-->>User: แสดงข้อความไม่มีสิทธิ์เข้าถึงระบบ
     else ผ่านการตรวจสอบระดับบทบาท
         loop ตลอด session (ตรวจสอบต่อเนื่อง ไม่ใช่ครั้งเดียวตอนเข้าสู่ระบบ) (จริง: setTimeout + event listener บน mouse/keyboard/touch event ของ browser — ไม่มี library ภายนอก)
@@ -128,7 +138,7 @@ sequenceDiagram
 
 | ลำดับ | Operation | Entity ที่กระทบ | การกระทำ | หมายเหตุ |
 | --- | --- | --- | --- | --- |
-| 1 | [[api-spec#Operation ร่วม — ตรวจสอบสิทธิ์การเข้าถึงข้อมูลผู้ป่วย (Access Control)\|Operation ร่วม (role-level)]] | [[db-spec#ผู้ใช้ (User)\|User]] | อ่าน | ตรวจสอบ บทบาท และ สถานะการใช้งานบัญชี ก่อนเข้าสู่ Operation 0 เสมอ (ไม่มีรหัสผู้ป่วยในขั้นนี้ จึงไม่ตรวจสอบระดับรายผู้ป่วย) |
+| 1 | [[api-spec#Operation ร่วม — ตรวจสอบสิทธิ์การเข้าถึงข้อมูลผู้ป่วย (Access Control)\|Operation ร่วม (role-level)]] | [[db-spec#ผู้ใช้ (User)\|User]] | อ่าน | ตรวจสอบ บทบาท, สถานะการใช้งานบัญชี และตั้งแต่ 2026-09-24 ตรวจสอบ `email_verified` จาก Firebase ID token เพิ่มด้วย (FR-09, decision area 19) ก่อนเข้าสู่ Operation 0 เสมอ (ไม่มีรหัสผู้ป่วยในขั้นนี้ จึงไม่ตรวจสอบระดับรายผู้ป่วย) |
 | 2 | [[api-spec#Operation 0 — ค้นหา/แสดงรายชื่อผู้ป่วยในความดูแล (ค้นหาเฉพาะรายด้วยเลข HN)\|Operation 0]] | — (ไม่กระทบ entity ใด) | ตรวจสอบรูปแบบ | เฉพาะเมื่อระบุ HN: ตรวจสอบว่าเป็นตัวเลขล้วนครบ 7 หลักหรือไม่ **หลัง** operation นี้ถูกเรียกแล้วเท่านั้น (ไม่ real-time ฝั่ง Client) — ถ้าไม่ครบรูปแบบ หยุดทันทีก่อนอ่าน PatientAssignment/Patient ใดๆ (FR-06) |
 | 3 | [[api-spec#Operation 0 — ค้นหา/แสดงรายชื่อผู้ป่วยในความดูแล (ค้นหาเฉพาะรายด้วยเลข HN)\|Operation 0]] | [[db-spec#การมอบหมายผู้ป่วยในความดูแล (PatientAssignment)\|PatientAssignment]] | อ่าน | ต้องอ่าน**ก่อน**อ่าน Patient เสมอ ไม่ว่าจะระบุ HN หรือไม่ เพื่อกำหนดขอบเขตผู้ป่วยที่อนุญาตให้เห็น (ไม่ใช่กรองตามแผนก/หน่วยงาน) |
 | 4 | [[api-spec#Operation 0 — ค้นหา/แสดงรายชื่อผู้ป่วยในความดูแล (ค้นหาเฉพาะรายด้วยเลข HN)\|Operation 0]] | [[db-spec#ผู้ป่วย (Patient)\|Patient]] (เชิง logical) | อ่าน | ถ้าระบุ HN ที่ผ่านรูปแบบแล้ว: อ่านแบบ exact match กับ Patient.เลขประจำตัวผู้ป่วย เฉพาะภายในขอบเขต PatientAssignment (ลำดับ 3) เท่านั้น (ไม่ใช่ partial match); ถ้าไม่ระบุ HN: อ่านทั้งหมดภายในขอบเขตเดียวกัน — **หมายเหตุเทคโนโลยีจริง:** ในทางเทคนิคไม่มีการอ่าน collection `patients` แยกต่างหากเลยใน Operation 0 (ดูหัวข้อ "หมายเหตุการ Implement" ท้ายเอกสาร) แถวนี้แสดงความรับผิดชอบเชิง logical ที่ยังถูกต้อง (ต้องได้ข้อมูล Patient.hn/fullName มาแสดง) แต่กลไกจริงคือฟิลด์ที่ denormalize ไว้ในลำดับ 3 เท่านั้น |
@@ -186,7 +196,7 @@ attribute สถานะ — ดู [[db-spec#การมอบหมายผ
 ตัวสถานะเหล่านี้จึง**ไม่ต้อง**ปรับให้สะท้อน Firestore field value ใดๆ (ไม่มี field สถานะให้สะท้อน) —
 กลไกจริงที่บังคับ transition แต่ละจุดต่างกันตามช่วง: "ตรวจสอบระดับบทบาท" บังคับโดย Firestore Security
 Rules (Operation 0); "ตรวจสอบระดับรายผู้ป่วย" หลังเลือกผู้ป่วยบังคับโดยโค้ด Cloud Functions (Operation
-1-6) ตาม [[technology-stack#7. Authentication/Authorization — Firebase Authentication + Custom Claims|decision area 7 ใน technology-stack]]
+1-6) ตาม [[technology-stack#7. Authentication/Authorization — Firebase Authentication (ไม่ใช้ Custom Claims เก็บบทบาท — แก้ไขในรอบสาม 2026-09-24)|decision area 7 ใน technology-stack]] — ทั้งสองเส้นทางอ่าน `role`/`isActive` จาก Firestore `users/{uid}` โดยตรงเสมอ **ไม่มี custom claims ให้อ่านอีกต่อไป** (decision area 18)
 
 ## State Diagram — สถานะขั้นตอนค้นหาด้วยเลข HN (Operation 0, เส้นทางระบุ HN)
 
@@ -257,10 +267,12 @@ diagram นี้ (เป็น request-scoped process state ทั้งหม�
   แล้วในหัวข้อ "หมายเหตุการ Implement" ด้านล่างคือกลไกหลักที่รองรับข้อกำหนดนี้ (ดู
   [[db-spec#คุณสมบัติร่วม (Cross-cutting Property) — Performance/Index Design (NFR-09)|db-spec]])
 - **Security Rules Verification (NFR-14):** Firestore Security Rules ที่ Operation 0 พึ่งพาทั้งหมด
-  (role-level ผ่าน `get()` บน `users/{uid}` และ patient-level ผ่าน field `userId` บน
-  `patientAssignments`) ต้องมี automated test ผ่าน Firebase Emulator Suite ครอบคลุมกรณีตามที่
+  (role-level ผ่าน `get()` บน `users/{uid}`, patient-level ผ่าน field `userId` บน
+  `patientAssignments` และตั้งแต่ 2026-09-24 เงื่อนไข `email_verified` เพิ่มเติมตาม decision area 19)
+  ต้องมี automated test ผ่าน Firebase Emulator Suite ครอบคลุมกรณีตามที่
   [[db-spec#คุณสมบัติร่วม (Cross-cutting Property) — Security Rules Verification (NFR-14)|db-spec]]
-  และ [[technology-stack#ความเสี่ยงที่ต้องพิจารณาเพิ่มเติม (สำคัญ — ผู้ใช้รับทราบและยืนยันให้ดำเนินการต่อแล้ว)|technology-stack — หัวข้อความเสี่ยง]]
+  (รวมกรณีใหม่ "(ง) ผู้ใช้ที่บัญชียังไม่ยืนยันอีเมล") และ
+  [[technology-stack#ความเสี่ยงที่ต้องพิจารณาเพิ่มเติม (สำคัญ — ผู้ใช้รับทราบและยืนยันให้ดำเนินการต่อแล้ว)|technology-stack — หัวข้อความเสี่ยง]]
   ระบุไว้ ก่อน deploy ใช้งานจริงเสมอ — **สำคัญเป็นพิเศษสำหรับฟีเจอร์นี้** เพราะเป็น operation เดียวใน
   ระบบที่ Client อ่าน Firestore ตรงโดยไม่ผ่าน Cloud Functions
 - **Browser/Device Compatibility (NFR-15):** หน้าจอค้นหา/รายชื่อผู้ป่วยในฟีเจอร์นี้ต้องแสดงผลถูกต้อง
@@ -278,6 +290,7 @@ diagram นี้ (เป็น request-scoped process state ทั้งหม�
 | ไม่มีข้อมูลยืนยันตัวตน หรือข้อมูลยืนยันตัวตนไม่ถูกต้อง | ปฏิเสธการเข้าถึงทันที ก่อนเรียก Operation 0 | [[api-spec#Operation ร่วม — ตรวจสอบสิทธิ์การเข้าถึงข้อมูลผู้ป่วย (Access Control)\|Operation ร่วม]] |
 | ผู้ใช้ถูก auto-logout เนื่องจากไม่มีการใช้งาน (inactivity) เกิน 30 นาที (NFR-12) แล้วส่งคำขอถัดไปโดยไม่มี auth context ที่ถูกต้องแนบมา | ปฏิเสธการเข้าถึงที่ step ตรวจสอบสิทธิ์ระดับบทบาทเช่นเดียวกับกรณี "ไม่มีข้อมูลยืนยันตัวตน" ข้างต้น — Client นำผู้ใช้กลับไปหน้าจอเข้าสู่ระบบใหม่ (ขั้นตอนที่ 1 ใน [[user-journey]]) | [[backlog#Non-Functional Requirements\|NFR-12]] |
 | บทบาทผู้ใช้ไม่ใช่แพทย์/พยาบาล หรือบัญชีถูกระงับ | ปฏิเสธการเข้าถึง — Client แสดงข้อความไม่มีสิทธิ์เข้าถึงระบบ | [[backlog#Non-Functional Requirements\|NFR-02]] |
+| บทบาท/สถานะบัญชี/PatientAssignment ถูกต้องครบ แต่ `email_verified` เป็นเท็จ (รวมถึงกรณี Client ถูกดัดแปลง/บั๊กข้ามการตรวจสอบ `emailVerified` ที่ชั้น UX แล้วเรียก Operation 0 ตรง) | **ปิดช่องว่างแล้วตั้งแต่ 2026-09-24** — Firestore Security Rules ปฏิเสธ query/read โดยอัตโนมัติผ่านเงื่อนไข `request.auth.token.email_verified == true` (decision area 19) — ไม่ใช่ช่องว่างที่ยังไม่ถูกยืนยันอีกต่อไป | [[technology-stack#19. การตรวจสอบ `emailVerified` ซ้ำฝั่ง Backend (FR-09, ฟีเจอร์ที่ 6) — ตรวจทั้ง Cloud Functions และ Security Rules\|decision area 19 ใน technology-stack]], [[backlog#สูง (MVP)\|FR-09]] |
 | ไม่มีผู้ป่วยรายใดอยู่ในความดูแลของผู้ใช้ (ไม่มีระเบียน PatientAssignment เลย) | คืนรายการว่าง ไม่ถือเป็น error — Client แสดงข้อความว่าไม่มีผู้ป่วยในความดูแล | [[api-spec#Operation 0 — ค้นหา/แสดงรายชื่อผู้ป่วยในความดูแล (ค้นหาเฉพาะรายด้วยเลข HN)\|Operation 0]] |
 | กรอก HN แล้วกดค้นหา แต่ไม่ครบรูปแบบตัวเลขล้วน 7 หลัก | ตรวจสอบหลังกดค้นหาเท่านั้น (ไม่ real-time) — หยุดทันที ไม่ค้นหาต่อ แจ้งเตือน "HN ไม่ครบ 7 หลัก" ให้กรอกค้นหาใหม่ได้ทันที โดยไม่บล็อกการเรียกดูรายชื่อทั้งหมด | [[backlog#สูง (MVP)\|FR-06]], [[api-spec#Operation 0 — ค้นหา/แสดงรายชื่อผู้ป่วยในความดูแล (ค้นหาเฉพาะรายด้วยเลข HN)\|Operation 0]] |
 | กรอก HN ครบ 7 หลักแล้วค้นหาแบบ exact match ไม่พบผู้ป่วยที่ตรงกัน (รวมถึงกรณีมี HN นี้จริงแต่ไม่อยู่ในความดูแลของผู้ใช้นี้) | แจ้งเตือน "ไม่พบผู้ป่วย" ให้กรอกค้นหาใหม่ได้ทันที โดยไม่บล็อกการเรียกดูรายชื่อทั้งหมด (ไม่เปิดเผยว่า HN นี้มีอยู่จริงแต่อยู่นอกความดูแลของผู้ใช้ — ข้อความเดียวกันทั้งสองกรณี) | [[backlog#สูง (MVP)\|FR-06]], [[api-spec#Operation 0 — ค้นหา/แสดงรายชื่อผู้ป่วยในความดูแล (ค้นหาเฉพาะรายด้วยเลข HN)\|Operation 0]] |
@@ -290,12 +303,17 @@ diagram นี้ (เป็น request-scoped process state ทั้งหม�
 
 รายละเอียดกลไกจริงต่อไปนี้อ้างอิงเฉพาะสิ่งที่ `[[technology-stack]]` ตัดสินใจไว้แล้วเท่านั้น (ดู
 [[technology-stack#3. สถาปัตยกรรม Backend Service — Firebase-native (ไม่มี Backend Service แยกแบบดั้งเดิม)|decision area 3]],
-[[technology-stack#7. Authentication/Authorization — Firebase Authentication + Custom Claims|decision area 7]]):
+[[technology-stack#7. Authentication/Authorization — Firebase Authentication (ไม่ใช้ Custom Claims เก็บบทบาท — แก้ไขในรอบสาม 2026-09-24)|decision area 7]],
+[[technology-stack#18. การ Sync role/isActive ระหว่าง Firestore กับ Custom Claims (ฟีเจอร์ที่ 6) — ไม่ Sync, Firestore เป็น Source of Truth เดียว|decision area 18]],
+[[technology-stack#19. การตรวจสอบ `emailVerified` ซ้ำฝั่ง Backend (FR-09, ฟีเจอร์ที่ 6) — ตรวจทั้ง Cloud Functions และ Security Rules|decision area 19]]):
 
 - **ตรวจสอบสิทธิ์ระดับบทบาท (role-level):** บังคับใช้ผ่าน **Firestore Security Rules** เท่านั้น
   ประเมิน `get(/databases/$(database)/documents/users/$(request.auth.uid)).data.role in
   ['แพทย์','พยาบาล']` และ `...isActive == true` อัตโนมัติทุกครั้งที่ Client ยิง query บน
-  `patientAssignments` — ไม่มีการเรียก Cloud Function แยกเพื่อตรวจสอบขั้นตอนนี้
+  `patientAssignments` — ไม่มีการเรียก Cloud Function แยกเพื่อตรวจสอบขั้นตอนนี้ — **ไม่มี custom claims
+  บทบาท/isActive ให้อ่านอีกต่อไป (decision area 18)** Firestore `users/{uid}` เป็น source of truth
+  เดียว — **เพิ่มเงื่อนไข `request.auth.token.email_verified == true` ในรอบ 2026-09-24 (decision area
+  19, FR-09)** อ่านจาก Firebase ID token ที่ verify อยู่แล้ว ไม่ต้องเพิ่ม Firestore read
 - **Operation 0 (ทั้งสองเส้นทาง — ค้นหาด้วย HN และดูรายชื่อทั้งหมด):** Client เรียก **Firestore SDK
   query ตรง** บน collection `patientAssignments` เพียง collection เดียว ใช้ field ที่ denormalize
   ไว้แล้ว (`patientHn`, `patientFullName`) ไม่อ่าน collection `patients` แยก:
@@ -348,3 +366,4 @@ diagram นี้ (เป็น request-scoped process state ทั้งหม�
 - [[complication-risk-analysis-alert]]
 - [[pdpa-data-protection-compliance]]
 - [[20260922-01-operational-quality-nfr]]
+- [[user-authentication-email-password]]

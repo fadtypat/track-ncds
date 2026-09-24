@@ -6,7 +6,7 @@ This file provides guidance to Claude Code (claude.ai/code) when working with co
 
 โปรเจกต์นี้เป็นพื้นที่ทำงานแบบ **docs-first** — งานหลักคือเอกสาร requirements/design/testing ใน `docs/` (Obsidian vault) ยังไม่มีแอปพลิเคชันจริงที่ build/deploy ได้ ความคืบหน้าของแต่ละขั้นตอนไม่เท่ากัน (เช่น `01-requirements/02-plan/` และ `03-task/` ยังว่าง) ให้ตรวจสถานะจริงของแต่ละไฟล์ก่อนอ้างอิงหรือแก้ไขเสมอ อย่าเชื่อคำอธิบายสถานะในเอกสารฉบับเก่า
 
-**Tech stack ตัดสินใจแล้ว** ใน `docs/02-design/02-technical/technology-stack.md` (Firebase-native: React + TypeScript บน Firebase Hosting, Cloud Functions 2nd gen แบบ Node.js + TypeScript, Cloud Firestore Native mode, Firebase Auth + Custom Claims) ให้อ่านไฟล์นั้นก่อนตัดสินใจเรื่องเทคโนโลยีใดๆ และเมื่อ `technology-stack.md` มีเนื้อหาแล้ว agent ในสาย technical spec จะเติมรายละเอียดเทคโนโลยีจริงลงเอกสารอื่นได้
+**Tech stack ตัดสินใจแล้ว** ใน `docs/02-design/02-technical/technology-stack.md` (Firebase-native: React + TypeScript บน Firebase Hosting, Cloud Functions 2nd gen แบบ Node.js + TypeScript, Cloud Firestore Native mode, Firebase Auth แบบ Email/Password + Identity Platform password policy — **ไม่ใช้ Custom Claims** เก็บ role/isActive ตั้งแต่ 2026-09-24 โดย `users/{uid}` ใน Firestore เป็น source of truth เดียว) ให้อ่านไฟล์นั้นก่อนตัดสินใจเรื่องเทคโนโลยีใดๆ และเมื่อ `technology-stack.md` มีเนื้อหาแล้ว agent ในสาย technical spec จะเติมรายละเอียดเทคโนโลยีจริงลงเอกสารอื่นได้
 
 โค้ดที่มีอยู่ตอนนี้มีเพียง:
 - **Firestore demo** (`docs/02-design/01-prototypes/20260922-01-firestore-demo/`) — static HTML ที่อ่าน/เขียน Firestore project `track-ncds` ตรงผ่าน Firebase compat SDK จาก CDN (ไม่มี build step) **ตั้งใจข้ามสถาปัตยกรรมใน technology-stack.md** (ไม่ผ่าน Cloud Functions, ไม่มี audit log, ใช้ rules แบบเปิดกว้าง) ดูข้อจำกัดทั้งหมดใน `prototype.md` ของโฟลเดอร์นั้น ห้ามนำแนวทางนี้ไปใช้เป็นต้นแบบของ production และ demo นี้ไม่ใช่ prototype มาตรฐานของ pipeline (`prototype-auditor`/`build-prototype` ไม่ควรตรวจ/แก้)
@@ -21,17 +21,17 @@ This file provides guidance to Claude Code (claude.ai/code) when working with co
 - เปิดดูเอกสาร/prototype ผ่าน browser: ใช้ preview config `docs-static` ใน `.claude/launch.json` (เสิร์ฟโฟลเดอร์ `docs/` ที่พอร์ต 4873 ด้วย `http-server`) — เช่น `http://localhost:4873/02-design/01-prototypes/20260922-01-firestore-demo/patient-list.html`
 - Cloud Functions (รันในโฟลเดอร์ `functions/`, Node engine ตั้งไว้ที่ 24): `npm run build` (tsc → `lib/`), `npm run build:watch`; `npm run serve`/`npm run deploy` ต้องมี `firebase.json` ก่อน
 
-## สถานะของแต่ละส่วน (ตรวจล่าสุด 2026-09-23 — ตรวจซ้ำก่อนอ้างอิงเสมอ)
+## สถานะของแต่ละส่วน (ตรวจล่าสุด 2026-09-24 — ตรวจซ้ำก่อนอ้างอิงเสมอ)
 
 | ส่วน | สถานะ |
 | --- | --- |
-| Spec (`01-spec/`) | มี 3 ไฟล์: NCD history/lab/risk (20260917), PDPA (20260921), operational-quality NFR (20260922) |
-| `backlog.md` | FR-01–FR-06 (สูงทั้งหมด), NFR-01–NFR-16 — ทุกรายการสถานะ `Backlog` ยังไม่มีรายการใดเริ่มพัฒนา |
-| `feature-list.md` / `user-journey.md` / `DESIGN.md` | มีเนื้อหาแล้ว |
-| Technical (`architecture`, `api-spec`, `db-spec`, `detailed-design/` 4 ฟีเจอร์, `nfr-review`, `technology-stack`) | มีเนื้อหาครบและผูก Firebase แล้ว |
-| Testing (`acceptance-criteria`, `test-plan`, `test-cases/` 5 ไฟล์) | มีเนื้อหาแล้ว |
+| Spec (`01-spec/`) | มี 4 ไฟล์: NCD history/lab/risk (20260917), PDPA (20260921), operational-quality NFR (20260922), user authentication email/password (20260923) |
+| `backlog.md` | FR-01–FR-10 (สูงทั้งหมด), NFR-01–NFR-18 — ทุกรายการสถานะ `Backlog` ยังไม่มีรายการใดเริ่มพัฒนา |
+| `feature-list.md` / `user-journey.md` / `DESIGN.md` | มีเนื้อหาแล้ว (6 ฟีเจอร์; DESIGN.md ยังไม่มีหน้าจอ auth) |
+| Technical (`architecture`, `api-spec` Operation 0–9, `db-spec`, `detailed-design/` 5 ไฟล์, `nfr-review` 18/18 Addressed, `technology-stack` decision area 1–19) | มีเนื้อหาครบและผูก Firebase แล้ว |
+| Testing (`acceptance-criteria`, `test-plan`, `test-cases/` 6 ไฟล์) | มีเนื้อหาแล้ว |
 | `02-test-result/`, `04-retrospectives/`, `00-archived/` | ว่าง |
-| `01-requirements/02-plan/`, `03-task/` | ว่าง — ยังไม่ได้รัน `/sync-phase-plan` |
+| `01-requirements/02-plan/`, `03-task/` | `release-plan.md` 6 phase (P1 Authentication → P2 ค้นหาผู้ป่วย+data protection → P3 ประวัติ/lab → P4 ความเสี่ยง → P5 PDPA ส่วนขยาย → P6 hardening) + task 6 ไฟล์ (20260924) |
 | Prototype `20260918-01-v1` | Clickable HTML mockup มาตรฐานของ pipeline (ข้อมูล hardcode) |
 | Prototype `20260922-01-firestore-demo` | Technical spike ต่อ Firestore จริง อยู่นอก pipeline (ดูหัวข้อสถานะโปรเจกต์ด้านบน) |
 | Firebase scaffold ที่ root | init ไม่ครบ (ไม่มี `firebase.json`/`.firebaserc`) และยังไม่ถูก track ใน git |
@@ -41,7 +41,7 @@ This file provides guidance to Claude Code (claude.ai/code) when working with co
 ชื่อ collection/document path จริงให้ยึดตามหัวข้อ "โครงสร้างเอกสารจริงใน Cloud Firestore" ใน `docs/02-design/02-technical/db-spec.md` (ถ้าไม่ตรงกับรายการนี้ ให้ถือ db-spec เป็นหลัก):
 
 ```
-users/{userId}                                   User (document ID = Firebase Auth UID, role อยู่ใน Custom Claims)
+users/{userId}                                   User (document ID = Firebase Auth UID, role/isActive เก็บที่นี่เท่านั้น — สร้างโดย Cloud Function signUpUser)
 patients/{patientId}                             Patient
 patientAssignments/{userId}_{patientId}          PatientAssignment (composite ID, denormalize patientHn/patientFullName)
 ncdDiagnoses/{diagnosisId}                       NcdDiagnosis (top-level + field patientId)

@@ -1,0 +1,160 @@
+<!DOCTYPE html>
+<html lang="th">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>NCDs History &amp; Risk — Prototype v1 — เข้าสู่ระบบ</title>
+<link rel="stylesheet" href="style.css">
+</head>
+<body>
+
+<nav class="proto-bar">
+  <div class="proto-bar-inner">
+    <div class="proto-bar-top">
+      <span class="proto-bar-title">NCDS CLINIC · PROTOTYPE v1 · เข้าสู่ระบบ</span>
+      <div class="proto-bar-nav">
+        <a href="index.html">หน้ารวม</a>
+        <a href="login.html" class="current">เข้าสู่ระบบ</a>
+        <a href="signup.html">สมัครบัญชี</a>
+        <a href="verify-email-notice.html">ยืนยันอีเมล/รออนุมัติ</a>
+        <a href="forgot-password.html">ลืมรหัสผ่าน</a>
+        <a href="reset-password.html">ตั้งรหัสผ่านใหม่</a>
+        <a href="patient-list.html">ค้นหา/รายชื่อผู้ป่วย</a>
+        <a href="patient-detail-risk-found.html">ประวัติ+ความเสี่ยง (พบ)</a>
+        <a href="patient-detail-no-risk.html">ประวัติ+ความเสี่ยง (ไม่พบ)</a>
+        <a href="access-denied.html">ปฏิเสธการเข้าถึง</a>
+        <a href="pdpa-data-subject-request.html">PDPA คำขอใช้สิทธิ</a>
+        <a href="pdpa-audit-trail.html">PDPA audit trail</a>
+      </div>
+    </div>
+    <div class="proto-bar-codes">
+      <span class="proto-code">FR-07</span>
+      <span class="proto-code">NFR-18</span>
+      <span class="proto-code">NFR-12 (ปลายทาง)</span>
+    </div>
+  </div>
+</nav>
+
+<div class="app-bg">
+<div class="container auth-shell">
+
+  <div class="auth-card">
+    <div class="auth-card-header">
+      <span class="type-eyebrow">NCDS CLINIC · AUTHENTICATION</span>
+      <h1 class="type-section-title">เข้าสู่ระบบ</h1>
+      <p class="type-body">
+        เข้าสู่ระบบด้วยอีเมลและรหัสผ่านที่สมัครไว้ (FR-07) การเข้าถึงข้อมูลผู้ป่วยหลังเข้าสู่ระบบสำเร็จ
+        ยังคงต้องผ่านเงื่อนไข role/isActive/patient assignment (NFR-02) และต้องยืนยันอีเมลก่อน (FR-09)
+      </p>
+    </div>
+
+    <div id="session-note" hidden></div>
+
+    <form id="login-form" class="auth-form" novalidate>
+      <div class="form-field">
+        <label for="login-email">อีเมล</label>
+        <input id="login-email" class="text-input" type="email" autocomplete="username"
+               placeholder="เช่น doctor@ncds-demo.local" />
+      </div>
+      <div class="form-field">
+        <label for="login-password">รหัสผ่าน</label>
+        <input id="login-password" class="text-input" type="password" autocomplete="current-password"
+               placeholder="รหัสผ่าน" />
+      </div>
+      <button type="submit" class="btn btn-primary">เข้าสู่ระบบ</button>
+      <a href="forgot-password.html" style="font-size:13px; text-align:center;">ลืมรหัสผ่าน?</a>
+    </form>
+
+    <div id="login-result" hidden></div>
+
+    <p class="auth-footer">ยังไม่มีบัญชี? <a href="signup.html">สมัครบัญชีใหม่</a></p>
+
+    <div class="callout info">
+      <span class="callout-title">ข้อมูลสาธิต (mockup ตาม NFR-01)</span>
+      <p class="type-body" style="color:inherit;">
+        ทดลองเข้าสู่ระบบด้วยบัญชีจำลอง: <span class="type-code">doctor@ncds-demo.local</span> /
+        <span class="type-code">Passw0rd1</span> (ยืนยันอีเมลแล้ว) หรือ
+        <span class="type-code">pending@ncds-demo.local</span> / <span class="type-code">Passw0rd1</span>
+        (ยังไม่ยืนยันอีเมล) — ค่าอื่นทั้งหมดจะแสดงข้อความผิดพลาดแบบทั่วไปตาม NFR-18
+      </p>
+    </div>
+  </div>
+
+</div>
+</div>
+
+<script>
+(function () {
+  var accounts = [
+    { email: "doctor@ncds-demo.local", password: "Passw0rd1", verified: true },
+    { email: "pending@ncds-demo.local", password: "Passw0rd1", verified: false }
+  ];
+
+  function escapeHtml(str) {
+    return String(str).replace(/[&<>"']/g, function (c) {
+      return { "&": "&amp;", "<": "&lt;", ">": "&gt;", '"': "&quot;", "'": "&#39;" }[c];
+    });
+  }
+
+  // จำลองผลลัพธ์เมื่อมาจาก auto-logout (NFR-12) หรือปุ่ม "ออกจากระบบ" ในหน้ารายชื่อผู้ป่วย
+  var sessionNote = document.getElementById("session-note");
+  if (location.hash === "#session-expired") {
+    sessionNote.hidden = false;
+    sessionNote.innerHTML =
+      '<div class="callout note" role="alert">' +
+        '<span class="callout-title">เซสชันหมดอายุ</span>' +
+        '<p class="type-body" style="color:inherit;">ระบบออกจากระบบให้อัตโนมัติเนื่องจากไม่มีการใช้งานเกิน 30 นาที กรุณาเข้าสู่ระบบใหม่อีกครั้ง (NFR-12)</p>' +
+      "</div>";
+  } else if (location.hash === "#logged-out") {
+    sessionNote.hidden = false;
+    sessionNote.innerHTML =
+      '<div class="callout info">' +
+        '<span class="callout-title">ออกจากระบบแล้ว</span>' +
+        '<p class="type-body" style="color:inherit;">ท่านออกจากระบบเรียบร้อยแล้ว</p>' +
+      "</div>";
+  }
+
+  var form = document.getElementById("login-form");
+  var resultBox = document.getElementById("login-result");
+
+  form.addEventListener("submit", function (e) {
+    e.preventDefault();
+    var email = document.getElementById("login-email").value.trim();
+    var password = document.getElementById("login-password").value;
+
+    var matched = null;
+    for (var i = 0; i < accounts.length; i++) {
+      if (accounts[i].email === email && accounts[i].password === password) { matched = accounts[i]; break; }
+    }
+
+    resultBox.hidden = false;
+    if (!matched) {
+      // NFR-18: ข้อความเดียวกันเสมอ ไม่เปิดเผยว่าอีเมลนี้มีอยู่ในระบบหรือไม่
+      resultBox.innerHTML =
+        '<div class="callout note" role="alert">' +
+          '<span class="callout-title">เข้าสู่ระบบไม่สำเร็จ</span>' +
+          '<p class="type-body" style="color:inherit;">อีเมลหรือรหัสผ่านไม่ถูกต้อง (NFR-18 — ไม่เปิดเผยว่าอีเมลนี้มีบัญชีอยู่ในระบบหรือไม่)</p>' +
+        "</div>";
+      return;
+    }
+    if (!matched.verified) {
+      resultBox.innerHTML =
+        '<div class="callout warn" role="alert">' +
+          '<span class="callout-title">ยังไม่ได้ยืนยันอีเมล</span>' +
+          '<p class="type-body" style="color:inherit;">อีเมล ' + escapeHtml(matched.email) + ' ยังไม่ได้ยืนยันตัวตน กรุณายืนยันอีเมลก่อนจึงจะเข้าใช้งานฟีเจอร์อื่นของระบบได้ (FR-09)</p>' +
+          '<a class="btn btn-primary btn-sm" href="verify-email-notice.html?state=pending-verify" style="margin-top:var(--space-2); align-self:flex-start;">ไปหน้ายืนยันอีเมล</a>' +
+        "</div>";
+      return;
+    }
+    resultBox.innerHTML =
+      '<div class="callout tip" role="status">' +
+        '<span class="callout-title">เข้าสู่ระบบสำเร็จ</span>' +
+        '<p class="type-body" style="color:inherit;">ยินดีต้อนรับ ระบบตรวจสอบ role/isActive/patient assignment ต่อ (NFR-02)</p>' +
+        '<a class="btn btn-primary btn-sm" href="patient-list.html" style="margin-top:var(--space-2); align-self:flex-start;">ไปหน้ารายชื่อผู้ป่วย</a>' +
+      "</div>";
+  });
+})();
+</script>
+
+</body>
+</html>

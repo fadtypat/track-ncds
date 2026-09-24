@@ -25,6 +25,12 @@ Sequence Diagram ด้านล่างยังคงโครงสร้า
 เสมอ) ตาม [[technology-stack#3. สถาปัตยกรรม Backend Service — Firebase-native (ไม่มี Backend Service แยกแบบดั้งเดิม)|decision area 3 ใน technology-stack]]
 — ดูหัวข้อ "หมายเหตุการ Implement (จาก technology-stack)" ท้ายเอกสารสำหรับรายละเอียดกลไกจริง
 
+**อัปเดต 2026-09-23 — ตรวจสอบความสอดคล้องกับฟีเจอร์ที่ 6 (Authentication):** ตรวจสอบแล้วว่า
+**ไม่กระทบเอกสารนี้** — การเปลี่ยน `บทบาท` เป็นไม่บังคับใน [[db-spec#ผู้ใช้ (User)|User]] ไม่ทำให้
+"ตรวจสอบสิทธิ์ระดับบทบาท + ระดับรายผู้ป่วย" ในลำดับ 1 ของตารางด้านล่างต้องเพิ่มเงื่อนไขใหม่ (บัญชีที่
+ยังไม่มี `role` ไม่ผ่านการตรวจสอบนี้อยู่แล้วโดยอัตโนมัติ) ดูรายละเอียดที่
+[[user-authentication-email-password]] ซึ่งเป็น precondition ก่อนฟีเจอร์นี้ทั้งหมด
+
 **อัปเดต 2026-09-22 (รอบสอง) — ตรวจสอบความสอดคล้องกับฟีเจอร์ที่ 5 (NFR-09–NFR-16):** ดูหัวข้อใหม่
 [[#Cross-cutting: คุณภาพเชิงปฏิบัติการของระบบ (NFR-09–NFR-16)|Cross-cutting: คุณภาพเชิงปฏิบัติการของระบบ]]
 ก่อนหัวข้อ Edge Case ด้านล่าง สำหรับผลกระทบของ
@@ -48,7 +54,7 @@ sequenceDiagram
     Note over User,Store: สืบเนื่องจาก [[patient-search-selection]] — ผู้ใช้เลือกผู้ป่วยรายบุคคลแล้ว
 
     Client->>Backend: ส่งคำขอดูประวัติการวินิจฉัย (Operation 1) พร้อมรหัสผู้ป่วย + auth context
-    Backend->>Backend: [Access Control] ตรวจสอบสิทธิ์ระดับบทบาท + ระดับรายผู้ป่วย (NFR-02, NFR-03)
+    Backend->>Backend: [Access Control] ตรวจสอบสิทธิ์ระดับบทบาท + ระดับรายผู้ป่วย + email_verified (NFR-02, NFR-03, FR-09 — เพิ่มเงื่อนไข email_verified ในรอบ 2026-09-24 ตาม decision area 19)
     Backend->>Store: อ่าน User, PatientAssignment (ตรวจสอบสิทธิ์)
     Store-->>Backend: ผลการตรวจสอบสิทธิ์
     alt ไม่ผ่านสิทธิ์ (บทบาทไม่ถูกต้อง หรือไม่มี PatientAssignment กับผู้ป่วยรายนี้)
@@ -150,7 +156,7 @@ sequenceDiagram
 
 | Edge Case | วิธีจัดการ | อ้างอิง |
 | --- | --- | --- |
-| ไม่มีสิทธิ์เข้าถึง (บทบาทไม่ถูกต้อง หรือผู้ป่วยรายนี้ไม่ได้อยู่ในความดูแลของผู้ใช้ตาม PatientAssignment) | ปฏิเสธการเข้าถึงข้อมูลผู้ป่วยรายนี้ทั้ง Operation 1 และ Operation 2 ก่อนอ่าน Patient/NcdDiagnosis/LabResult ใดๆ | [[backlog#Non-Functional Requirements\|NFR-02]], [[backlog#สูง (MVP)\|FR-05]] |
+| ไม่มีสิทธิ์เข้าถึง (บทบาทไม่ถูกต้อง หรือผู้ป่วยรายนี้ไม่ได้อยู่ในความดูแลของผู้ใช้ตาม PatientAssignment หรือ `email_verified` เป็นเท็จ) | ปฏิเสธการเข้าถึงข้อมูลผู้ป่วยรายนี้ทั้ง Operation 1 และ Operation 2 ก่อนอ่าน Patient/NcdDiagnosis/LabResult ใดๆ — เงื่อนไข `email_verified` เพิ่มใหม่ 2026-09-24 ตาม decision area 19 (ตรวจใน shared helper module เดียวกันกับ role/isActive) | [[backlog#Non-Functional Requirements\|NFR-02]], [[backlog#สูง (MVP)\|FR-05]], [[backlog#สูง (MVP)\|FR-09]] |
 | ผู้ใช้ถูก auto-logout เนื่องจากไม่มีการใช้งาน (inactivity) เกิน 30 นาที (NFR-12) แล้วส่งคำขอ Operation 1/2 โดยไม่มี auth context ที่ถูกต้องแนบมา | ปฏิเสธการเข้าถึงที่ step ตรวจสอบสิทธิ์เช่นเดียวกับกรณีไม่มีสิทธิ์เข้าถึงข้างต้น — Client นำผู้ใช้กลับไปหน้าจอเข้าสู่ระบบใหม่ | [[backlog#Non-Functional Requirements\|NFR-12]] |
 | บันทึก Audit Log ไม่สำเร็จ | ยกเลิกการดำเนินการทั้งหมด (ไม่อ่าน Patient/NcdDiagnosis/LabResult) แจ้งข้อผิดพลาดแก่ผู้ใช้ (fail-safe) | [[backlog#Non-Functional Requirements\|NFR-06]], [[api-spec#Operation ร่วม — บันทึกร่องรอยการเข้าถึงข้อมูลผู้ป่วย (Audit Logging)\|Operation ร่วม — Audit Logging]] |
 | ไม่พบผู้ป่วยตามรหัสที่ระบุ | แจ้งว่าไม่พบผู้ป่วย ทั้งสอง operation หยุดก่อนอ่าน NcdDiagnosis/LabResult | [[db-spec#ผู้ป่วย (Patient)\|Patient]] |
@@ -171,8 +177,10 @@ sequenceDiagram
   [[api-spec#Operation 2 — ดึงผลตรวจ lab ย้อนหลังของผู้ป่วย|Technical Binding ของ Operation 2 ใน api-spec]]
 - **การตรวจสอบสิทธิ์ (ลำดับ 1 ในตารางด้านบน):** implement เป็น shared helper module ภายในโค้ด Cloud
   Functions เรียกจากทั้งสอง callable function ก่อนดำเนินการเสมอ — ตรวจบทบาท/สถานะบัญชีจาก
-  `users/{uid}` และตรวจ patient-level ผ่าน `exists()` บน `patientAssignments/{uid}_{patientId}`
-  ด้วย Admin SDK (ไม่ใช่ Firestore Security Rules — ต่างจาก Operation 0)
+  `users/{uid}` (ไม่มี custom claims บทบาท/isActive ให้อ่านจาก token อีกต่อไป — decision area 18)
+  และตรวจ patient-level ผ่าน `exists()` บน `patientAssignments/{uid}_{patientId}`
+  ด้วย Admin SDK (ไม่ใช่ Firestore Security Rules — ต่างจาก Operation 0) — **เพิ่มการตรวจสอบ
+  `decodedToken.email_verified` ในโมดูลเดียวกันตั้งแต่ 2026-09-24 (decision area 19, FR-09)**
 - **Audit Logging (ลำดับ 2):** เขียนลง `auditLogRecords` ผ่าน Admin SDK เท่านั้นภายใน callable
   function เดียวกัน ก่อนอ่าน `ncdDiagnoses`/`labResults` เสมอ (fail-safe) ตาม
   [[api-spec#Operation ร่วม — บันทึกร่องรอยการเข้าถึงข้อมูลผู้ป่วย (Audit Logging)|Technical Binding ของ Operation ร่วม Audit Logging]]
@@ -194,3 +202,4 @@ sequenceDiagram
 - [[complication-risk-analysis-alert]]
 - [[pdpa-data-protection-compliance]]
 - [[20260922-01-operational-quality-nfr]]
+- [[user-authentication-email-password]]

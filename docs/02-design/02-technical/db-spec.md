@@ -7,9 +7,31 @@
 ต้องการต้นทางจาก [[backlog]],
 [[20260917-01-patient-ncd-history-lab-complication-risk]],
 [[20260921-01-pdpa-data-protection-compliance]] (ฟีเจอร์ที่ 4 — คุ้มครองข้อมูลส่วนบุคคลตาม PDPA,
-NFR-03–NFR-08) และ
+NFR-03–NFR-08),
 [[20260922-01-operational-quality-nfr]] (ฟีเจอร์ที่ 5 — รับประกันคุณภาพเชิงปฏิบัติการของระบบ,
-NFR-09–NFR-16)
+NFR-09–NFR-16) และ
+[[20260923-01-user-authentication-email-password]] (ฟีเจอร์ที่ 6 — สมัครบัญชี เข้าสู่ระบบ และจัดการ
+รหัสผ่านด้วยอีเมล, FR-07–FR-10, NFR-17–NFR-18)
+
+**อัปเดต 2026-09-24 (รอบ sync ที่ห้า) — สอดคล้องกับ `[[technology-stack]]` รอบสาม (decision area
+7 แก้ไข + 13-19 ใหม่):** แก้ไขทุกจุดในหัวข้อ [[#ผู้ใช้ (User)|User]] ที่เคยอ้างอิง "เก็บ role/isActive
+ซ้ำใน Firestore แม้มี Custom Claims" ให้ตรงกับการตัดสินใจใหม่ว่า **ไม่ sync ไปยัง Custom Claims เลย**
+(decision area 18) — Firestore `users/{uid}` เป็น source of truth เดียว, เพิ่มเงื่อนไข
+`request.auth.token.email_verified == true` ใน Firestore Security Rules ของ `patientAssignments`
+(decision area 19) และปรับตาราง Security Rules Verification (NFR-14) ให้มีเคส
+`email_verified=false` เพิ่มเติม ปิดรายการ "ประเด็นรอตัดสินใจ" ของฟีเจอร์ที่ 6 ที่ตัดสินใจแล้ว
+(sync custom claims, Auth Blocking Functions)
+
+**อัปเดต 2026-09-23 (รอบ sync ที่สี่) — ตรวจสอบความสอดคล้องกับฟีเจอร์ที่ 6 (Authentication):**
+[[architecture]] เพิ่มฟีเจอร์ที่ 6 (FR-07–FR-10, NFR-17, NFR-18) ซึ่งมีผลกับ entity
+[[#ผู้ใช้ (User)|User]] โดยตรง — ตามที่ผู้ใช้ยืนยันแล้วผ่าน `NEEDS_USER_INPUT` ระหว่างรอบ sync
+architecture: (1) `บทบาท` ต้องเปลี่ยนจาก "จำเป็น" เป็น "ไม่บังคับ" เพราะบัญชีที่เพิ่งสมัคร (FR-08)
+ยังไม่มี role กำหนดจนกว่าผู้ดูแลระบบจะอนุมัติผ่าน Firebase Console/Firestore โดยตรง (2) เพิ่ม
+attribute เชิง logical `อีเมล`, `รหัสผ่านที่จัดเก็บ` (hashed), `สถานะการยืนยันอีเมล` เข้าไปใน User
+เพราะเป็นส่วนหนึ่งของแนวคิดทางธุรกิจของ "บัญชีผู้ใช้" แม้ทางเทคนิคจะไม่ได้จัดเก็บใน Firestore
+document `users/{uid}` เอง (จัดเก็บโดย Firebase Authentication ตามที่ `[[technology-stack]]`
+decision area 7 ตัดสินใจไว้) — ไม่มี entity ใหม่ถูกเพิ่ม เพราะฟีเจอร์ที่ 6 ทั้งหมดผูกกับ entity User
+ที่มีอยู่แล้วเท่านั้น ดูรายละเอียดที่หัวข้อ [[#ผู้ใช้ (User)|User]] ด้านล่าง
 
 **อัปเดต 2026-09-22 (รอบ sync ที่สอง) — ตรวจสอบความสอดคล้องกับฟีเจอร์ที่ 5 (NFR-09–NFR-16):** เช่นเดียว
 กับ [[api-spec]] พบว่าฟีเจอร์ที่ 5 **ไม่ต้องเพิ่ม entity ใหม่** ในเอกสารนี้ เพราะ composite index ที่
@@ -42,7 +64,7 @@ subcollection ตามความเหมาะสม)** ไม่ใช่�
 
 | Entity | คำอธิบายสั้น | รหัส FR/NFR ที่เกี่ยวข้อง |
 | --- | --- | --- |
-| ผู้ใช้ (User) | แพทย์/พยาบาลผู้ดูแลผู้ป่วย NCD ที่เข้าใช้งานระบบ | [[backlog#สูง (MVP)\|FR-05]], [[backlog#Non-Functional Requirements\|NFR-02]] |
+| ผู้ใช้ (User) | แพทย์/พยาบาลผู้ดูแลผู้ป่วย NCD ที่เข้าใช้งานระบบ (รวมบัญชีที่สมัครแล้วแต่ยังรออนุมัติ) | [[backlog#สูง (MVP)\|FR-05]], [[backlog#สูง (MVP)\|FR-07]], [[backlog#สูง (MVP)\|FR-08]], [[backlog#สูง (MVP)\|FR-09]], [[backlog#สูง (MVP)\|FR-10]], [[backlog#Non-Functional Requirements\|NFR-02]], [[backlog#Non-Functional Requirements\|NFR-17]], [[backlog#Non-Functional Requirements\|NFR-18]] |
 | ผู้ป่วย (Patient) | ผู้ป่วย NCD รายบุคคลที่ถูกดูประวัติ/ผลตรวจ/ผลวิเคราะห์ความเสี่ยง | [[backlog#สูง (MVP)\|FR-01]], [[backlog#สูง (MVP)\|FR-02]], [[backlog#สูง (MVP)\|FR-03]], [[backlog#สูง (MVP)\|FR-05]], [[backlog#สูง (MVP)\|FR-06]] |
 | การมอบหมายผู้ป่วยในความดูแล (PatientAssignment) | ความสัมพันธ์ระดับรายผู้ป่วยระหว่างแพทย์/พยาบาลผู้ดูแลกับผู้ป่วยแต่ละราย ใช้กรองรายชื่อและตรวจสิทธิ์ระดับรายผู้ป่วย | [[backlog#สูง (MVP)\|FR-05]], [[backlog#Non-Functional Requirements\|NFR-02]] |
 | ประวัติการวินิจฉัยโรค NCD (NcdDiagnosis) | บันทึกการวินิจฉัยโรค NCD แต่ละครั้งของผู้ป่วย | [[backlog#สูง (MVP)\|FR-01]] |
@@ -59,29 +81,55 @@ subcollection ตามความเหมาะสม)** ไม่ใช่�
 ### ผู้ใช้ (User)
 
 รองรับ [[architecture#บริการฝั่งเซิร์ฟเวอร์ (Backend Service)|Access Control]] ตาม
-[[backlog#Non-Functional Requirements|NFR-02]]
+[[backlog#Non-Functional Requirements|NFR-02]] และตั้งแต่รอบ sync ที่สี่ (2026-09-23) ยังรองรับ
+ฟีเจอร์ที่ 6 (Authentication) — [[backlog#สูง (MVP)|FR-07]]–[[backlog#สูง (MVP)|FR-10]],
+[[backlog#Non-Functional Requirements|NFR-17]], [[backlog#Non-Functional Requirements|NFR-18]] —
+ระเบียนหนึ่งใบครอบคลุมทั้งบัญชีที่อนุมัติแล้วและบัญชีที่เพิ่งสมัครแต่ยังรออนุมัติ (ไม่มี entity แยก
+สำหรับสถานะ "รออนุมัติ")
 
 | Attribute | ชนิดข้อมูลเชิงตรรกะ | จำเป็นต้องมีค่า | คำอธิบาย |
 | --- | --- | --- | --- |
-| id | ข้อความ (ตัวระบุเฉพาะ) | จำเป็น | ตัวระบุผู้ใช้ |
+| id | ข้อความ (ตัวระบุเฉพาะ) | จำเป็น | ตัวระบุผู้ใช้ (เท่ากับ Firebase Authentication UID) |
 | ชื่อ-นามสกุล | ข้อความ | จำเป็น | ใช้แสดงผล/ตรวจสอบตัวตน |
-| บทบาท | ข้อความ (ค่าที่กำหนดไว้ล่วงหน้า: "แพทย์", "พยาบาล") | จำเป็น | ใช้ตัดสินสิทธิ์การเข้าถึงตาม NFR-02 — เฉพาะสองบทบาทนี้เท่านั้นที่เข้าถึงข้อมูลผู้ป่วยได้ |
-| สถานะการใช้งานบัญชี | จริง/เท็จ | จำเป็น | จริง = ใช้งานได้, เท็จ = ถูกระงับสิทธิ์ (NFR-02) |
+| อีเมล | ข้อความ (รูปแบบอีเมล, ไม่ซ้ำกันทั้งระบบ) | จำเป็น | ใช้เข้าสู่ระบบ (FR-07), สมัครบัญชี (FR-08) และรับอีเมลยืนยันตัวตน/รีเซ็ตรหัสผ่าน (FR-09, FR-10) — **ใหม่จากฟีเจอร์ที่ 6** |
+| รหัสผ่านที่จัดเก็บ | ข้อความ (hashed) | จำเป็น | ต้องเป็นไปตามนโยบายรหัสผ่านขั้นต่ำก่อนจัดเก็บเสมอ (ความยาว ≥ 8 ตัวอักษร มีทั้งตัวอักษรและตัวเลข — NFR-17) — **ใหม่จากฟีเจอร์ที่ 6** |
+| สถานะการยืนยันอีเมล | จริง/เท็จ | จำเป็น | จริง = ยืนยันความเป็นเจ้าของอีเมลแล้ว (FR-09) — ค่าเริ่มต้นเป็นเท็จทันทีที่สมัครบัญชี (FR-08) จนกว่าจะเปิดลิงก์ยืนยันจากอีเมล ต้องเป็นจริงก่อนจึงจะใช้งานฟีเจอร์อื่นได้ (แม้ `สถานะการใช้งานบัญชี` และ `บทบาท` จะถูกอนุมัติแล้วก็ตาม) — **ใหม่จากฟีเจอร์ที่ 6** |
+| บทบาท | ข้อความ (ค่าที่กำหนดไว้ล่วงหน้า: "แพทย์", "พยาบาล") | **ไม่บังคับ** (เปลี่ยนจาก "จำเป็น" ในรอบ sync ที่สี่) | ใช้ตัดสินสิทธิ์การเข้าถึงตาม NFR-02 — เฉพาะสองบทบาทนี้เท่านั้นที่เข้าถึงข้อมูลผู้ป่วยได้ **ไม่มีค่าโดยดีฟอลต์ทันทีที่สมัครบัญชีสำเร็จ (FR-08)** จนกว่าผู้ดูแลระบบจะกำหนดให้ผ่าน Firebase Console/Firestore โดยตรง (ยืนยันโดยผู้ใช้แล้ว — ไม่มีหน้าจออนุมัติในระบบสำหรับ MVP) บัญชีที่ยังไม่มีบทบาทนี้จะไม่ผ่านการตรวจสอบระดับบทบาทของ [[api-spec#Operation ร่วม — ตรวจสอบสิทธิ์การเข้าถึงข้อมูลผู้ป่วย (Access Control)\|Operation ร่วม ตรวจสอบสิทธิ์การเข้าถึงข้อมูลผู้ป่วย]] โดยอัตโนมัติ (ค่าว่าง/ไม่มีค่า ไม่ใช่ "แพทย์" หรือ "พยาบาล") |
+| สถานะการใช้งานบัญชี | จริง/เท็จ | จำเป็น | จริง = ใช้งานได้, เท็จ = ถูกระงับสิทธิ์ (NFR-02) — **ค่าเริ่มต้นเป็นเท็จโดยอัตโนมัติทันทีที่สมัครบัญชีสำเร็จ (FR-08)** จนกว่าผู้ดูแลระบบจะเปลี่ยนเป็นจริงพร้อมกำหนด `บทบาท` ผ่าน Firebase Console/Firestore (ยืนยันโดยผู้ใช้แล้ว) |
 
-**Firestore Technical Binding (ตาม [[technology-stack#7. Authentication/Authorization — Firebase Authentication + Custom Claims|decision area 7 ใน technology-stack]]):**
+**Firestore Technical Binding (ตาม [[technology-stack#7. Authentication/Authorization — Firebase Authentication (ไม่ใช้ Custom Claims เก็บบทบาท — แก้ไขในรอบสาม 2026-09-24)|decision area 7 ใน technology-stack]] และ [[technology-stack#18. การ Sync role/isActive ระหว่าง Firestore กับ Custom Claims (ฟีเจอร์ที่ 6) — ไม่ Sync, Firestore เป็น Source of Truth เดียว|decision area 18]] — แก้ไข 2026-09-24: ไม่ใช้ Custom Claims เก็บบทบาท/isActive อีกต่อไป):**
 
 - **Collection/Document path:** `users/{userId}` — **document ID = Firebase Authentication UID
   โดยตรง** (ไม่ใช่ id แยกต่างหาก) เพื่อให้ Security Rules อ้างอิง `request.auth.uid` ตรงกับ document
   ID ได้ทันทีโดยไม่ต้อง query
 - **Field mapping:** `ชื่อ-นามสกุล` → `displayName` (string), `บทบาท` → `role` (string, ค่าที่
-  กำหนดไว้ล่วงหน้า `"แพทย์"` \| `"พยาบาล"`), `สถานะการใช้งานบัญชี` → `isActive` (boolean)
-- **เหตุผลที่ต้องเก็บ `role`/`isActive` ซ้ำใน Firestore แม้มี Custom Claims ใน Auth token แล้ว:**
-  Custom Claims ถูก cache ไว้ใน token จนกว่าจะ refresh (ไม่ใช่ real-time) จึง**ไม่เพียงพอสำหรับตรวจสอบ
-  บัญชีที่เพิ่งถูกระงับ** — `[[technology-stack#ความเสี่ยงที่ต้องพิจารณาเพิ่มเติม (สำคัญ — ผู้ใช้รับทราบและยืนยันให้ดำเนินการต่อแล้ว)|
-  หัวข้อความเสี่ยงใน technology-stack]] ระบุเป็นหนึ่งใน automated test case ที่บังคับ ("(ค) ผู้ใช้ที่
-  บัญชีถูกระงับ (สถานะการใช้งานบัญชี = เท็จ)") จึงต้องมี field `isActive` ใน Firestore ให้ทั้ง
-  Firestore Security Rules (Operation 0, ผ่าน `get(/databases/$(database)/documents/users/$(request.auth.uid))`)
-  และ Cloud Functions (Operation 1-6) ตรวจสอบซ้ำเสมอ ไม่พึ่ง Custom Claims เพียงอย่างเดียว
+  กำหนดไว้ล่วงหน้า `"แพทย์"` \| `"พยาบาล"`, **ไม่มี field นี้เลย/เป็น `null` เมื่อบัญชียังไม่ถูกอนุมัติ**),
+  `สถานะการใช้งานบัญชี` → `isActive` (boolean, ดีฟอลต์ `false` ตอนสร้างเอกสาร)
+- **`อีเมล`/`รหัสผ่านที่จัดเก็บ`/`สถานะการยืนยันอีเมล` — ไม่มี field ตรงกันใน Firestore document นี้
+  (สำคัญ — ใหม่จากฟีเจอร์ที่ 6):** ทั้งสาม attribute ข้างต้นเป็นแนวคิดเชิง logical ของ "บัญชีผู้ใช้"
+  แต่จัดเก็บจริงโดย **Firebase Authentication** (ไม่ใช่ Cloud Firestore) ตามที่
+  [[technology-stack#7. Authentication/Authorization — Firebase Authentication (ไม่ใช้ Custom Claims เก็บบทบาท — แก้ไขในรอบสาม 2026-09-24)|decision area 7 ใน technology-stack]]
+  ตัดสินใจไว้ — `อีเมล` = `user.email`, `รหัสผ่านที่จัดเก็บ` = ค่า hash ภายในของ Firebase
+  Authentication เอง (ระบบไม่มีสิทธิ์เข้าถึงค่านี้โดยตรงไม่ว่ากรณีใด), `สถานะการยืนยันอีเมล` =
+  `user.emailVerified`/`decodedToken.email_verified` อ่านได้จาก Firebase ID token หลังเข้าสู่ระบบ
+  (FR-07, FR-09) — Cloud Functions (Account Onboarding & Authentication Gateway) เรียก Firebase
+  Admin SDK เพื่ออ่าน/เขียนค่าเหล่านี้เมื่อจำเป็น (เช่น ตรวจสอบว่าอีเมลมีบัญชีอยู่แล้วหรือไม่ตอนสมัคร/
+  รีเซ็ตรหัสผ่าน) ไม่มี Firestore document field ใดๆ สำหรับสามค่านี้เลย — ค่า `email_verified` นี้ยัง
+  ถูกใช้เป็นเงื่อนไขตรวจสอบซ้ำที่ Operation ร่วม Access Control ด้วย (ดูหมายเหตุถัดไป)
+- **เหตุผลที่ `role`/`isActive` เก็บเฉพาะใน Firestore เป็น source of truth เดียว — ไม่ sync ไปยัง
+  Custom Claims เลย (แก้ไข 2026-09-24 ตาม [[technology-stack#18. การ Sync role/isActive ระหว่าง Firestore กับ Custom Claims (ฟีเจอร์ที่ 6) — ไม่ Sync, Firestore เป็น Source of Truth เดียว|decision area 18 ใน technology-stack]]):**
+  รอบก่อนหน้าเอกสารนี้เคยอธิบายว่าต้องเก็บ `role`/`isActive` ซ้ำใน Firestore เพราะ Custom Claims ถูก
+  cache ไว้ใน token จนกว่าจะ refresh (ไม่ real-time) จึงไม่เพียงพอสำหรับตรวจสอบบัญชีที่เพิ่งถูกระงับ —
+  ผู้ใช้ตัดสินใจในรอบ 2026-09-24 ว่า**ไม่ sync ไปยัง Custom Claims เลยตั้งแต่ต้น** (ไม่ใช่แค่ไม่พึ่งพา
+  เพียงอย่างเดียว) เพราะไม่มี operation ใดเคยอ่านค่าจาก Custom Claims จริงในทางปฏิบัติอยู่แล้ว ทั้ง
+  Firestore Security Rules (Operation 0, ผ่าน
+  `get(/databases/$(database)/documents/users/$(request.auth.uid))`) และ Cloud Functions
+  (Operation 1-6, shared helper module) ต้องอ่าน field `isActive`/`role` จาก Firestore
+  `users/{uid}` โดยตรงทุกครั้งเป็น**แหล่งความจริงเดียว** — automated test case ที่บังคับตาม NFR-14
+  ยังคงต้องครอบคลุมกรณี "(ค) ผู้ใช้ที่บัญชีถูกระงับ (สถานะการใช้งานบัญชี = เท็จ)" เช่นเดิม พร้อมเพิ่ม
+  กรณีใหม่ "(ง) ผู้ใช้ที่บัญชียังไม่ยืนยันอีเมล (`email_verified=false`)" ตาม
+  [[technology-stack#19. การตรวจสอบ `emailVerified` ซ้ำฝั่ง Backend (FR-09, ฟีเจอร์ที่ 6) — ตรวจทั้ง Cloud Functions และ Security Rules|decision area 19]]
+  (ดูตารางอัปเดตในหัวข้อ Security Rules Verification ท้ายเอกสาร)
 - **Composite index:** ไม่จำเป็น (query ด้วย document ID โดยตรงเสมอ ไม่มีการ query แบบ filter/sort
   หลายเงื่อนไขบน collection นี้)
 - **หมายเหตุ NFR-12 (Session Timeout) — เหตุใด entity นี้จึงไม่มี attribute `lastActivityAt`:** ตาม
@@ -179,10 +227,13 @@ subcollection ตามความเหมาะสม)** ไม่ใช่�
   3. `(patientId ASC)` — เป็น single-field index (Firestore สร้างอัตโนมัติ) ใช้ตอน Cloud Functions
      ต้องหาทุกระเบียน assignment ของผู้ป่วยรายหนึ่งเพื่ออัปเดต denormalized field ตอนแก้ไขข้อมูล
      ผู้ป่วย (ดู trade-off ด้านบน)
-- **Firestore Security Rules (Operation 0 — ตาม [[technology-stack#3. สถาปัตยกรรม Backend Service — Firebase-native (ไม่มี Backend Service แยกแบบดั้งเดิม)|decision area 3]]):**
-  `allow list, get: if request.auth != null && resource.data.userId == request.auth.uid && get(/databases/$(database)/documents/users/$(request.auth.uid)).data.role in ['แพทย์','พยาบาล'] && get(/databases/$(database)/documents/users/$(request.auth.uid)).data.isActive == true;`
+- **Firestore Security Rules (Operation 0 — ตาม [[technology-stack#3. สถาปัตยกรรม Backend Service — Firebase-native (ไม่มี Backend Service แยกแบบดั้งเดิม)|decision area 3]] และ [[technology-stack#19. การตรวจสอบ `emailVerified` ซ้ำฝั่ง Backend (FR-09, ฟีเจอร์ที่ 6) — ตรวจทั้ง Cloud Functions และ Security Rules|decision area 19 — เพิ่มเงื่อนไข `email_verified` ในรอบ 2026-09-24]]):**
+  `allow list, get: if request.auth != null && request.auth.token.email_verified == true && resource.data.userId == request.auth.uid && get(/databases/$(database)/documents/users/$(request.auth.uid)).data.role in ['แพทย์','พยาบาล'] && get(/databases/$(database)/documents/users/$(request.auth.uid)).data.isActive == true;`
   `allow create, update, delete: if false;` (Client ไม่มีสิทธิ์เขียน `patientAssignments` โดยตรงเลย
-  ในขอบเขต MVP นี้ เพราะยังไม่มี operation สำหรับสร้าง/แก้ไข assignment ตาม "ประเด็นรอตัดสินใจ")
+  ในขอบเขต MVP นี้ เพราะยังไม่มี operation สำหรับสร้าง/แก้ไข assignment ตาม "ประเด็นรอตัดสินใจ") —
+  เงื่อนไข `request.auth.token.email_verified == true` เป็นการเพิ่มใหม่ในรอบ 2026-09-24 เพื่อปิด
+  ช่องว่างที่ Client ถูกดัดแปลง/บั๊กข้ามการตรวจสอบ `emailVerified` เองแล้วเรียก Operation 0 ตรง (อ่านค่า
+  จาก Firebase ID token ที่ verify อยู่แล้ว ไม่ต้องเพิ่ม Firestore read)
 
 **หมายเหตุ:** รูปแบบปัจจุบันถือว่าการมีระเบียน PatientAssignment เชื่อมโยงผู้ใช้กับผู้ป่วยรายใด
 เท่ากับผู้ป่วยรายนั้น "อยู่ในความดูแล" ของผู้ใช้คนนั้น (แบบ existence-based ไม่มีสถานะ
@@ -517,8 +568,11 @@ erDiagram
     USER {
         string id
         string ชื่อ_นามสกุล
-        string บทบาท
-        boolean สถานะการใช้งานบัญชี
+        string อีเมล "ใหม่ฟีเจอร์ที่ 6 (FR-07/08) — จัดเก็บโดย Firebase Authentication"
+        string รหัสผ่านที่จัดเก็บ "ใหม่ฟีเจอร์ที่ 6 (FR-08, NFR-17) — hashed, จัดเก็บโดย Firebase Authentication"
+        boolean สถานะการยืนยันอีเมล "ใหม่ฟีเจอร์ที่ 6 (FR-09) — จัดเก็บโดย Firebase Authentication"
+        string บทบาท "ไม่บังคับ — ว่างจนกว่าจะอนุมัติ (FR-08)"
+        boolean สถานะการใช้งานบัญชี "ดีฟอลต์เท็จตอนสมัคร (FR-08)"
     }
     PATIENT {
         string id
@@ -693,15 +747,17 @@ managed caching layer แยก (ดู "ประเด็นรอตัดส
 
 รองรับ [[backlog#Non-Functional Requirements|NFR-14]] — Firestore Security Rules ที่ควบคุมสิทธิ์การ
 เข้าถึงทุก collection ในเอกสารนี้ต้องมี automated test (ผ่าน Firebase Emulator Suite ตาม
-[[technology-stack#7. Authentication/Authorization — Firebase Authentication + Custom Claims|decision area 7 ใน technology-stack]])
-ครอบคลุมอย่างน้อย: ผู้ใช้ไม่มี assignment ใดเลย, ผู้ใช้มี assignment บางส่วน, บัญชีถูกระงับ, ไม่มี
-custom claims ที่ถูกต้อง — ก่อน deploy ใช้งานกับข้อมูลผู้ป่วยจริงเสมอ สรุป Security Rules ที่ต้องอยู่ใน
-ชุดทดสอบนี้ (อ้างอิงจากหัวข้อ "Firestore Technical Binding" ของแต่ละ entity ด้านบน):
+[[technology-stack#7. Authentication/Authorization — Firebase Authentication (ไม่ใช้ Custom Claims เก็บบทบาท — แก้ไขในรอบสาม 2026-09-24)|decision area 7 ใน technology-stack]])
+ครอบคลุมอย่างน้อย: (ก) ผู้ใช้ไม่มี assignment ใดเลย, (ข) ผู้ใช้มี assignment บางส่วน, (ค) บัญชีถูกระงับ
+(`isActive=false`), (ง) บัญชียังไม่ยืนยันอีเมล (`email_verified=false` — เพิ่มใหม่ 2026-09-24 ตาม
+[[technology-stack#19. การตรวจสอบ `emailVerified` ซ้ำฝั่ง Backend (FR-09, ฟีเจอร์ที่ 6) — ตรวจทั้ง Cloud Functions และ Security Rules|decision area 19]]) — ก่อน deploy ใช้งานกับข้อมูลผู้ป่วยจริงเสมอ
+สรุป Security Rules ที่ต้องอยู่ในชุดทดสอบนี้ (อ้างอิงจากหัวข้อ "Firestore Technical Binding" ของแต่ละ
+entity ด้านบน):
 
 | Collection | กฎที่ต้องทดสอบ | รองรับ |
 | --- | --- | --- |
-| `users` | อ่านได้เฉพาะเอกสารของตนเอง (ใช้เป็นแหล่งตรวจ role/isActive) | [[#ผู้ใช้ (User)\|User]] |
-| `patientAssignments` | `allow list, get` เฉพาะเมื่อ `resource.data.userId == request.auth.uid` และ role/isActive ถูกต้อง; `allow create, update, delete: if false` | [[#การมอบหมายผู้ป่วยในความดูแล (PatientAssignment)\|PatientAssignment]] |
+| `users` | อ่านได้เฉพาะเอกสารของตนเอง (ใช้เป็นแหล่งตรวจ role/isActive); ต้องมี test case เพิ่มเติมสำหรับฟีเจอร์ที่ 6: บัญชีที่เพิ่งสมัคร (ไม่มี `role`, `isActive=false`) ต้องไม่ผ่านการตรวจสอบระดับบทบาทของ Operation ร่วม Access Control | [[#ผู้ใช้ (User)\|User]] |
+| `patientAssignments` | `allow list, get` เฉพาะเมื่อ `resource.data.userId == request.auth.uid`, `request.auth.token.email_verified == true` และ role/isActive ถูกต้อง; `allow create, update, delete: if false`; ต้องมี test case เพิ่มเติม: บัญชีที่ `isActive=true`/role ถูกต้องครบแต่ `email_verified=false` ต้องถูกปฏิเสธเช่นกัน (เพิ่มใหม่ 2026-09-24 ตาม decision area 19) | [[#การมอบหมายผู้ป่วยในความดูแล (PatientAssignment)\|PatientAssignment]] |
 | `patients`, `ncdDiagnoses`, `labResults`, `complicationRiskThresholds`, `complicationRiskAssessments` (+ subcollection `riskFindings`), `dataSubjectRequests`, `retentionPolicies` | `allow read, write: if false;` สำหรับ Client ทั้งหมด (เข้าถึงได้เฉพาะผ่าน Cloud Functions/Admin SDK) | แต่ละ entity ที่เกี่ยวข้องด้านบน |
 | `auditLogRecords` | `allow read, write: if false;` สำหรับ Client ทั้งหมด (บังคับ append-only/immutable) | [[#บันทึกการเข้าถึงข้อมูล (AuditLogRecord)\|AuditLogRecord]] |
 
@@ -747,6 +803,20 @@ custom claims ที่ถูกต้อง — ก่อน deploy ใช้�
   ตัดสินใจใช้ composite index ที่ระบุไว้แล้วข้างต้นเป็นกลไกเดียวโดยเจตนาสำหรับรอบนี้ (ไม่ใช่ยังไม่
   ตัดสินใจ) — ถ้าผลทดสอบ performance จริงพบว่าไม่พอ ขั้นตอนถัดไปคือ in-memory caching ใน Cloud
   Functions สำหรับข้อมูลอ้างอิงคงที่ ก่อนพิจารณา managed caching layer แยก
+- **ฟีเจอร์ที่ 6 (Authentication) — ปิดแล้วในรอบ 2026-09-24 (เดิมเป็นประเด็นรอตัดสินใจ):**
+  `[[technology-stack]]` รอบสาม (2026-09-24) ตัดสินใจกลไกทางเทคนิคที่เคยค้างไว้ครบแล้ว: (1) **ไม่ sync**
+  `role`/`isActive` ไปยัง Custom Claims เลย (ยกเลิกแนวคิด Custom Claims ทั้งหมดสำหรับสองค่านี้ — ดู
+  [[technology-stack#18. การ Sync role/isActive ระหว่าง Firestore กับ Custom Claims (ฟีเจอร์ที่ 6) — ไม่ Sync, Firestore เป็น Source of Truth เดียว|decision area 18]])
+  ไม่กระทบโครงสร้าง entity User ในเอกสารนี้ เพราะไม่เคยมี Firestore field สำหรับ Custom Claims อยู่แล้ว
+  (2) **ไม่ใช้** Auth Blocking Functions (`beforeSignIn`/`beforeUserCreated`) ในรอบนี้ (ดู
+  [[technology-stack#16. Auth Blocking Functions (ฟีเจอร์ที่ 6) — ไม่ใช้|decision area 16]]) — ผลคือ
+  Operation 7 ยังไม่มีจุดตรวจ `emailVerified`/`isActive` ซ้ำระดับ token issuance (ความเสี่ยงที่ผู้ใช้
+  รับทราบแล้ว บันทึกไว้ใน [[architecture#ความเสี่ยงที่ต้องพิจารณาเพิ่มเติม (สำคัญ — ผู้ใช้รับทราบและยืนยันให้ดำเนินการต่อแล้ว)|architecture]])
+  แทนที่ด้วยการตรวจสอบ `email_verified` ซ้ำที่ Operation ร่วม Access Control (Cloud Functions +
+  Firestore Security Rules ของ `patientAssignments`) ตาม
+  [[technology-stack#19. การตรวจสอบ `emailVerified` ซ้ำฝั่ง Backend (FR-09, ฟีเจอร์ที่ 6) — ตรวจทั้ง Cloud Functions และ Security Rules|decision area 19]]
+  ซึ่งได้ปรับ Firestore Security Rules ของ `patientAssignments` และตาราง Security Rules Verification
+  ในเอกสารนี้แล้ว (ดูหัวข้อที่เกี่ยวข้องด้านบน)
 
 ## เอกสารที่เกี่ยวข้อง
 
@@ -759,3 +829,4 @@ custom claims ที่ถูกต้อง — ก่อน deploy ใช้�
 - [[20260917-01-patient-ncd-history-lab-complication-risk]]
 - [[20260921-01-pdpa-data-protection-compliance]]
 - [[20260922-01-operational-quality-nfr]]
+- [[20260923-01-user-authentication-email-password]]

@@ -536,6 +536,42 @@ button { font-family: inherit; cursor: pointer; }
 .status-pill.success  { background: var(--emerald-50); border-color: var(--emerald-200); color: var(--emerald-800); }
 .status-pill.rejected { background: var(--rose-50);    border-color: var(--rose-200);    color: var(--rose-800); }
 
+/* ================= Auth screens (ฟีเจอร์ 6, FR-07–FR-10, NFR-17/18) =================
+   ประกอบจาก token/pattern เดิมทั้งหมด: .denied-shell/.denied-card (เลย์เอาต์การ์ดกลางจอ),
+   .form-field/.text-input (input), .callout (ผลลัพธ์/ข้อผิดพลาด), .value-normal/.value-abnormal-fg
+   (ใช้ความหมาย "ผ่านเงื่อนไข/ไม่ผ่านเงื่อนไข" แบบเดียวกับ lab value ปกติ/ผิดปกติ) — ไม่มีสี/ค่าใหม่ */
+.auth-shell { min-height: 65vh; display:flex; align-items:center; justify-content:center; padding-block: var(--space-6); }
+.auth-card {
+  max-width: 440px; width:100%;
+  background: var(--surface-card);
+  border-radius: var(--radius-2xl);
+  box-shadow: var(--shadow-md);
+  padding: var(--pad-header);
+  display:flex; flex-direction:column; gap: var(--space-5);
+}
+.auth-card-header { display:flex; flex-direction:column; gap: var(--space-1-5); }
+.auth-form { display:flex; flex-direction:column; gap: var(--space-4); }
+.auth-footer { text-align:center; font-size:13px; color: var(--text-muted); }
+.auth-icon-row { display:flex; flex-direction:column; align-items:center; gap: var(--space-3); text-align:center; }
+.auth-icon {
+  width:64px; height:64px; border-radius: var(--radius-full);
+  display:flex; align-items:center; justify-content:center; font-size:28px; flex-shrink:0;
+}
+.auth-icon.info    { background: var(--sky-100);     color: var(--sky-700); }
+.auth-icon.pending { background: var(--amber-100);    color: var(--amber-800); }
+.auth-icon.success { background: var(--emerald-100);  color: var(--emerald-800); }
+
+.password-rules { display:flex; flex-direction:column; gap: var(--space-1); list-style:none; padding:0; margin:0; }
+.password-rules li {
+  font-size:12px; line-height:16px; color: var(--text-muted);
+  display:flex; align-items:center; gap: var(--space-1-5);
+}
+.password-rules li::before { content:"○"; font-size:10px; color: var(--text-faint); }
+.password-rules li.rule-met { color: var(--value-normal-fg); font-weight:600; }
+.password-rules li.rule-met::before { content:"✓"; color: var(--value-normal-fg); }
+.password-rules li.rule-unmet { color: var(--value-abnormal-fg); font-weight:600; }
+.password-rules li.rule-unmet::before { content:"✕"; color: var(--value-abnormal-fg); }
+
 /* ================= Misc helpers ================= */
 .flex-between { display:flex; align-items:center; justify-content:space-between; gap: var(--space-2); flex-wrap:wrap; }
 .mt-1 { margin-top: var(--space-1); }

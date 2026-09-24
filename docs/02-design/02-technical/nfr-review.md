@@ -1,19 +1,31 @@
 # NFR Review
 
 เอกสารนี้ตรวจสอบว่า NFR ทุกตัวใน [[backlog#Non-Functional Requirements|backlog]] ถูกออกแบบมารองรับ
-จริงหรือไม่ในเอกสารเชิงเทคนิคทั้งหมด ได้แก่ [[architecture]], [[api-spec]], [[db-spec]] และไฟล์ทั้ง 4
-ใน `detailed-design/` ([[patient-search-selection]], [[patient-ncd-diagnosis-lab-history]],
-[[complication-risk-analysis-alert]], [[pdpa-data-protection-compliance]]) **เอกสารนี้เป็นผลการตรวจสอบ
-เท่านั้น ไม่ใช่การออกแบบ** — ถ้าพบช่องว่าง ให้รัน skill ที่แนะนำในคอลัมน์สุดท้ายเพื่อแก้ไขเอกสารเชิง
-เทคนิคที่เกี่ยวข้อง ห้ามแก้ไข `architecture.md`/`api-spec.md`/`db-spec.md`/`detailed-design/*` จาก
-เอกสารนี้โดยตรง
+จริงหรือไม่ในเอกสารเชิงเทคนิคทั้งหมด ได้แก่ [[architecture]], [[api-spec]], [[db-spec]], [[technology-stack]]
+และไฟล์ทั้ง 5 ใน `detailed-design/` ([[patient-search-selection]], [[patient-ncd-diagnosis-lab-history]],
+[[complication-risk-analysis-alert]], [[pdpa-data-protection-compliance]],
+[[user-authentication-email-password]]) **เอกสารนี้เป็นผลการตรวจสอบเท่านั้น ไม่ใช่การออกแบบ** — ถ้าพบ
+ช่องว่าง ให้รัน skill ที่แนะนำในคอลัมน์สุดท้ายเพื่อแก้ไขเอกสารเชิงเทคนิคที่เกี่ยวข้อง ห้ามแก้ไข
+`architecture.md`/`api-spec.md`/`db-spec.md`/`technology-stack.md`/`detailed-design/*` จากเอกสารนี้
+โดยตรง
 
-อัปเดตล่าสุด: 2026-09-22 (ตรวจสอบรอบที่หก — ตรวจซ้ำทั้งหมดทุก NFR-01 ถึง NFR-08 เทียบกับ
-[[backlog#Non-Functional Requirements|backlog]] ปัจจุบันซึ่งมี NFR-01–NFR-08 ครบระดับความสำคัญแล้ว
-โดยอ่าน [[architecture]], [[api-spec]], [[db-spec]] และไฟล์ทั้ง 4 ใน `detailed-design/` ใหม่ทั้งไฟล์
-**ผลสรุป: ทุก NFR ยังคงสถานะ "รองรับแล้ว (Addressed)" เหมือนเดิม ไม่มี NFR ใดถดถอยหรือมีช่องว่างใหม่ —
-และพบว่าข้อสังเกตเสริม 2 รายการที่รอบที่สี่/ห้าเคยบันทึกไว้ว่ายังไม่บล็อกสถานะ Addressed (แต่เสนอให้
-พิจารณาแก้เพื่อความสม่ำเสมอ) ได้รับการแก้ไขแล้วจริงในเนื้อหาปัจจุบันของไฟล์**:
+อัปเดตล่าสุด: 2026-09-24 (ตรวจสอบรอบที่แปด — ประเมินใหม่เฉพาะ **NFR-17, NFR-18** หลัง
+`[[technology-stack]]` เพิ่ม decision area 13–19 และแก้ไข decision area 7 (เลิกใช้ Custom Claims เก็บ
+บทบาท/isActive, ตรวจ `email_verified` ซ้ำทั้ง Cloud Functions/Security Rules, ตัดสินใจกลไก password
+policy และ Email Enumeration Protection แบบเจาะจง) อ่าน [[architecture]], [[api-spec]], [[db-spec]],
+[[user-authentication-email-password]] และ [[technology-stack]] ทั้งไฟล์ใหม่ พบว่าทั้ง 4 เอกสารถูก
+แก้ไขให้สอดคล้องกับการตัดสินใจทางเทคนิคใหม่ครบถ้วนแล้ว (รวมถึงลบร่องรอยของ "custom claims" เดิมออกจน
+หมดและแทนที่ด้วยการตรวจ Firestore `users/{uid}` โดยตรง) **ผลสรุปรอบนี้: NFR-17 และ NFR-18 เปลี่ยนสถานะ
+จาก "รองรับบางส่วน (Partial)" เป็น "รองรับแล้ว (Addressed)"** เพราะกลไกทางเทคนิคที่แน่นอนที่เคยเป็น
+ช่องว่าง (regex + Identity Platform password policy backstop สำหรับ NFR-17; Firebase "Email
+Enumeration Protection" สำหรับ NFR-18) ถูกตัดสินใจและ trace ไว้ตรงกันครบทุกชั้นเอกสารแล้ว — เหลือเพียง
+ความเสี่ยงคงเหลือ (timing side-channel ของ NFR-18, ไม่มี `beforeSignIn` ตรวจซ้ำระดับ token issuance)
+ที่ผู้ใช้รับทราบและยืนยันให้ดำเนินการต่อในรอบ MVP นี้แล้วอย่างชัดเจน ไม่ใช่ gap ที่ตกหล่น ดูรายละเอียด
+ที่หัวข้อ NFR-17/NFR-18 ด้านล่าง ตรวจสอบซ้ำแล้วว่า NFR-01 ถึง NFR-16 ไม่ได้รับผลกระทบ/ไม่ถดถอยจากการแก้
+decision area 7/18 (การลบ custom claims) เพราะทุกจุดที่เคยอ้างอิง custom claims (โดยเฉพาะ test case
+ของ NFR-14) ถูกแก้ไขให้ตรงกันเป็น "อ่าน role/isActive จาก Firestore" ครบทุกจุดแล้วเช่นกัน
+
+ก่อนหน้านั้น ผลตรวจสอบรอบที่หก (2026-09-22) สำหรับ NFR-01–NFR-08 มีดังนี้ (คงไว้เพื่อ traceability):
 
 1. [[pdpa-data-protection-compliance]] ตอนนี้มีหัวข้อ "ข้อกำหนด: การจำกัด/ล้างข้อมูลผู้ป่วยที่ละเอียดอ่อน
    ฝั่ง Client (NFR-02)" แล้ว ครอบคลุมผลลัพธ์ที่ Operation 4 (กรณี "ขอเข้าถึง"/"ขอสำเนา") ส่งให้ Client
@@ -55,6 +67,16 @@ Operation 4) NFR อื่นทั้งหมด (NFR-01, NFR-03–NFR-08) ต
 | NFR-06 | PDPA / Audit Log & Accountability — บันทึกร่องรอยการเข้าถึงข้อมูล | **รองรับแล้ว (Addressed)** | [[architecture#Data Flow Diagram — Journey หลัก\|architecture — Data Flow Diagram Journey หลัก]], [[architecture#ตาราง Mapping NFR ไปยัง Component\|architecture — ตาราง Mapping NFR]], [[api-spec#Operation ร่วม — บันทึกร่องรอยการเข้าถึงข้อมูลผู้ป่วย (Audit Logging)\|api-spec — Operation ร่วม Audit Logging]], [[db-spec#บันทึกการเข้าถึงข้อมูล (AuditLogRecord)\|db-spec AuditLogRecord]], [[patient-ncd-diagnosis-lab-history#Sequence Diagram\|patient-ncd-diagnosis-lab-history — sequence diagram (audit log step)]], [[complication-risk-analysis-alert#Sequence Diagram\|complication-risk-analysis-alert — sequence diagram (audit log step)]], [[pdpa-data-protection-compliance#Sequence Diagram 1 — คำขอใช้สิทธิของเจ้าของข้อมูล (Operation 4)\|pdpa-data-protection-compliance — Sequence Diagram 1 และ 2]] | ไม่มีช่องว่าง — ยืนยันแล้วว่า [[patient-ncd-diagnosis-lab-history]] และ [[complication-risk-analysis-alert]] ถูกแก้ไขให้มีขั้นตอนบันทึก Audit Log ก่อนอ่านข้อมูลผู้ป่วยจริงตามที่คาดไว้ พร้อม fail-safe (ยกเลิก operation ถ้าบันทึกไม่สำเร็จ) และมี edge case รองรับครบ; [[patient-search-selection]] (Operation 0) ไม่มีขั้นตอน audit log อย่างถูกต้องตามเจตนา เพราะยังไม่มีการระบุผู้ป่วยรายบุคคล (ไม่ผ่านการตรวจสอบระดับรายผู้ป่วยซึ่งเป็นตัว trigger การบันทึกตาม architecture) — ไม่ใช่ gap | ไม่มี |
 | NFR-07 | PDPA / Data Subject Rights — รองรับคำขอเข้าถึง/สำเนา/แก้ไข/ลบ/คัดค้านการประมวลผลข้อมูล | **รองรับแล้ว (Addressed)** | [[architecture#ตาราง Mapping NFR ไปยัง Component\|architecture — ตาราง Mapping NFR]], [[api-spec#Operation 4 — ยื่นและดำเนินการคำขอใช้สิทธิของเจ้าของข้อมูล (Data Subject Rights Request)\|api-spec Operation 4]], [[db-spec#คำขอใช้สิทธิของเจ้าของข้อมูล (DataSubjectRequest)\|db-spec DataSubjectRequest]], [[pdpa-data-protection-compliance#Sequence Diagram 1 — คำขอใช้สิทธิของเจ้าของข้อมูล (Operation 4)\|pdpa-data-protection-compliance — Sequence Diagram 1 + State Diagram]] | ไม่มีช่องว่างเชิงออกแบบ logical — ครอบคลุมสิทธิทั้ง 5 ประเภท (เข้าถึง/สำเนา/แก้ไข/ลบ/คัดค้าน) พร้อม state diagram และ edge case ครบ กระบวนการยืนยันตัวตนผู้ยื่นคำขอก่อนเจ้าหน้าที่บันทึกคำขอในระบบยังไม่ถูกยืนยันจากผู้ใช้ แต่ถูกบันทึกไว้อย่างชัดเจนว่าเป็นกระบวนการเชิงองค์กรที่อยู่นอกขอบเขตของ operation นี้ ไม่ใช่ gap ของการออกแบบระดับเอกสารเชิงเทคนิค | ไม่มี (ควรให้ผู้ใช้/เจ้าของ requirement ยืนยันกระบวนการยืนยันตัวตนผู้ยื่นคำขอ — เป็นคำถามเชิง requirement ไม่ใช่ gap ของ technical spec) |
 | NFR-08 | PDPA / Breach Notification Support — สนับสนุนข้อมูลสำหรับการแจ้งเหตุละเมิดข้อมูลส่วนบุคคล | **รองรับแล้ว (Addressed)** | [[architecture#ตาราง Mapping NFR ไปยัง Component\|architecture — ตาราง Mapping NFR]], [[api-spec#Operation 5 — สืบค้นบันทึกการเข้าถึงข้อมูล (Audit Trail Retrieval)\|api-spec Operation 5]], [[db-spec#บันทึกการเข้าถึงข้อมูล (AuditLogRecord)\|db-spec AuditLogRecord]], [[pdpa-data-protection-compliance#Sequence Diagram 2 — สืบค้น Audit Trail เพื่อสนับสนุนการสืบสวน/แจ้งเหตุละเมิด (Operation 5)\|pdpa-data-protection-compliance — Sequence Diagram 2]] | ไม่มีช่องว่างเชิงออกแบบ logical — Operation 5 ให้บริการค้นคืน audit trail พร้อม edge case ครบ (ไม่มีสิทธิ์, ช่วงเวลาไม่ถูกต้อง, ไม่พบข้อมูล) กรอบเวลาที่กฎหมายกำหนดจริงยังไม่ถูกระบุในเอกสารต้นทาง แต่ถูกบันทึกไว้อย่างชัดเจนว่าเป็นประเด็นรอข้อมูลเพิ่มเติม ไม่ใช่ gap ของการออกแบบ | ไม่มี |
+| NFR-09 | Performance — หน้าจอค้นหา/ประวัติวินิจฉัย/lab/ผลวิเคราะห์ความเสี่ยงตอบสนอง < 2 วินาที | **รองรับแล้ว (Addressed)** | [[architecture#ตาราง Mapping NFR ไปยัง Component\|architecture — ตาราง Mapping NFR (แถว NFR-09)]], [[api-spec#Cross-cutting: ข้อกำหนดคุณภาพเชิงปฏิบัติการที่ครอบคลุมทุก Operation (NFR-09–NFR-16)\|api-spec — Cross-cutting NFR-09–16]], [[patient-search-selection#Cross-cutting: คุณภาพเชิงปฏิบัติการของระบบ (NFR-09–NFR-16)\|patient-search-selection]], [[complication-risk-analysis-alert#Cross-cutting: คุณภาพเชิงปฏิบัติการของระบบ (NFR-09–NFR-16)\|complication-risk-analysis-alert]] | ไม่มีช่องว่าง — กลไกจริง (Firestore composite index ต่อ query pattern ของแต่ละ operation ไม่มี caching layer เพิ่มเติมโดยเจตนา) ถูกตัดสินใจแล้วใน `[[technology-stack]]` decision area 9 และระบุ index จริงไว้ครบในทุก entity ของ [[db-spec]] และทุกไฟล์ที่เกี่ยวข้องใน `detailed-design/` | ไม่มี |
+| NFR-10 | Availability — อ้างอิง SLA มาตรฐานของ Firebase/Google Cloud | **รองรับแล้ว (Addressed)** | [[architecture#ตาราง Mapping NFR ไปยัง Component\|architecture — ตาราง Mapping NFR (แถว NFR-10)]] | ไม่มีช่องว่าง — เป็นคุณสมบัติระดับ infrastructure ที่ไม่ต้องออกแบบ component/operation เพิ่มเติมตามที่ระบุไว้แล้วอย่างมีเจตนา ผูกกับ SLA ของ Firebase services ที่ `[[technology-stack]]` เลือกใช้โดยตรง | ไม่มี |
+| NFR-11 | Clinical Safety Validation — ยืนยันการจับคู่โรค/threshold โดยแพทย์ผู้เชี่ยวชาญก่อน deploy ทุกครั้ง | **รองรับแล้ว (Addressed)** | [[architecture#ตาราง Mapping NFR ไปยัง Component\|architecture — ตาราง Mapping NFR (แถว NFR-11)]], [[db-spec#threshold มาตรฐานของโรคแทรกซ้อน (ComplicationRiskThreshold)\|db-spec — หมายเหตุ NFR-11 ใน ComplicationRiskThreshold]], [[complication-risk-analysis-alert#Cross-cutting: คุณภาพเชิงปฏิบัติการของระบบ (NFR-09–NFR-16)\|complication-risk-analysis-alert]] | ไม่มีช่องว่างเชิงออกแบบ — ถูกบันทึกไว้อย่างชัดเจนว่าเป็นกระบวนการเชิงองค์กร (deployment approval gate) นอกระบบ ไม่ใช่ behavior ที่ต้อง implement เป็นโค้ด/UI/attribute ใหม่ ค่า threshold จริงยังไม่ถูกกำหนด (ประเด็นรอยืนยันจากแพทย์ผู้เชี่ยวชาญ ไม่ใช่ gap ของเอกสารเทคนิค) | ไม่มี |
+| NFR-12 | Session Timeout — auto-logout เมื่อไม่ใช้งานเกิน 30 นาที | **รองรับแล้ว (Addressed — มีความเสี่ยงที่บันทึกไว้ชัดเจน)** | [[architecture#ขอบเขตความรับผิดชอบของแต่ละ Component\|architecture — หัวข้อ Client/Backend Service]], [[architecture#ตาราง Mapping NFR ไปยัง Component\|architecture — ตาราง Mapping NFR (แถว NFR-12)]], [[api-spec#Operation ร่วม — ตรวจสอบสิทธิ์การเข้าถึงข้อมูลผู้ป่วย (Access Control)\|api-spec — Operation ร่วม ข้อ 4]], [[db-spec#ผู้ใช้ (User)\|db-spec — หมายเหตุ NFR-12 ใน User]], [[patient-search-selection#Sequence Diagram\|patient-search-selection — loop inactivity ใน Sequence Diagram]] | ไม่มีช่องว่างเชิงออกแบบ — กลไก client custom inactivity timer (`setTimeout` + event listener เรียก `signOut()`) ถูกตัดสินใจแล้วใน `[[technology-stack]]` decision area 10 และระบุคู่กันในทุกชั้นเอกสาร **ความเสี่ยงด้านความปลอดภัย (ไม่มี server-side token revocation, token ยังใช้ได้ต่อจนถึง ~1 ชม.) ถูกบันทึกไว้อย่างเด่นชัดและผู้ใช้รับทราบ/ยืนยันให้ดำเนินการต่อแล้ว — เป็น mitigation ที่ควรทำก่อนใช้ข้อมูลผู้ป่วยจริง ไม่ใช่ gap ของการออกแบบเอกสารในรอบ MVP นี้** | ไม่มี (แนะนำเพิ่ม server-side token revocation ก่อนใช้ข้อมูลผู้ป่วยจริง — บันทึกไว้แล้วใน "ประเด็นรอตัดสินใจ" ของ architecture) |
+| NFR-13 | Accessibility — ห้ามใช้สีเป็นสัญญาณเดียว ต้องมีข้อความกำกับคู่กับสีเสมอ | **รองรับแล้ว (Addressed)** | [[architecture#ตาราง Mapping NFR ไปยัง Component\|architecture — ตาราง Mapping NFR (แถว NFR-13)]], [[db-spec#รายละเอียดผลการประเมินต่อโรคแทรกซ้อน (RiskFinding)\|db-spec RiskFinding — field ระดับความเสี่ยงที่ประเมินได้]], [[complication-risk-analysis-alert#Cross-cutting: คุณภาพเชิงปฏิบัติการของระบบ (NFR-09–NFR-16)\|complication-risk-analysis-alert]] | ไม่มีช่องว่าง — field ข้อความ (ไม่ใช่รหัสสี) พร้อมใช้งานแล้วใน db-spec, กลไกจริง (WCAG 2.1 AA + Heroicons + Lighthouse Audit) ถูกตัดสินใจแล้วใน `[[technology-stack]]` decision area 11 รายละเอียด mapping สี/ไอคอนเฉพาะจุดเป็นหน้าที่ของ [[DESIGN]] ต่อไปตามที่ระบุไว้แล้ว | ไม่มี |
+| NFR-14 | Security Rules Verification — automated test ผ่าน Firebase Emulator Suite ครอบคลุมทุกกรณีสิทธิ์ | **รองรับแล้ว (Addressed)** | [[architecture#ตาราง Mapping NFR ไปยัง Component\|architecture — ตาราง Mapping NFR (แถว NFR-14)]], [[patient-search-selection#หมายเหตุการ Implement\|patient-search-selection]], [[complication-risk-analysis-alert#Cross-cutting: คุณภาพเชิงปฏิบัติการของระบบ (NFR-09–NFR-16)\|complication-risk-analysis-alert]], [[user-authentication-email-password#Cross-cutting: คุณภาพเชิงปฏิบัติการของระบบ (NFR-09–NFR-16)\|user-authentication-email-password]] | ไม่มีช่องว่าง — รายการ collection/กรณีทดสอบ (ไม่มี assignment, assignment บางส่วน, บัญชีถูกระงับ, ไม่มี custom claims ที่ถูกต้อง, บัญชีที่เพิ่งสมัครยังไม่มี role) ถูกระบุครบใน db-spec และอ้างอิงตรงกันในทุกไฟล์ `detailed-design/` ที่เกี่ยวข้อง รวมไฟล์ Authentication ใหม่ | ไม่มี |
+| NFR-15 | Browser/Device Compatibility — Chrome/Edge/Firefox ล่าสุดบน desktop/tablet | **รองรับแล้ว (Addressed)** | [[architecture#ตาราง Mapping NFR ไปยัง Component\|architecture — ตาราง Mapping NFR (แถว NFR-15)]], [[complication-risk-analysis-alert#Cross-cutting: คุณภาพเชิงปฏิบัติการของระบบ (NFR-09–NFR-16)\|complication-risk-analysis-alert]] | ไม่มีช่องว่าง — browserslist config ถูกตัดสินใจแล้วใน `[[technology-stack]]` decision area 12 เป็นเรื่องของ Client build config ล้วนๆ ไม่กระทบ operation/entity | ไม่มี |
+| NFR-16 | Interoperability (future, Won't have เฟสนี้) — พิจารณา HL7/FHIR เมื่อเชื่อมต่อ HOSxP จริง | **รองรับแล้ว (Addressed — Won't have โดยเจตนา)** | [[architecture#ตาราง Mapping NFR ไปยัง Component\|architecture — ตาราง Mapping NFR (แถว NFR-16)]] | ไม่มีช่องว่าง — ยืนยันแล้วว่าเป็น Won't have ของเฟสนี้ ไม่ต้องออกแบบ component/operation เพิ่มเติมจนกว่าจะเชื่อมต่อ HOSxP จริงในอนาคต | ไม่มี |
+| NFR-17 | Security / Password Policy — รหัสผ่านขั้นต่ำ 8 ตัวอักษร มีทั้งตัวอักษรและตัวเลข | **รองรับแล้ว (Addressed)** | [[architecture#ขอบเขตความรับผิดชอบของแต่ละ Component\|architecture — หัวข้อ Client/Backend Service ฟีเจอร์ที่ 6]], [[architecture#ตาราง Mapping NFR ไปยัง Component\|architecture — ตาราง Mapping NFR (แถว NFR-17)]], [[api-spec#Operation 8 — สมัครบัญชีผู้ใช้งานด้วยตนเอง (Self Sign-up)\|api-spec Operation 8]], [[api-spec#Operation 9 — ขอรีเซ็ตรหัสผ่านทางอีเมล (Forgot Password)\|Operation 9]], [[db-spec#ผู้ใช้ (User)\|db-spec User — attribute รหัสผ่านที่จัดเก็บ]], [[user-authentication-email-password#Sequence Diagram — สมัครบัญชี ยืนยันอีเมล และรออนุมัติ (Operation 8, FR-08/FR-09)\|user-authentication-email-password — Sequence Diagram Operation 8/9]], [[technology-stack#13. กลไก Validate Password Policy ฝั่งเซิร์ฟเวอร์ (NFR-17, ฟีเจอร์ที่ 6) — Regex ใน Cloud Function + Identity Platform เป็น Backstop\|technology-stack decision area 13]] | ไม่มีช่องว่าง — กลไกทางเทคนิคจริงถูกตัดสินใจแล้วในรอบ 2026-09-24: **regex ในโค้ด Cloud Function `signUpUser`** (Operation 8) + **Google Cloud Identity Platform password policy เป็น backstop** สำหรับ Operation 9 (`confirmPasswordReset` ที่ไม่ผ่าน Cloud Function) — ตรวจสอบแล้วว่า [[architecture]] (หัวข้อ Client/Backend Service ฟีเจอร์ที่ 6 + ประเด็นรอตัดสินใจ), [[api-spec]] (Operation 8/9 Technical Binding), [[db-spec]] (attribute รหัสผ่านที่จัดเก็บ) และ [[user-authentication-email-password]] (sequence diagram Operation 8/9 + หมายเหตุการ Implement) อ้างอิงกลไกเดียวกันนี้ตรงกันครบทุกไฟล์แล้ว ไม่มีข้อความ "ยังไม่ตัดสินใจ" หลงเหลืออยู่ | ไม่มี |
+| NFR-18 | Security / Account Enumeration Prevention — ไม่เปิดเผยว่าอีเมลมีบัญชีในระบบหรือไม่ | **รองรับแล้ว (Addressed — มีความเสี่ยงคงเหลือที่บันทึกไว้ชัดเจน)** | [[architecture#ขอบเขตความรับผิดชอบของแต่ละ Component\|architecture — หัวข้อ Client/Backend Service ฟีเจอร์ที่ 6]], [[architecture#ตาราง Mapping NFR ไปยัง Component\|architecture — ตาราง Mapping NFR (แถว NFR-18)]], [[api-spec#Operation 7 — เข้าสู่ระบบด้วยอีเมลและรหัสผ่าน\|api-spec Operation 7]], [[api-spec#Operation 8 — สมัครบัญชีผู้ใช้งานด้วยตนเอง (Self Sign-up)\|Operation 8]], [[api-spec#Operation 9 — ขอรีเซ็ตรหัสผ่านทางอีเมล (Forgot Password)\|Operation 9]], [[user-authentication-email-password#Edge Case และวิธีจัดการ\|user-authentication-email-password — Edge Case]], [[technology-stack#14. กลไกป้องกัน Account Enumeration (NFR-18, ฟีเจอร์ที่ 6) — Firebase Email Enumeration Protection\|technology-stack decision area 14]] | ไม่มีช่องว่างเชิงออกแบบ — กลไกทางเทคนิคจริงถูกตัดสินใจแล้ว: เปิด **Firebase "Email Enumeration Protection"** ระดับโปรเจกต์ ปิด error code ที่แยกแยะได้ของ Operation 7 ตรงกับที่ [[architecture]]/[[api-spec]]/[[user-authentication-email-password]] อ้างอิงกลไกเดียวกันครบแล้ว **ความเสี่ยง timing side-channel ที่ยังไม่ถูกปิด (ไม่มี fixed minimum delay) ถูกบันทึกไว้อย่างเด่นชัดในทุกชั้นเอกสาร (technology-stack หัวข้อ "ความเสี่ยงเพิ่มเติม", architecture หัวข้อ "ประเด็นรอตัดสินใจ") ว่าผู้ใช้รับทราบและยืนยันให้ดำเนินการต่อในรอบ MVP นี้แล้ว — ไม่ใช่ gap ที่ตกหล่น แต่เป็น mitigation ที่ควรทำก่อนใช้ข้อมูลผู้ป่วยจริง** เช่นเดียวกับรูปแบบที่ใช้กับ NFR-12 | ไม่มี (แนะนำเพิ่ม fixed minimum delay ใน Cloud Function ก่อนใช้ข้อมูลผู้ป่วยจริง — บันทึกไว้แล้วใน "ประเด็นรอตัดสินใจ"/"ความเสี่ยงที่ต้องพิจารณาเพิ่มเติม" ของ technology-stack) |
 
 ## รายละเอียดการตรวจสอบ
 
@@ -178,6 +200,158 @@ HOSxP/mockup โดยตรง มีเพียงการเพิ่ม co
 - สรุป: รองรับแล้วครบทุกชั้นเอกสารในระดับ logical — กรอบเวลาที่กฎหมายกำหนดจริงยังไม่ถูกระบุในเอกสาร
   ต้นทาง แต่ไม่กระทบความสมบูรณ์ของการออกแบบระดับ logical ที่มีอยู่แล้ว
 
+### NFR-09 — Performance < 2 วินาที
+
+- [[architecture]]: ตาราง Mapping NFR ระบุ Client + Backend Service + Primary Data Store เป็นผู้
+  รับผิดชอบร่วมกัน กลไกจริง (Firestore composite index เท่านั้น ไม่มี caching layer เพิ่มเติมโดยเจตนา)
+  ถูกตัดสินใจแล้วใน `[[technology-stack]]` decision area 9
+- [[api-spec]]: หัวข้อ Cross-cutting ระบุว่าไม่มี operation ใหม่ ครอบคลุม Operation 0-3 ที่ผู้ใช้รอผล
+  โดยตรง แต่ละ operation อ้างอิง composite index ของตนเองใน [[db-spec]]
+- [[db-spec]]: ทุก entity ที่ถูก query บ่อย (`patientAssignments`, `ncdDiagnoses`, `labResults`,
+  `complicationRiskThresholds`, `complicationRiskAssessments`) มี composite index ระบุไว้ครบตาม query
+  pattern จริงของแต่ละ operation
+- `detailed-design/`: [[patient-search-selection]] และ [[complication-risk-analysis-alert]] อ้างอิง
+  index เดียวกันกับ db-spec ในหัวข้อ Cross-cutting NFR-09–16 ตรงกัน
+- สรุป: รองรับแล้วครบทุกชั้นเอกสาร ไม่มีช่องว่าง — trade-off (ไม่มี caching, ทุก request อ่าน Firestore
+  ทุกครั้ง) ถูกบันทึกไว้อย่างมีเจตนาพร้อมขั้นตอนถัดไปถ้าพบว่าไม่พอ (in-memory caching)
+
+### NFR-10 — Availability
+
+- [[architecture]]: ตาราง Mapping NFR ระบุว่าเป็นคุณสมบัติ cross-cutting ระดับ infrastructure ผูกกับ
+  SLA ของ Firebase/Google Cloud services ที่ `[[technology-stack]]` เลือกใช้ทั้งหมด ไม่ต้องออกแบบ
+  redundancy/failover เพิ่มเติมเอง
+- [[api-spec]]/[[db-spec]]/`detailed-design/`: ไม่มีผลกระทบต่อ operation/entity ใด ตามที่ [[api-spec]]
+  ระบุไว้ชัดเจนแล้วในหัวข้อ Cross-cutting
+- สรุป: รองรับแล้ว ไม่มีช่องว่าง — เป็นการออกแบบที่มีเจตนาว่าไม่ต้องมี component/operation ใหม่
+
+### NFR-11 — Clinical Safety Validation
+
+- [[architecture]]: ตาราง Mapping NFR และหัวข้อ Backend Service (Risk Rule Engine) ระบุชัดว่าเป็น
+  manual approval gate ในกระบวนการ deployment ไม่ใช่ behavior ที่ต้อง implement เป็นโค้ด/UI
+- [[db-spec]]: entity ComplicationRiskThreshold มีหมายเหตุเฉพาะอธิบายเหตุผลที่ไม่เพิ่ม attribute ใหม่
+  (เช่น "ผู้ยืนยัน"/"วันที่ยืนยัน") สำหรับข้อนี้ พร้อมข้อเสนอแนะถ้าต้องการบันทึกหลักฐานในอนาคต
+- `detailed-design/`: [[complication-risk-analysis-alert]] มี edge case "threshold/rule ยังไม่ผ่านการ
+  ยืนยัน" ระบุว่าไม่ deploy โค้ดที่มี rule ใหม่จนกว่าจะผ่านการยืนยัน
+- สรุป: รองรับแล้วครบทุกชั้นเอกสารในระดับที่เหมาะสมกับธรรมชาติของข้อกำหนด (กระบวนการองค์กร) ไม่มีช่องว่าง
+  เชิงออกแบบเอกสารเทคนิค — ค่า threshold จริงยังรอแพทย์ผู้เชี่ยวชาญยืนยัน (ไม่ใช่ gap ของเอกสาร)
+
+### NFR-12 — Session Timeout
+
+- [[architecture]]: หัวข้อ Client และ Backend Service (Access Control) อธิบายกลไก client custom
+  inactivity timer อย่างละเอียด พร้อม**เน้นย้ำความเสี่ยงด้านความปลอดภัย** (ไม่มี server-side token
+  revocation, token ยังใช้ได้ต่อจนถึง ~1 ชม. ซึ่งนานกว่า 30 นาทีที่กำหนดเกือบ 2 เท่า) ครบถ้วนในหลายจุด
+  ของเอกสาร
+- [[api-spec]]: Operation ร่วม Access Control ข้อ 4 อธิบายความสัมพันธ์กับ NFR-12 และยืนยันว่าไม่มี
+  กลไกเซิร์ฟเวอร์เพิ่มเติมเพื่อเพิกถอน token ก่อนหมดอายุธรรมชาติ
+- [[db-spec]]: หัวข้อ User มีหมายเหตุอธิบายเหตุผลที่ไม่มี field `lastActivityAt` (ตัดสินใจไม่เลือกแล้ว
+  เพราะกระทบ NFR-09)
+- `detailed-design/`: [[patient-search-selection]] มี `loop` block ตรวจสอบ inactivity ใน Sequence
+  Diagram จริง พร้อม edge case "ถูก auto-logout แล้วส่งคำขอถัดไป"; [[complication-risk-analysis-alert]]
+  อ้างอิงจุดเดียวกัน
+- สรุป: **รองรับแล้ว (Addressed)** ในแง่การออกแบบครบทุกชั้นเอกสารตรงกัน — แต่มีความเสี่ยงด้านความ
+  ปลอดภัยที่สำคัญซึ่งถูกบันทึกไว้อย่างเด่นชัดแล้วว่าผู้ใช้รับทราบและยืนยันให้ดำเนินการต่อในรอบ MVP นี้
+  ไม่ใช่ gap ที่ตกหล่นในเอกสาร แต่เป็น mitigation ที่ควรทำก่อนใช้ข้อมูลผู้ป่วยจริง (เพิ่ม server-side
+  token revocation)
+
+### NFR-13 — Accessibility
+
+- [[architecture]]: ตาราง Mapping NFR ระบุ Client เป็นผู้รับผิดชอบ กลไกจริง (WCAG 2.1 AA + Heroicons +
+  Lighthouse Accessibility Audit) ถูกตัดสินใจแล้วใน `[[technology-stack]]` decision area 11
+- [[db-spec]]: field `ระดับความเสี่ยงที่ประเมินได้` ใน RiskFinding เป็นค่าข้อความที่กำหนดไว้ล่วงหน้า
+  (ไม่ใช่รหัสสี) โดยเจตนาเพื่อให้ Client แสดงคู่กับสี/ไอคอนได้ทันที
+- `detailed-design/`: [[complication-risk-analysis-alert]] อธิบายกลไกจริงและ mapping กับ field นี้
+  ครบในหัวข้อ Cross-cutting และหมายเหตุการ Implement
+- สรุป: รองรับแล้วครบทุกชั้นเอกสาร ไม่มีช่องว่าง — รายละเอียด mapping สี/ไอคอนเฉพาะจุดเป็นหน้าที่ของ
+  [[DESIGN]] ต่อไปตามที่ระบุไว้แล้ว ไม่ใช่ gap ของชั้นเอกสารเทคนิคนี้
+
+### NFR-14 — Security Rules Verification
+
+- [[architecture]]: ตาราง Mapping NFR ระบุ Firebase Emulator Suite เป็นกลไกจริง ครอบคลุม collection
+  `patients`, `patientAssignments`, `auditLogRecords` ฯลฯ
+- [[db-spec]]: หัวข้อคุณสมบัติร่วม "Security Rules Verification (NFR-14)" ระบุรายการกรณีทดสอบบังคับ
+  (ไม่มี assignment, assignment บางส่วน, บัญชีถูกระงับ, ไม่มี custom claims ที่ถูกต้อง) ครบ
+- `detailed-design/`: [[patient-search-selection]], [[complication-risk-analysis-alert]] อ้างอิงกรณี
+  ทดสอบเดียวกันตรงกัน; [[user-authentication-email-password]] เพิ่มกรณีทดสอบใหม่เฉพาะฟีเจอร์นี้ (บัญชี
+  ที่เพิ่งสมัครยังไม่มี role/isActive=false) สอดคล้องกับที่ db-spec ระบุไว้แล้ว
+- สรุป: รองรับแล้วครบทุกชั้นเอกสาร รวมไฟล์ Authentication ใหม่ ไม่มีช่องว่าง
+
+### NFR-15 — Browser/Device Compatibility
+
+- [[architecture]]: ตาราง Mapping NFR ระบุ browserslist config ที่ตัดสินใจแล้วใน `[[technology-stack]]`
+  decision area 12 เป็นเรื่องของ Client build config ล้วนๆ
+- [[api-spec]]/[[db-spec]]: ไม่กระทบ operation/entity ตามที่ [[api-spec]] ระบุไว้ชัดเจนแล้ว
+- `detailed-design/`: [[complication-risk-analysis-alert]] ระบุว่าหน้าจอ flag ความเสี่ยงต้องแสดงผล
+  ถูกต้องบน browser หลักเช่นเดียวกับทุกหน้าจอในระบบ
+- สรุป: รองรับแล้ว ไม่มีช่องว่าง — เป็นเรื่องของ Client implementation ล้วนๆ ตามที่ออกแบบไว้อย่างมีเจตนา
+
+### NFR-16 — Interoperability (future, Won't have เฟสนี้)
+
+- [[architecture]]: ตาราง Mapping NFR ยืนยันว่าเป็น Won't have ของเฟสนี้ ไม่มีผลต่อการออกแบบ component
+  จนกว่าจะเชื่อมต่อ HOSxP จริงในอนาคต
+- [[api-spec]]/[[db-spec]]/`detailed-design/`: ไม่มีการอ้างอิงเพิ่มเติม สอดคล้องกับสถานะ Won't have
+- สรุป: รองรับแล้วในความหมายว่าถูกจัดสถานะ Won't have อย่างถูกต้องและสม่ำเสมอทุกชั้นเอกสาร ไม่มีช่องว่าง
+
+### NFR-17 — Security / Password Policy
+
+**ตรวจสอบรอบที่แปด (2026-09-24) — ประเมินใหม่หลัง `[[technology-stack]]` เพิ่ม decision area 13:**
+
+- [[technology-stack]]: decision area 13 ตัดสินใจกลไกจริงแบบ hybrid — **regex ในโค้ด Cloud Function
+  `signUpUser`** (ความยาว ≥ 8 ตัวอักษร มีตัวอักษรและตัวเลขอย่างน้อยอย่างละ 1 ตัว) สำหรับ Operation 8 และ
+  **Google Cloud Identity Platform password policy เป็น backstop ฝั่งเซิร์ฟเวอร์** สำหรับ Operation 9
+  (`confirmPasswordReset` ที่ไม่ผ่าน Cloud Function) พร้อมเหตุผลที่ต้องใช้ 2 กลไกและผลกระทบต่อ
+  project setup (อัปเกรดเป็น Identity Platform) ที่บันทึกไว้ชัดเจน
+- [[architecture]]: หัวข้อ Client/Backend Service ของฟีเจอร์ที่ 6 และ "ประเด็นรอตัดสินใจ" ท้ายเอกสาร
+  ถูกแก้ไขให้ระบุกลไกที่ตัดสินใจแล้วนี้ตรงกัน ไม่มีข้อความ "ยังไม่ตัดสินใจ" หลงเหลืออยู่อีกต่อไป
+  (ยืนยันด้วยการอ่านทั้งไฟล์ใหม่ในรอบนี้)
+- [[api-spec]]: Technical Binding ของ Operation 8 ระบุ regex ในโค้ดเดียวกัน อ้างอิง decision area 13
+  ตรงๆ; Operation 9 ระบุว่าใช้ Identity Platform password policy เป็น backstop แทน regex เพราะไม่มี
+  Cloud Function คั่นกลางในลำดับนี้ — สอดคล้องกับเหตุผลใน technology-stack ทุกประการ
+- [[db-spec]]: attribute `รหัสผ่านที่จัดเก็บ` ใน User ไม่เปลี่ยนแปลง (ยังคงจัดเก็บโดย Firebase
+  Authentication) — ไม่กระทบสถานะ
+- `detailed-design/`: [[user-authentication-email-password]] sequence diagram ของ Operation 8/9 และ
+  หัวข้อ "หมายเหตุการ Implement" อ้างอิงกลไก 2 จุดนี้ตรงกันครบ ไม่มีข้อความ "ยังไม่ระบุว่าเลือกแบบใด"
+  หลงเหลืออยู่
+- สรุป: **เปลี่ยนจาก "รองรับบางส่วน (Partial)" เป็น "รองรับแล้ว (Addressed)"** — ช่องว่างที่เคยพบใน
+  รอบที่เจ็ด (กลไกทางเทคนิคจริงยังไม่ถูกตัดสินใจ) ถูกปิดแล้วอย่างสมบูรณ์และสอดคล้องกันครบทุกชั้นเอกสาร
+  ไม่มีช่องว่างเหลืออยู่
+
+### NFR-18 — Security / Account Enumeration Prevention
+
+**ตรวจสอบรอบที่แปด (2026-09-24) — ประเมินใหม่หลัง `[[technology-stack]]` เพิ่ม decision area 14:**
+
+- [[technology-stack]]: decision area 14 ตัดสินใจเปิด **Firebase "Email Enumeration Protection"**
+  ระดับโปรเจกต์ เป็นกลไกเดียวสำหรับปิดช่องว่างของ Operation 7 (จุดเดียวที่ไม่มี Cloud Function คั่นกลาง
+  คอยแปลง error code) โดยผู้ใช้ยืนยัน**ไม่เพิ่ม fixed minimum delay/normalize เวลาตอบสนองเพิ่มเติม** —
+  หัวข้อ "ความเสี่ยงเพิ่มเติม" ท้ายเอกสารบันทึก timing side-channel ที่ยังไม่ปิดไว้อย่างเด่นชัดพร้อม
+  คำแนะนำ mitigation ก่อนใช้ข้อมูลผู้ป่วยจริง
+- [[architecture]]: หัวข้อ Client/Backend Service ฟีเจอร์ที่ 6, ตาราง Mapping NFR และ "ประเด็นรอ
+  ตัดสินใจ" ท้ายเอกสาร ถูกแก้ไขให้ระบุกลไกนี้ตรงกัน พร้อมคงคำเตือนเรื่อง timing side-channel ที่ยังไม่ปิด
+  ไว้อย่างชัดเจนเช่นเดียวกับ technology-stack — ไม่มีข้อความ "ยังไม่ตัดสินใจ" หลงเหลืออยู่
+- [[api-spec]]: Cross-cutting Authentication และ Technical Binding ของ Operation 7/8/9 อ้างอิงกลไก
+  เดียวกันนี้ตรงกัน (Operation 8/9 ใช้ข้อความ generic ที่ Cloud Function ควบคุมเองอยู่แล้วโดยไม่ต้องพึ่ง
+  setting นี้; Operation 7 พึ่ง Email Enumeration Protection เพราะไม่มี Cloud Function คั่นกลาง)
+- [[db-spec]]: ไม่มี attribute ใหม่ที่เกี่ยวข้องโดยตรง (เป็นเรื่องของ behavior ของ operation ไม่ใช่
+  data model) — ไม่กระทบสถานะ
+- `detailed-design/`: [[user-authentication-email-password]] sequence diagram ของ Operation 7 อ้างอิง
+  "Email Enumeration Protection เปิดใช้" ตรงกัน และยังคงระบุ "timing side-channel ที่ยังไม่ปิด" ไว้ใน
+  Note ของ sequence diagram เดียวกัน — สอดคล้องครบ
+- สรุป: **เปลี่ยนจาก "รองรับบางส่วน (Partial)" เป็น "รองรับแล้ว (Addressed — มีความเสี่ยงคงเหลือที่
+  บันทึกไว้ชัดเจน)"** — กลไกทางเทคนิคหลัก (error code ที่แยกแยะได้) ถูกปิดแล้วด้วยการตัดสินใจที่ชัดเจน
+  ส่วนความเสี่ยง timing side-channel ที่ยังไม่ปิดเป็นการตัดสินใจที่ผู้ใช้รับทราบและยืนยันให้ดำเนินการ
+  ต่อแล้วอย่างมีเจตนา (บันทึกไว้สอดคล้องกันทุกชั้นเอกสาร) เช่นเดียวกับรูปแบบที่ใช้ประเมิน NFR-12 ไม่ใช่
+  gap ที่ตกหล่นของการออกแบบเอกสารเชิงเทคนิค
+
+### หมายเหตุรวม — ผลกระทบของการแก้ไข decision area 7/18 (ยกเลิก Custom Claims) ต่อ NFR อื่น (ตรวจสอบรอบที่แปด 2026-09-24)
+
+`[[technology-stack]]` แก้ไข decision area 7 และเพิ่ม decision area 18 ให้เลิกเก็บ `role`/`isActive`
+ใน Custom Claims โดยสิ้นเชิง (เดิมเคยเก็บ) ตรวจสอบแล้วว่า [[architecture]] และ [[db-spec]] ถูกแก้ไขให้
+ลบร่องรอยของ "custom claims" เดิมออกครบทุกจุดที่เคยอ้างถึง และแทนที่ด้วย "อ่าน role/isActive จาก
+Firestore `users/{uid}` โดยตรงทุกครั้ง" อย่างสอดคล้องกัน — โดยเฉพาะรายการกรณีทดสอบของ **NFR-14** ที่เคย
+มีเคส "ไม่มี custom claims ที่ถูกต้อง" ถูกแก้ไขให้ตรงกับสถาปัตยกรรมใหม่ (ไม่มี custom claims ให้ตรวจ
+อีกต่อไป) และเพิ่มเคสใหม่ "`email_verified=false`" แทน (ตาม decision area 19) ครบทั้ง [[db-spec]] และ
+[[architecture]] **ผลคือ NFR-01 ถึง NFR-16 ไม่มีตัวใดถดถอยจากการแก้ไขนี้** — เป็นการทำให้เอกสารสอดคล้อง
+กับสถาปัตยกรรมจริงมากขึ้น ไม่ใช่การลดทอนการออกแบบ
+
 ### หมายเหตุรวม — ผลกระทบของการแก้ไข FR-05/FR-06 ต่อ NFR-03 ถึง NFR-08 (ตรวจสอบรอบที่สาม 2026-09-21)
 
 NFR-03 ถึง NFR-08 (หมวด PDPA) ไม่มีการอ้างอิงถึงรายละเอียดวิธีค้นหาผู้ป่วย (ชื่อ/คำค้นอิสระ หรือ HN)
@@ -215,10 +389,12 @@ NFR-03 ถึง NFR-08 (หมวด PDPA) ไม่มีการอ้าง
 - [[architecture]]
 - [[api-spec]]
 - [[db-spec]]
+- [[technology-stack]]
 - [[patient-search-selection]]
 - [[patient-ncd-diagnosis-lab-history]]
 - [[complication-risk-analysis-alert]]
 - [[pdpa-data-protection-compliance]]
+- [[user-authentication-email-password]]
 - [[backlog]]
 - [[feature-list]]
 - [[user-journey]]
