@@ -14,6 +14,11 @@
       <span class="proto-bar-title">NCDS CLINIC · PROTOTYPE v1 · หน้ารวม</span>
       <div class="proto-bar-nav">
         <a href="index.html" class="current">หน้ารวม</a>
+        <a href="login.html">เข้าสู่ระบบ</a>
+        <a href="signup.html">สมัครบัญชี</a>
+        <a href="verify-email-notice.html">ยืนยันอีเมล/รออนุมัติ</a>
+        <a href="forgot-password.html">ลืมรหัสผ่าน</a>
+        <a href="reset-password.html">ตั้งรหัสผ่านใหม่</a>
         <a href="patient-list.html">ค้นหา/รายชื่อผู้ป่วย</a>
         <a href="patient-detail-risk-found.html">ประวัติ+ความเสี่ยง (พบ)</a>
         <a href="patient-detail-no-risk.html">ประวัติ+ความเสี่ยง (ไม่พบ)</a>
@@ -36,13 +41,54 @@
     <h1 class="type-page-title">ประวัติโรค NCD ผลตรวจ Lab และการวิเคราะห์ความเสี่ยงโรคแทรกซ้อน</h1>
     <p class="type-body" style="max-width:720px;">
       Prototype เวอร์ชัน v1 ของฟีเจอร์ตาม
-      <span class="type-code">20260917-01-patient-ncd-history-lab-complication-risk</span> และ
-      <span class="type-code">20260921-01-pdpa-data-protection-compliance</span>
-      ครอบคลุมทั้ง 4 ฟีเจอร์ Must have ใน feature-list.md สำหรับผู้ใช้บทบาทเดียว:
+      <span class="type-code">20260917-01-patient-ncd-history-lab-complication-risk</span>,
+      <span class="type-code">20260921-01-pdpa-data-protection-compliance</span> และ
+      <span class="type-code">20260923-01-user-authentication-email-password</span>
+      ครอบคลุมฟีเจอร์ Must have ใน feature-list.md สำหรับผู้ใช้บทบาทเดียว:
       <strong>แพทย์/พยาบาลผู้ดูแลผู้ป่วย NCD</strong>
+      (อัปเดต 20260924: เพิ่มฟีเจอร์ที่ 6 — สมัครบัญชี/เข้าสู่ระบบ/จัดการรหัสผ่านด้วยอีเมล เป็น
+      precondition ก่อน Journey ที่ 1 และ 2 ด้านล่าง)
     </p>
     <span class="chip chip-neutral" style="align-self:flex-start;">บทบาทผู้ใช้: แพทย์/พยาบาลผู้ดูแลผู้ป่วย NCD (NFR-02)</span>
   </header>
+
+  <section class="section-card">
+    <div class="section-head">
+      <h2 class="type-section-title">Journey ที่ 0 — สมัครบัญชี เข้าสู่ระบบ และจัดการรหัสผ่านด้วยอีเมล (Authentication, ฟีเจอร์ 6)</h2>
+      <span class="type-caption">Precondition ก่อน Journey ที่ 1 และ 2 ทั้งหมด — ต้องเข้าสู่ระบบและยืนยันอีเมลสำเร็จก่อนจึงเริ่มดูข้อมูลผู้ป่วยได้</span>
+    </div>
+    <ol class="stack" style="gap:12px; padding-left:0;">
+      <li class="dx-item" style="border-color:var(--border-default);">
+        <div class="dx-item-main">
+          <span class="dx-item-name">1. สมัครบัญชีใหม่ด้วยอีเมล/รหัสผ่าน</span>
+          <span class="dx-item-meta">แสดงกฎรหัสผ่านขั้นต่ำแบบ live · บัญชีใหม่ isActive=false ไม่มี role จนกว่าผู้ดูแลระบบจะอนุมัติ</span>
+        </div>
+        <a class="btn btn-primary btn-sm" href="signup.html">เปิดหน้าสมัครบัญชี <span class="proto-code" style="margin-left:6px;">FR-08·NFR-17·NFR-18</span></a>
+      </li>
+      <li class="dx-item" style="border-color:var(--border-default);">
+        <div class="dx-item-main">
+          <span class="dx-item-name">2. ยืนยันอีเมล / รอผู้ดูแลระบบอนุมัติบัญชี</span>
+          <span class="dx-item-meta">สาธิตทั้งสถานะ "ส่งอีเมลยืนยันแล้ว" และ "ยืนยันสำเร็จ รออนุมัติผ่าน Firebase Console/Firestore"</span>
+        </div>
+        <a class="btn btn-secondary btn-sm" href="verify-email-notice.html">เปิดหน้ายืนยันอีเมล <span class="proto-code" style="margin-left:6px;">FR-09</span></a>
+      </li>
+      <li class="dx-item" style="border-color:var(--border-default);">
+        <div class="dx-item-main">
+          <span class="dx-item-name">3. เข้าสู่ระบบด้วยอีเมล/รหัสผ่าน</span>
+          <span class="dx-item-meta">กรณีผิดพลาด/ยังไม่ยืนยันอีเมล/สำเร็จ — ข้อความผิดพลาดเป็นแบบทั่วไปเสมอ ไม่เปิดเผยว่าอีเมลมีในระบบหรือไม่</span>
+        </div>
+        <a class="btn btn-primary btn-sm" href="login.html">เปิดหน้าเข้าสู่ระบบ <span class="proto-code" style="margin-left:6px;">FR-07·NFR-18</span></a>
+      </li>
+      <li class="dx-item" style="border-color:var(--border-default);">
+        <div class="dx-item-main">
+          <span class="dx-item-name">4. ลืมรหัสผ่าน → ตั้งรหัสผ่านใหม่</span>
+          <span class="dx-item-meta">ขอลิงก์รีเซ็ตทางอีเมล (ข้อความเดียวกันเสมอ) แล้วตั้งรหัสผ่านใหม่ตามนโยบายขั้นต่ำ</span>
+        </div>
+        <a class="btn btn-secondary btn-sm" href="forgot-password.html">เปิดหน้าลืมรหัสผ่าน <span class="proto-code" style="margin-left:6px;">FR-10·NFR-18</span></a>
+        <a class="btn btn-secondary btn-sm" href="reset-password.html">เปิดหน้าตั้งรหัสผ่านใหม่ <span class="proto-code" style="margin-left:6px;">FR-10·NFR-17</span></a>
+      </li>
+    </ol>
+  </section>
 
   <section class="section-card">
     <div class="section-head">
@@ -119,6 +165,31 @@
           </tr>
         </thead>
         <tbody>
+          <tr>
+            <td class="param-name"><a href="login.html">login.html</a></td>
+            <td style="font-family:var(--font-sans); font-size:14px;">6. สมัครบัญชี เข้าสู่ระบบ และจัดการรหัสผ่านด้วยอีเมล</td>
+            <td>FR-07, NFR-18, NFR-12 (ปลายทาง)</td>
+          </tr>
+          <tr>
+            <td class="param-name"><a href="signup.html">signup.html</a></td>
+            <td style="font-family:var(--font-sans); font-size:14px;">6. สมัครบัญชี เข้าสู่ระบบ และจัดการรหัสผ่านด้วยอีเมล</td>
+            <td>FR-08, NFR-17, NFR-18</td>
+          </tr>
+          <tr>
+            <td class="param-name"><a href="verify-email-notice.html">verify-email-notice.html</a></td>
+            <td style="font-family:var(--font-sans); font-size:14px;">6. สมัครบัญชี เข้าสู่ระบบ และจัดการรหัสผ่านด้วยอีเมล</td>
+            <td>FR-09, FR-08 (รออนุมัติ)</td>
+          </tr>
+          <tr>
+            <td class="param-name"><a href="forgot-password.html">forgot-password.html</a></td>
+            <td style="font-family:var(--font-sans); font-size:14px;">6. สมัครบัญชี เข้าสู่ระบบ และจัดการรหัสผ่านด้วยอีเมล</td>
+            <td>FR-10, NFR-18</td>
+          </tr>
+          <tr>
+            <td class="param-name"><a href="reset-password.html">reset-password.html</a></td>
+            <td style="font-family:var(--font-sans); font-size:14px;">6. สมัครบัญชี เข้าสู่ระบบ และจัดการรหัสผ่านด้วยอีเมล</td>
+            <td>FR-10, NFR-17</td>
+          </tr>
           <tr>
             <td class="param-name"><a href="patient-list.html">patient-list.html</a></td>
             <td style="font-family:var(--font-sans); font-size:14px;">3. ค้นหา/เลือกผู้ป่วยในความดูแล</td>

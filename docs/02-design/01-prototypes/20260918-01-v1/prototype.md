@@ -11,10 +11,26 @@ Clickable HTML Prototype เวอร์ชันแรกของโปรเ�
 เดิมเป็น free-text) และเพิ่มหน้าจอใหม่ 2 หน้ารองรับฟีเจอร์ที่ 4 "คุ้มครองข้อมูลส่วนบุคคลของผู้ป่วยตาม
 PDPA" (NFR-03–NFR-08) — ดูรายละเอียดในหัวข้อ "ขอบเขตที่ครอบคลุม (อัปเดต)" ด้านล่าง
 
+**อัปเดตล่าสุด (20260924):** เพิ่มหน้าจอใหม่ 5 หน้ารองรับฟีเจอร์ที่ 6 "สมัครบัญชี เข้าสู่ระบบ และ
+จัดการรหัสผ่านด้วยอีเมล (Authentication)" (FR-07–FR-10, NFR-17, NFR-18) ตาม
+[[../../user-journey#Journey ผู้ใช้งานสมัครบัญชี เข้าสู่ระบบ และจัดการรหัสผ่านด้วยอีเมล (Authentication)|journey Authentication]]
+ซึ่งเป็น precondition ก่อน Journey ที่ 1 และ 2 เดิมทั้งหมด พร้อมอัปเดต proto-bar nav ของทุกหน้าจอเดิม
+(7 หน้า) ให้เชื่อมโยงถึง 5 หน้าใหม่ครบ และเพิ่มปุ่ม "ออกจากระบบ"/"จำลอง: เซสชันหมดอายุอัตโนมัติ (NFR-12)"
+ใน `patient-list.html` เพื่อสาธิตจุดเชื่อมต่อกลับไปยัง `login.html` — ไม่ได้แก้ไข logic เดิมของ 7
+หน้าจอ Journey ที่ 1/2 นอกเหนือจาก proto-bar nav และ header ของ `patient-list.html`
+
 ## ขอบเขตที่ครอบคลุม (อัปเดต)
 
-ครอบคลุมทั้ง 4 ฟีเจอร์ Must have ใน [[../../feature-list|feature-list]] และทั้ง 2 journey ใน
-[[../../user-journey|user-journey]]:
+ครอบคลุมทั้ง 6 ฟีเจอร์ Must have ใน [[../../feature-list|feature-list]] (ฟีเจอร์ 1–4 และ 6 มีหน้าจอ
+โดยตรง — ฟีเจอร์ 5 เป็น cross-cutting quality ที่สะท้อนผ่านพฤติกรรม/หมายเหตุในหน้าจออื่นแทนหน้าจอเฉพาะ)
+และทั้ง 3 journey ใน [[../../user-journey|user-journey]]:
+
+- **Journey 0** (precondition ก่อน journey อื่นทั้งหมด, ฟีเจอร์ 6): สมัครบัญชี (`signup.html`,
+  แสดงกฎรหัสผ่านขั้นต่ำแบบ live ตาม NFR-17) → ยืนยันอีเมล/รออนุมัติบัญชี (`verify-email-notice.html`,
+  สาธิตทั้ง 2 สถานะ) → เข้าสู่ระบบ (`login.html`, ครบ 3 แขนงผลลัพธ์: ผิดพลาด/ยังไม่ยืนยันอีเมล/สำเร็จ
+  — ข้อความผิดพลาดเป็นแบบทั่วไปเสมอตาม NFR-18) → ลืมรหัสผ่าน/ตั้งรหัสผ่านใหม่ (`forgot-password.html`,
+  `reset-password.html`) เชื่อมต่อกับ `patient-list.html` ทั้งขาเข้า (login สำเร็จ → ไปหน้ารายชื่อผู้ป่วย)
+  และขาออก (ปุ่ม "ออกจากระบบ"/"จำลอง: เซสชันหมดอายุอัตโนมัติ" → กลับไป `login.html`)
 
 - **Journey 1** (routine การดูแลผู้ป่วย, ฟีเจอร์ 1–3): ตรวจสิทธิ์ → ค้นหา/เลือกผู้ป่วยด้วยเลข HN
   7 หลัก (รวม validation flow D1–D5: กรอกไม่ครบ 7 หลัก/ค้นหาไม่พบ → แจ้งเตือนแล้วกรอกใหม่ได้ ไม่บล็อก
@@ -35,14 +51,19 @@ PDPA" (NFR-03–NFR-08) — ดูรายละเอียดในหัว�
 
 | ไฟล์ | Journey step / ฟีเจอร์ (feature-list.md) | รหัส FR/NFR ที่ครอบคลุม |
 | --- | --- | --- |
-| `index.html` | หน้ารวมลิงก์ทุกหน้าจอ จัดกลุ่มตาม journey (2 journey) พร้อม badge บทบาทผู้ใช้ | — |
-| `patient-list.html` | ฟีเจอร์ 3 — ค้นหา/เลือกผู้ป่วยในความดูแล (Journey 1 ขั้นตอนที่ 3–8, รวม validation D1–D5) | FR-05, FR-06, NFR-02 |
+| `index.html` | หน้ารวมลิงก์ทุกหน้าจอ จัดกลุ่มตาม journey (3 journey) พร้อม badge บทบาทผู้ใช้ | — |
+| `login.html` | ฟีเจอร์ 6 — Journey 0 ขั้นตอนที่ 8–11 (เข้าสู่ระบบ, ครบ 3 แขนงผลลัพธ์) + ปลายทาง auto-logout | FR-07, NFR-18, NFR-12 (ปลายทาง) |
+| `signup.html` | ฟีเจอร์ 6 — Journey 0 ขั้นตอนที่ 2–4 (สมัครบัญชี + validation รหัสผ่านแบบ live) | FR-08, NFR-17, NFR-18 |
+| `verify-email-notice.html` | ฟีเจอร์ 6 — Journey 0 ขั้นตอนที่ 5–7 (ส่งอีเมลยืนยัน + รออนุมัติบัญชี) | FR-09, FR-08 (รออนุมัติ) |
+| `forgot-password.html` | ฟีเจอร์ 6 — Journey 0 ขั้นตอนที่ 12–14 (ขอลิงก์รีเซ็ตรหัสผ่าน) | FR-10, NFR-18 |
+| `reset-password.html` | ฟีเจอร์ 6 — Journey 0 ขั้นตอนที่ 15–16 (ตั้งรหัสผ่านใหม่ + validation) | FR-10, NFR-17 |
+| `patient-list.html` | ฟีเจอร์ 3 — ค้นหา/เลือกผู้ป่วยในความดูแล (Journey 1 ขั้นตอนที่ 3–8, รวม validation D1–D5) + จุดเชื่อมต่อ logout/auto-logout กลับ Journey 0 | FR-05, FR-06, NFR-02, NFR-12 (ปุ่มจำลอง) |
 | `patient-detail-risk-found.html` | ฟีเจอร์ 1 (ขั้นตอนที่ 10–11) + ฟีเจอร์ 2 (ขั้นตอนที่ 12–13 แขนง "พบ") — ผู้ป่วยตัวอย่าง นายสมชาย ใจกล้า | FR-01, FR-02, FR-03, FR-04, NFR-01 |
 | `patient-detail-no-risk.html` | ฟีเจอร์ 1 (ขั้นตอนที่ 10–11) + ฟีเจอร์ 2 (ขั้นตอนที่ 12–13 แขนง "ไม่พบ") — ผู้ป่วยตัวอย่าง นายวิชัย ถุงลมดี | FR-01, FR-02, FR-03, FR-04, NFR-01 |
 | `access-denied.html` | สถานะ guard ก่อนเข้าถึงข้อมูลผู้ป่วยรายบุคคล (Journey 1 ขั้นตอนที่ 1–2 แขนง "ไม่มีสิทธิ์") | NFR-02 |
 | `pdpa-data-subject-request.html` | ฟีเจอร์ 4 — Journey 2 เส้นทางคำขอใช้สิทธิของเจ้าของข้อมูล (ขั้นตอนที่ 2–3) | NFR-03, NFR-05, NFR-06, NFR-07 (precondition: FR-05, FR-06) |
 | `pdpa-audit-trail.html` | ฟีเจอร์ 4 — Journey 2 เส้นทางสงสัยข้อมูลรั่วไหล (ขั้นตอนที่ 4–5) | NFR-02, NFR-06, NFR-08 |
-| `style.css` | CSS custom properties + component class แปลงจาก DESIGN.md §2–§7 ทั้งหมด (รวม form control class ที่ประกอบเพิ่มสำหรับ 2 หน้าจอ PDPA) | — |
+| `style.css` | CSS custom properties + component class แปลงจาก DESIGN.md §2–§7 ทั้งหมด (รวม form control class ที่ประกอบเพิ่มสำหรับ 2 หน้าจอ PDPA และ class `.auth-shell`/`.auth-card`/`.password-rules` ที่ประกอบเพิ่มสำหรับ 5 หน้าจอ Authentication) | — |
 
 ## หมายเหตุการตีความ/simplification ของ mockup data
 
@@ -82,6 +103,27 @@ PDPA" (NFR-03–NFR-08) — ดูรายละเอียดในหัว�
   กับ validation message ทั่วไปอาจทำให้ผู้ใช้สับสนว่าเป็นคำเตือนทางคลินิก — ส่วนกรณี "ปฏิเสธสิทธิ์เข้าถึง"
   (NFR-02 ใน `pdpa-audit-trail.html`) และ "ระงับการลบเพราะ RetentionPolicy" (NFR-05 ใน
   `pdpa-data-subject-request.html`) ยังคงใช้ `callout.warn` เพราะเป็นผลลัพธ์เชิงปฏิเสธที่ควรเด่นชัดกว่า
+- (ใหม่ 20260924) DESIGN.md ไม่มี component สำเร็จรูปสำหรับหน้าจอ authentication (login/signup/ฯลฯ)
+  จึงประกอบ class ใหม่ 3 กลุ่มจาก token/pattern ที่มีอยู่แล้วทั้งหมด (ไม่มีสี/ค่าใหม่นอกจาน DESIGN.md):
+  `.auth-shell`/`.auth-card` ประกอบจากเลย์เอาต์ `.denied-shell`/`.denied-card` เดิม (การ์ดกลางจอ),
+  `.auth-icon` ประกอบจาก `.denied-icon` เดิมแต่เพิ่มตัวแปรสี info/pending/success จากสี base scale เดียวกัน
+  (sky-100/700, amber-100/800, emerald-100/800 ที่มีอยู่ใน `:root` แล้ว), และ `.password-rules` ประกอบจาก
+  ความหมาย "ผ่าน/ไม่ผ่านเงื่อนไข" แบบเดียวกับ `--value-normal-fg`/`--value-abnormal-fg` ของ lab value tile
+  (ฟีเจอร์ 1) — นำมาใช้ซ้ำกับความหมาย "รหัสผ่านตรง/ไม่ตรงเงื่อนไขนี้" แทน โดยข้อความกำกับ (เช่น "อย่างน้อย
+  8 ตัวอักษร") ยังคงอยู่คู่กับสี/ไอคอนเสมอ ไม่ใช้สีเป็นสัญญาณเดียว
+- (ใหม่ 20260924) `login.html`/`signup.html`/`reset-password.html` ใช้ JS ฝั่ง client (vanilla, ไม่มี
+  library ภายนอก, มี `escapeHtml` ใน `login.html`) จำลอง flow ทั้งหมดแบบไม่มี backend จริง — บัญชีจำลอง
+  ที่กำหนดไว้ใน `login.html` (`doctor@ncds-demo.local`/`Passw0rd1` ยืนยันแล้ว,
+  `pending@ncds-demo.local`/`Passw0rd1` ยังไม่ยืนยัน) เป็นข้อมูล mockup ตาม NFR-01 ไม่ใช่บัญชีจริงใน
+  Firebase Authentication ระบบจริงจะเรียก Firebase Authentication SDK แทนอาร์เรย์ในหน้า client
+- (ใหม่ 20260924) `verify-email-notice.html` อ่าน query string (`?state=just-signed-up` จาก
+  `signup.html`, `?state=pending-verify` จาก `login.html`) เพื่อสาธิตทั้งสองเส้นทางที่นำไปสู่หน้านี้ตาม
+  user-journey (ขั้นตอนที่ 5–7 และขั้นตอนที่ 10 แขนง "ยังไม่ยืนยัน") — ปุ่ม "จำลอง: กดลิงก์ยืนยันจากอีเมล
+  แล้ว" สลับ panel ในหน้าเดียวกันด้วย JS โดยไม่มีการยืนยันอีเมลจริง (ไม่มีอีเมลจริงถูกส่งใน prototype นี้)
+- (ใหม่ 20260924) ปุ่ม "จำลอง: เซสชันหมดอายุอัตโนมัติ (NFR-12)" และ "ออกจากระบบ" ใน `patient-list.html`
+  ลิงก์ไป `login.html#session-expired` และ `login.html#logged-out` ตามลำดับ ใช้ URL fragment (`#...`)
+  เพื่อสาธิตข้อความที่แตกต่างกันโดยไม่ต้องมี session state จริง — เป็นการจำลองปลายทางของ NFR-12
+  (auto-logout) ไม่ใช่การ implement inactivity timer จริงในหน้านี้ (out of scope ของ prototype)
 
 ## จุดที่เน้นตาม NFR/หลักการออกแบบ (DESIGN.md §1, §6, §7)
 
@@ -116,9 +158,32 @@ PDPA" (NFR-03–NFR-08) — ดูรายละเอียดในหัว�
 - ตรวจ `style.css`: class ใหม่ทั้งหมด (`.form-field`, `.text-input`, `.select-input`,
   `.textarea-input`, `.radio-group`/`.radio-option`, `.checkbox-row`, `.field-row`, `.status-pill`)
   ใช้เฉพาะ CSS custom property ที่นิยามไว้แล้วใน `:root` ของไฟล์เดิม ไม่มีค่าสี/ระยะห่างใหม่
+- **(20260924)** อ่านไฟล์ใหม่ทั้ง 5 ไฟล์ (`login.html`, `signup.html`, `verify-email-notice.html`,
+  `forgot-password.html`, `reset-password.html`) กลับมาตรวจแล้ว: แท็กเปิด/ปิดครบ, attribute ใส่
+  quote ครบคู่, `<link rel="stylesheet" href="style.css">` ถูกต้องทุกไฟล์, proto-bar-nav มีลิงก์ครบ
+  ทั้ง 12 หน้าจอ (7 เดิม + 5 ใหม่) และ `class="current"` ตรงกับไฟล์ตัวเอง, ปุ่ม/ลิงก์ทุกจุดที่ navigate
+  ระหว่างหน้า (`href="login.html"`, `href="signup.html"`, `href="patient-list.html"`,
+  `href="verify-email-notice.html?state=..."`, `href="reset-password.html"`, `href="forgot-password.html"`,
+  `href="login.html#session-expired"`, `href="login.html#logged-out"`) ตรงกับชื่อไฟล์จริงที่สร้าง
+  ไม่มีลิงก์ตาย
+- **(20260924)** อ่าน `<script>` ของ 5 ไฟล์ใหม่กลับมาตรวจแล้ว: วงเล็บ/quote ปิดครบ, ทุก
+  `getElementById`/`querySelectorAll` อ้าง id/attribute ที่มีอยู่จริงในไฟล์เดียวกัน, `login.html` มี
+  `escapeHtml` ป้องกัน HTML injection จากค่าที่ echo กลับ (อีเมลที่กรอก), `signup.html`/
+  `reset-password.html` ใช้ regex เดียวกัน (`length>=8`, `/[A-Za-zก-๙]/`, `/[0-9]/`) ตรงกับนโยบาย
+  NFR-17 ที่ระบุใน spec (8 ตัวอักษรขึ้นไป มีทั้งตัวอักษรและตัวเลขอย่างน้อยอย่างละ 1 ตัว)
+- **(20260924)** ตรวจการแก้ไขไฟล์เดิม 7 ไฟล์: proto-bar-nav ของทุกไฟล์เพิ่มลิงก์ 5 หน้าใหม่ถูกต้อง
+  (ตรวจด้วยการอ่านกลับหลังแก้ทุกไฟล์), `patient-list.html` เพิ่มปุ่ม 2 ปุ่มในส่วน header โดยไม่กระทบ
+  ฟอร์ม/สคริปต์ค้นหา HN เดิม, `index.html` เพิ่ม section "Journey ที่ 0" และแถวตารางใหม่ 5 แถวโดยไม่ลบ/
+  แก้เนื้อหา Journey ที่ 1/2 เดิม
+- ตรวจ `style.css`: class ใหม่ทั้งหมดของ auth screens (`.auth-shell`, `.auth-card`,
+  `.auth-card-header`, `.auth-form`, `.auth-footer`, `.auth-icon-row`, `.auth-icon` + ตัวแปร
+  `.info`/`.pending`/`.success`, `.password-rules` + `.rule-met`/`.rule-unmet`) ใช้เฉพาะ CSS custom
+  property ที่นิยามไว้แล้วใน `:root` ของไฟล์เดิม (รวมสี base scale sky/amber/emerald ที่มีอยู่แล้ว)
+  ไม่มีค่าสี/ระยะห่างใหม่
 - **ยังไม่ได้ตรวจด้วยเบราว์เซอร์จริง** (agent นี้ไม่มีเครื่องมือเปิดเบราว์เซอร์) — ตรวจได้เพียงอ่าน
-  โครงสร้างไฟล์กลับเท่านั้น แนะนำให้เปิดไฟล์จริงในเบราว์เซอร์ (โดยเฉพาะ interactive JS ของ 3 ไฟล์
-  ข้างต้น และ breakpoint มือถือ/แท็บเล็ต) เป็น follow-up ในเทรดหลัก
+  โครงสร้างไฟล์กลับเท่านั้น แนะนำให้เปิดไฟล์จริงในเบราว์เซอร์ (โดยเฉพาะ interactive JS ของทุกไฟล์
+  ข้างต้น, breakpoint มือถือ/แท็บเล็ต, และ URL fragment/query string ของหน้า auth) เป็น follow-up
+  ในเทรดหลัก
 
 ## เอกสารที่เกี่ยวข้อง
 
@@ -129,3 +194,4 @@ PDPA" (NFR-03–NFR-08) — ดูรายละเอียดในหัว�
 - [[../../../01-requirements/01-spec/20260917-01-patient-ncd-history-lab-complication-risk|spec ต้นทาง (NCD history)]]
 - [[../../../01-requirements/01-spec/20260921-01-pdpa-data-protection-compliance|spec ต้นทาง (PDPA)]]
 - [[../../02-technical/detailed-design/pdpa-data-protection-compliance|detailed-design (PDPA)]]
+- [[../../../01-requirements/01-spec/20260923-01-user-authentication-email-password|spec ต้นทาง (Authentication)]]

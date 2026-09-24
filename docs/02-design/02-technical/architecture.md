@@ -1,13 +1,70 @@
 # Architecture (Logical/Conceptual)
 
 เอกสารนี้อธิบายสถาปัตยกรรมระดับ hi-level (logical component + data flow) ของระบบที่รองรับฟีเจอร์ทั้ง
-ห้ารายการใน [[feature-list]] และทั้งสอง journey ใน [[user-journey]] อ้างอิงความต้องการต้นทางจาก
+หกรายการใน [[feature-list]] และทั้งสาม journey ใน [[user-journey]] อ้างอิงความต้องการต้นทางจาก
 [[backlog]] และ spec
 [[20260917-01-patient-ncd-history-lab-complication-risk]],
 [[20260921-01-pdpa-data-protection-compliance]] (ฟีเจอร์ที่ 4 — คุ้มครองข้อมูลส่วนบุคคลตาม PDPA,
-NFR-03–NFR-08) และ
+NFR-03–NFR-08),
 [[20260922-01-operational-quality-nfr]] (ฟีเจอร์ที่ 5 — รับประกันคุณภาพเชิงปฏิบัติการของระบบ,
-NFR-09–NFR-16)
+NFR-09–NFR-16) และ
+[[20260923-01-user-authentication-email-password]] (ฟีเจอร์ที่ 6 — สมัครบัญชี เข้าสู่ระบบ และจัดการ
+รหัสผ่านด้วยอีเมล, FR-07–FR-10, NFR-17–NFR-18)
+
+**หมายเหตุการอัปเดตล่าสุด (2026-09-24, รอบ sync ที่ห้า):** `[[technology-stack]]` ปรับปรุงรอบสามเพิ่ม
+decision area 13–19 (กลไกจริงของฟีเจอร์ที่ 6 — Authentication) และ **แก้ไข decision area 7**: **ไม่ใช้
+Custom Claims เก็บ `role`/`isActive` อีกต่อไป** — Firestore `users/{uid}` เป็น source of truth เดียว
+ที่ทั้ง Firestore Security Rules (Operation 0) และ Cloud Functions (Operation 1-6) อ่านตรงทุกครั้ง
+เอกสารนี้จึงถูกแก้ไขทุกจุดที่เคยอ้างถึง "custom claims เก็บบทบาท/isActive" ให้สอดคล้องกับการตัดสินใจนี้
+(ดูหัวข้อ Component Diagram, บริการยืนยันตัวตน, บริการฝั่งเซิร์ฟเวอร์ — การควบคุมการเข้าถึง, sequence
+diagram Authentication/journey หลัก และตาราง Mapping NFR-02 ด้านล่าง) พร้อมเติมกลไกจริงที่เคยบันทึกไว้
+ว่า "ยังไม่ตัดสินใจ" ให้ครบตาม decision area 13–19:
+
+- **NFR-17 (Password Policy):** regex ในโค้ด Cloud Function `signUpUser` (Operation 8) + Google Cloud
+  Identity Platform password policy เป็น backstop ฝั่งเซิร์ฟเวอร์สำหรับ Operation 9 (`confirmPasswordReset`
+  ที่ Client เรียก Authentication Service ตรง ไม่ผ่าน Cloud Function)
+- **NFR-18 (Account Enumeration Prevention):** เปิด Firebase "Email Enumeration Protection" ระดับ
+  โปรเจกต์ (ปิด Operation 7 เท่านั้น) — **timing side-channel ยังไม่ปิด** ผู้ใช้รับทราบและยืนยันให้
+  ดำเนินการต่อแล้ว (ดูหัวข้อความเสี่ยงใหม่ด้านล่าง)
+- **เทมเพลตอีเมล (FR-09/FR-10):** template เริ่มต้นของ Firebase Authentication ปรับ locale ไทย +
+  ชื่อผู้ส่งผ่าน Console เท่านั้น ไม่ custom domain
+- **Auth Blocking Functions:** ตัดสินใจ**ไม่ใช้** (`beforeUserCreated`/`beforeUserSignedIn`) — Operation
+  7 จึงยังไม่มีจุดตรวจ `emailVerified`/`isActive` ซ้ำระดับ token issuance (ความเสี่ยงที่รับทราบแล้ว)
+- **การสร้าง `users/{uid}` (FR-08):** สร้างภายใน Cloud Function `signUpUser` เดียวกันกับที่สร้างบัญชี
+  Authentication (Admin SDK) พร้อม **rollback ลบ Auth user ถ้าเขียน Firestore ล้มเหลว**
+- **การ sync role/isActive กับ custom claims:** ตัดสินใจ**ไม่ sync เลย** (เหตุผลของการยกเลิก custom
+  claims ทั้งหมดใน decision area 7/18)
+- **การตรวจสอบ `emailVerified` ซ้ำฝั่ง backend:** เพิ่มการตรวจ `decodedToken.email_verified` ใน shared
+  helper module ของ Cloud Functions (Operation 1-6) และเงื่อนไข `request.auth.token.email_verified ==
+  true` ใน Firestore Security Rules ของ `patientAssignments` (Operation 0)
+
+รายการทั้งหมดนี้จึงถูกย้ายออกจากหัวข้อ "ประเด็นรอตัดสินใจ" (ปิดแล้ว) เหลือเฉพาะความเสี่ยงที่ผู้ใช้รับทราบ
+และยืนยันให้ดำเนินการต่อ (timing side-channel ของ NFR-18, ช่องว่าง `beforeSignIn` ของ Operation 7,
+การติดตาม billing ของ Identity Platform, custom email service ในอนาคต — ดูหัวข้อท้ายเอกสาร)
+
+**หมายเหตุการอัปเดตล่าสุด (2026-09-23, รอบ sync ที่สี่):** `[[feature-list]]`/`[[user-journey]]`
+เพิ่มฟีเจอร์ที่ 6 (Authentication — FR-07–FR-10, NFR-17, NFR-18) เอกสารนี้จึงถูกปรับปรุงเพิ่ม
+component "บริการยืนยันตัวตน (Authentication Service)", กลุ่มงานใหม่ใน Backend Service ("การจัดการ
+บัญชีผู้ใช้และการยืนยันตัวตน — Account Onboarding"), Data Flow Diagram ของ journey ที่ 1
+(Authentication) และแถว NFR-17/NFR-18 ในตาราง Mapping NFR — **การตัดสินใจเชิงสถาปัตยกรรม 2 จุดที่
+spec/user-journey ไม่ได้ระบุชัดเจน ได้ถามผู้ใช้จริงแล้วผ่านสัญญาณ `NEEDS_USER_INPUT` และได้รับคำตอบ
+ยืนยันแล้ว:**
+
+1. **การสมัครบัญชี (FR-08) และการขอรีเซ็ตรหัสผ่าน (FR-10) ต้องผ่าน Backend Service เป็นตัวกลางเสมอ**
+   (ไม่ให้ Client เรียก Authentication Service ตรงสำหรับสองปฏิบัติการนี้) เพื่อให้ Backend Service
+   เป็นจุดเดียวที่บังคับ password policy (NFR-17) และคืนข้อความ generic เดียวกันเสมอไม่ว่าอีเมลจะมี
+   บัญชีอยู่แล้วหรือไม่ (NFR-18) ได้อย่างแน่นอนทั้งระดับข้อความและระดับ error/response ไม่ใช่แค่การ
+   mask ข้อความที่ชั้น UI — สอดคล้องกับเหตุผลเดียวกับที่เคยขยายขอบเขต Backend Service ให้ครอบคลุม
+   Operation 1-6 ทั้งหมดเพื่อบังคับใช้ fail-safe ของ NFR-06
+2. **ระเบียนบัญชีเริ่มต้น (`users/{uid}` ที่มี `isActive=false` และยังไม่มี role) ต้องถูกสร้างอัตโนมัติ
+   โดย Backend Service ทันทีที่มีการสร้างบัญชี Authentication ใหม่สำเร็จ** (เขียนผ่าน Admin SDK
+   เท่านั้น — Client ไม่มีสิทธิ์เขียนเอกสารนี้เลยไม่ว่ากรณีใด) เพื่อป้องกัน Client แก้ไข field
+   `isActive`/role เองได้ สอดคล้องกับรูปแบบเดียวกับที่ใช้กับ `auditLogRecords`
+
+รายละเอียดกลไกทางเทคนิคที่แน่นอน (เช่น วิธี suppress/แปลง error code ของ Firebase Auth ให้เป็น
+generic เสมอ, วิธีส่งอีเมลยืนยันตัวตน/รีเซ็ตรหัสผ่าน, Identity Platform password policy) ยังไม่มีใน
+`[[technology-stack]]` ณ ขณะนี้ (เอกสารนั้นตัดสินใจไปก่อนที่ spec Authentication จะถูกสร้าง) จึงบันทึก
+ไว้เป็น "ประเด็นรอตัดสินใจ" ท้ายเอกสารนี้ แนะนำให้รัน `/build-tech-stack` เพื่อเติมรายละเอียดต่อ
 
 **หมายเหตุการอัปเดตล่าสุด (2026-09-22, รอบ sync ที่สาม):** `[[technology-stack]]` ปรับปรุงรอบสองเพิ่ม
 decision area 9-12 ระบุกลไกจริงสำหรับ **NFR-09 (Performance), NFR-12 (Session Timeout), NFR-13
@@ -31,7 +88,9 @@ Service แบบ persistent server แยกต่างหาก — แบ่
 Security Rules** (ไม่ผ่าน Backend Service จริง) ส่วน **Operation 1-6** (เข้าถึงข้อมูลผู้ป่วยรายบุคคล/
 audit trail/คำขอสิทธิทั้งหมด) ผ่าน **Cloud Functions (2nd gen, Node.js + TypeScript)** เป็นตัวกลางเสมอ;
 Primary Data Store และ Audit Log Store ทั้งคู่เป็น **Cloud Firestore (Native mode)** คนละ collection;
-**Firebase Authentication + Custom Claims** สำหรับ authentication/authorization; **Google-managed
+**Firebase Authentication** สำหรับ authentication/authorization (ยืนยันบัญชีเท่านั้น — **ไม่เก็บ
+role/isActive ใน Custom Claims อีกต่อไป** Firestore `users/{uid}` เป็น source of truth เดียว ตาม
+decision area 7/18 ของรอบ 2026-09-24); **Google-managed
 encryption keys** + HTTPS/TLS สำหรับการเข้ารหัส — เอกสารนี้จึงถูกปรับปรุงให้ระบุชื่อเทคโนโลยีจริงกำกับ
 component/diagram ทุกจุดตามที่ `[[technology-stack]]` ตัดสินใจไว้ (ดูรายละเอียดเต็มใน
 [[technology-stack]]) โดยยังคงคำอธิบายระดับ logical component เดิมไว้ครบทุกจุด เพื่อให้เอกสารอ่าน
@@ -81,11 +140,23 @@ uptime (NFR-10), การจับคู่โรค/threshold ที่ใช�
 (NFR-15) และพิจารณา HL7/FHIR ในอนาคตเมื่อเชื่อมต่อ HOSxP จริง (NFR-16 — Won't have ในเฟสนี้ ยืนยันโดย
 ผู้ใช้แล้ว)
 
-สถาปัตยกรรมจึงถูกแบ่งเป็น 5 logical component หลัก ได้แก่ Client, Backend Service, Primary Data
-Store, ที่เก็บบันทึกการเข้าถึง (Audit Log Store) และ External Clinical Data Source (ระบบภายนอกที่
-ไม่ได้พัฒนาในโปรเจกต์นี้) — ฟีเจอร์ที่ 5 ไม่ต้องการ component ใหม่เพิ่มเติม เพราะ NFR-09–NFR-16
-ทุกรหัสอธิบายได้ด้วย component เดิมทั้ง 5 ตัวนี้ (ดูรายละเอียดในหัวข้อขอบเขตความรับผิดชอบของแต่ละ
-component และตาราง Mapping NFR ด้านล่าง)
+นอกจากนี้ ฟีเจอร์ที่ 6 "สมัครบัญชี เข้าสู่ระบบ และจัดการรหัสผ่านด้วยอีเมล (Authentication)" (FR-07–
+FR-10, NFR-17, NFR-18 ดู
+[[feature-list#6. สมัครบัญชี เข้าสู่ระบบ และจัดการรหัสผ่านด้วยอีเมล (Authentication)|feature-list]])
+เป็น **precondition ก่อนฟีเจอร์ที่ 1-5 ทั้งหมด** — ผู้ใช้งานต้องสมัครบัญชี ยืนยันอีเมล และรอผู้ดูแล
+ระบบอนุมัติ (กำหนด role และ `isActive=true` ผ่าน Firebase Console/Firestore โดยตรง ไม่มีหน้าจออนุมัติ
+ในระบบสำหรับ MVP) ก่อนจึงจะเข้าสู่ระบบและเริ่ม journey ค้นหา/ดูข้อมูลผู้ป่วยได้ (NFR-02 ยังคงควบคุม
+สิทธิ์เข้าถึงข้อมูลผู้ป่วยแยกต่างหากหลังเข้าสู่ระบบสำเร็จแล้วเหมือนเดิม) ฟีเจอร์นี้ต้องการ component
+ใหม่หนึ่งตัวคือ **บริการยืนยันตัวตน (Authentication Service)** ที่แยกออกมาจากที่เคยเป็นเพียง
+cross-cutting note ใต้ Component Diagram (ดูหัวข้อ
+[[#บริการยืนยันตัวตน (Authentication Service)]] ด้านล่าง) เนื่องจากตอนนี้มี flow ที่ผู้ใช้โต้ตอบกับ
+component นี้โดยตรงเป็นฟีเจอร์หลักแล้ว (ไม่ใช่แค่การแนบ token ไปกับคำขออื่น)
+
+สถาปัตยกรรมจึงถูกแบ่งเป็น 6 logical component หลัก ได้แก่ Client, Backend Service, Primary Data
+Store, ที่เก็บบันทึกการเข้าถึง (Audit Log Store), บริการยืนยันตัวตน (Authentication Service) และ
+External Clinical Data Source (ระบบภายนอกที่ไม่ได้พัฒนาในโปรเจกต์นี้) — ฟีเจอร์ที่ 5 ไม่ต้องการ
+component ใหม่เพิ่มเติม เพราะ NFR-09–NFR-16 ทุกรหัสอธิบายได้ด้วย component เดิม (ดูรายละเอียดในหัวข้อ
+ขอบเขตความรับผิดชอบของแต่ละ component และตาราง Mapping NFR ด้านล่าง)
 
 ## Component Diagram
 
@@ -96,6 +167,7 @@ flowchart LR
     DataStore["ที่เก็บข้อมูลหลัก\n(Primary Data Store)\nเทคโนโลยีจริง: Cloud Firestore (Native mode)"]
     AuditStore["ที่เก็บบันทึกการเข้าถึง\n(Audit Log Store)\nเทคโนโลยีจริง: Cloud Firestore collection แยก (auditLogRecords)"]
     ExternalSrc["แหล่งข้อมูลคลินิกภายนอก\n(External Clinical Data Source เช่น HOSxP)\nทราบแล้วว่าใช้ MySQL/MariaDB — ยังไม่เชื่อมต่อจริงใน MVP"]
+    AuthSvc["บริการยืนยันตัวตน\n(Authentication Service)\nเทคโนโลยีจริง: Firebase Authentication"]
 
     Client -->|"Operation 0 เท่านั้น (FR-05, FR-06) — อ่านตรงผ่าน Firebase SDK + Firestore Security Rules กรองตาม PatientAssignment, ไม่ผ่าน Backend Service จริง (HTTPS/TLS — NFR-04)"| DataStore
     Client -->|"Operation 1-6 — คำขอดูประวัติ/ผล lab/ผลวิเคราะห์ความเสี่ยง/คำขอสิทธิ/audit trail ผ่าน HTTPS Callable Functions (ช่องทางเข้ารหัส TLS — NFR-04)"| Backend
@@ -105,6 +177,12 @@ flowchart LR
     AuditStore -->|"ให้ข้อมูล audit trail เพื่อสืบสวน/สนับสนุนการแจ้งเหตุละเมิด (NFR-08)"| Backend
     Backend -.->|"ดึงข้อมูลประวัติวินิจฉัย/ผลตรวจ lab จริง (นอกขอบเขตการเชื่อมต่อจริงของ MVP นี้ — ดู NFR-01)"| ExternalSrc
     ExternalSrc -.->|"ระหว่างพัฒนา/ทดสอบ ใช้ข้อมูล mockup แทนข้อมูลจริง (NFR-01)"| DataStore
+    Client -->|"FR-07 เข้าสู่ระบบด้วยอีเมล/รหัสผ่าน — เรียกตรง ไม่ผ่าน Backend Service (Firebase Email Enumeration Protection เปิดใช้ระดับโปรเจกต์ — NFR-18, decision area 14)"| AuthSvc
+    Client -->|"FR-08 สมัครบัญชี — ต้องผ่าน Backend Service เป็นตัวกลางเสมอ เพื่อบังคับ password policy ด้วย regex ในโค้ด (NFR-17, decision area 13) และข้อความ generic ป้องกัน account enumeration (NFR-18)"| Backend
+    Client -->|"FR-10 ขอรีเซ็ตรหัสผ่าน (Operation 9a — ขอลิงก์) ผ่าน Backend Service เช่นกัน; หลังคลิกลิงก์ในอีเมล Client เรียก AuthSvc ตรง (Operation 9b — confirmPasswordReset ไม่ผ่าน Cloud Function) บังคับ password policy ด้วย Identity Platform password policy เป็น backstop (decision area 13)"| Backend
+    Backend -->|"Op.8 signUpUser: createUser (Admin SDK) แล้วเขียน users/{uid} ในฟังก์ชันเดียวกัน, rollback deleteUser ถ้าเขียน Firestore ล้มเหลว (decision area 17); Op.9 requestPasswordReset: สั่งส่งอีเมลลิงก์รีเซ็ต"| AuthSvc
+    Backend -->|"สร้างเอกสารบัญชีเริ่มต้น users/{uid} (isActive=false, ไม่มี role) — เขียนผ่าน Admin SDK เท่านั้น ภายใน signUpUser เดียวกับที่สร้างบัญชี Authentication (decision area 17)"| DataStore
+    AuthSvc -->|"ส่งอีเมลยืนยันตัวตน (FR-09) / อีเมลลิงก์รีเซ็ตรหัสผ่าน (FR-10) — template เริ่มต้นของ Firebase ปรับ locale ไทย+ชื่อผู้ส่งผ่าน Console (decision area 15) ไปยังผู้ใช้งานโดยตรง"| Client
 ```
 
 หมายเหตุ: ทุกเส้นทางการสื่อสารระหว่าง component ข้างต้นที่มีข้อมูลส่วนบุคคล/ข้อมูลสุขภาพของผู้ป่วยไหล
@@ -126,13 +204,26 @@ audit log และมี logic ตรวจสอบไม่ซับซ้อ
 [[technology-stack#ความเสี่ยงที่ต้องพิจารณาเพิ่มเติม (สำคัญ — ผู้ใช้รับทราบและยืนยันให้ดำเนินการต่อแล้ว)|
 หัวข้อความเสี่ยงของ technology-stack]])
 
-**หมายเหตุเทคโนโลยีจริง (Authentication):** การยืนยันตัวตนผู้ใช้ (sign-in) ใช้ **Firebase
-Authentication** โดยตรงระหว่าง Client กับบริการของ Firebase (ไม่ผ่าน Backend Service หรือ Primary
-Data Store) แล้วแนบ token พร้อม custom claims (บทบาทผู้ใช้) ไปกับทุกคำขอไปยัง Backend Service และ
-Primary Data Store ด้านบนเสมอ — ไม่ได้วาดเป็น node แยกในไดอะแกรมนี้เพราะเป็นบริการที่ทุก component
-เรียกใช้ร่วมกัน (คล้าย cross-cutting concern) ไม่ใช่หน่วยประมวลผล/จัดเก็บข้อมูลของระบบเอง (ดู
-[[technology-stack#7. Authentication/Authorization — Firebase Authentication + Custom Claims|
-decision area 7 ใน technology-stack]])
+**หมายเหตุเทคโนโลยีจริง (Authentication):** ตั้งแต่รอบ sync ที่สี่ (2026-09-23) **บริการยืนยันตัวตน
+(Authentication Service)** ถูกวาดเป็น node แยกในไดอะแกรมข้างต้นแล้ว (ก่อนหน้านี้ไม่ได้วาดแยกเพราะเป็น
+เพียง cross-cutting concern ที่ทุก component เรียกใช้ร่วมกัน) เนื่องจากฟีเจอร์ที่ 6 (Authentication)
+ทำให้ Client โต้ตอบกับ component นี้เป็น flow หลักโดยตรง: **การเข้าสู่ระบบ (FR-07)** ยังคงเป็น Client
+เรียก Authentication Service ตรง (ไม่ผ่าน Backend Service) แล้วแนบ Firebase ID token ไปกับทุกคำขอไปยัง
+Backend Service และ Primary Data Store เหมือนเดิม — **ตั้งแต่รอบ 2026-09-24 token นี้ไม่มี custom claims
+เก็บบทบาท/isActive อีกต่อไป** (decision area 7/18) ทั้ง Backend Service และ Firestore Security Rules
+อ่าน `role`/`isActive` จากเอกสาร Firestore `users/{uid}` โดยตรงทุกครั้งแทน แต่ยังคงใช้ค่า
+`email_verified` จากตัว token เอง (ไม่ต้องเพิ่ม Firestore read — decision area 19) แต่ **การสมัครบัญชี
+(FR-08) และการขอลิงก์รีเซ็ตรหัสผ่าน (FR-10) ต้องผ่าน Backend Service เป็นตัวกลางเสมอ** (ผู้ใช้ยืนยันแล้ว
+ผ่าน `NEEDS_USER_INPUT` — ดูหมายเหตุการอัปเดตต้นเอกสาร) เพื่อให้ Backend Service เป็นจุดเดียวที่บังคับ
+password policy ด้วย regex ในโค้ด (NFR-17, decision area 13) และคืนข้อความ generic ป้องกัน account
+enumeration (NFR-18, decision area 14) ได้แน่นอน ก่อนเรียก Authentication Service ผ่าน Firebase Admin
+SDK ต่อ — ส่วนการ**ตั้งรหัสผ่านใหม่จริง**หลังคลิกลิงก์ (`confirmPasswordReset`) เรียก Authentication
+Service ตรงโดยไม่ผ่าน Cloud Function จึงต้องพึ่ง **Google Cloud Identity Platform password policy**
+เป็น backstop ฝั่งเซิร์ฟเวอร์แทน (ดู
+[[technology-stack#13. กลไก Validate Password Policy ฝั่งเซิร์ฟเวอร์ (NFR-17, ฟีเจอร์ที่ 6) — Regex ใน Cloud Function + Identity Platform เป็น Backstop|
+decision area 13]],
+[[technology-stack#14. กลไกป้องกัน Account Enumeration (NFR-18, ฟีเจอร์ที่ 6) — Firebase Email Enumeration Protection|
+decision area 14]] ใน technology-stack)
 
 ## ขอบเขตความรับผิดชอบของแต่ละ Component
 
@@ -204,6 +295,32 @@ decision area 7 ใน technology-stack]])
   เรียกผ่าน HTTPS Callable Functions ไปยัง Cloud Functions เสมอ (ดูหัวข้อ "บริการฝั่งเซิร์ฟเวอร์"
   ด้านล่าง)
 
+**ความรับผิดชอบเพิ่มเติมสำหรับฟีเจอร์ที่ 6 (Authentication — FR-07–FR-10, NFR-17, NFR-18):**
+
+- แสดงหน้าจอเข้าสู่ระบบ (อีเมล/รหัสผ่าน) และเรียก Authentication Service **ตรง** เพื่อยืนยันตัวตน
+  (FR-07) — ไม่ผ่าน Backend Service สำหรับขั้นตอนนี้
+- แสดงหน้าจอสมัครบัญชีใหม่ (อีเมล/รหัสผ่าน) พร้อมตรวจสอบรูปแบบรหัสผ่านเบื้องต้นที่ชั้น UI เพื่อ UX
+  ที่รวดเร็ว (ความยาวขั้นต่ำ 8 ตัวอักษร มีทั้งตัวอักษรและตัวเลข) แต่**ส่งคำขอสมัครไปยัง Backend
+  Service เสมอ** ไม่เรียก Authentication Service ตรง เพื่อให้ Backend Service เป็นผู้บังคับ password
+  policy จริงด้วย regex ในโค้ด Cloud Function `signUpUser` และสร้างบัญชี (FR-08, NFR-17 —
+  [[technology-stack#13. กลไก Validate Password Policy ฝั่งเซิร์ฟเวอร์ (NFR-17, ฟีเจอร์ที่ 6) — Regex ใน Cloud Function + Identity Platform เป็น Backstop|
+  decision area 13]])
+- แสดงข้อความแจ้งเตือนแบบ generic เดียวกันเสมอที่ได้รับจาก Backend Service เมื่อสมัครบัญชี/ขอรีเซ็ต
+  รหัสผ่าน โดยไม่แสดงข้อความที่บ่งชี้ว่าอีเมลมีบัญชีอยู่แล้วหรือไม่ไม่ว่ากรณีใด (FR-08, FR-10,
+  NFR-18)
+- แสดงหน้าจอ "ลืมรหัสผ่าน" ให้กรอกอีเมล แล้วส่งคำขอ**ขอลิงก์**รีเซ็ตไปยัง Backend Service เสมอ (ไม่เรียก
+  Authentication Service ตรงสำหรับขั้นตอนนี้) (FR-10) — เมื่อผู้ใช้คลิกลิงก์ในอีเมลแล้วมาตั้งรหัสผ่านใหม่
+  จริง Client เรียก Authentication Service (`confirmPasswordReset`) **ตรง** โดยไม่ผ่าน Backend Service
+  (บังคับ password policy ด้วย Google Cloud Identity Platform password policy เป็น backstop แทน regex
+  ในโค้ด — decision area 13)
+- ตรวจสอบสถานะยืนยันอีเมล (`emailVerified`) หลังเข้าสู่ระบบสำเร็จ และบล็อกการเข้าถึงฟีเจอร์อื่นของ
+  ระบบพร้อมแจ้งให้ยืนยันอีเมลก่อน หากยังไม่ยืนยัน (FR-09) — เป็นการตรวจสอบชั้น UX เท่านั้น การบังคับใช้
+  จริงเกิดที่ Cloud Functions/Security Rules ซ้ำอีกชั้น (ดูหัวข้อ Backend Service — การควบคุมการเข้าถึง)
+- แสดงข้อความแจ้งเตือนเมื่อเข้าสู่ระบบผิดพลาด (อีเมล/รหัสผ่านไม่ถูกต้อง) แบบข้อความรวมเดียวกันเสมอ
+  โดยไม่เปิดเผยว่าอีเมลที่กรอกมีบัญชีอยู่ในระบบหรือไม่ (FR-07, NFR-18) — **กลไกจริง:** Firebase "Email
+  Enumeration Protection" เปิดใช้ระดับโปรเจกต์ (decision area 14) ปิดเฉพาะความแตกต่างของ error
+  code/ข้อความเท่านั้น **ยังไม่ปิด timing side-channel** (ดูหัวข้อความเสี่ยงท้ายเอกสาร)
+
 ### บริการฝั่งเซิร์ฟเวอร์ (Backend Service) — เทคโนโลยีจริง: [[technology-stack#2. ภาษา/Framework ฝั่ง Backend Logic — Node.js + TypeScript บน Cloud Functions|Cloud Functions (2nd gen), Node.js + TypeScript]]
 
 **หมายเหตุเทคโนโลยีจริงสำคัญ:** ตาม
@@ -230,18 +347,25 @@ Firebase project เดียวกัน ตาม [[technology-stack#6. Hostin
   limitation — จำกัดขอบเขตข้อมูล/การประมวลผลที่ส่งต่อให้ทุกกลุ่มงานด้านล่างเฉพาะเท่าที่จำเป็นต่อ
   วัตถุประสงค์การดูแลรักษาผู้ป่วยตามขอบเขตของ FR-01–FR-04 เท่านั้น ไม่อนุญาตให้นำข้อมูลไปใช้นอก
   วัตถุประสงค์โดยไม่มีฐานทางกฎหมายรองรับ (NFR-03)
-  - **กลไกจริง:** [[technology-stack#7. Authentication/Authorization — Firebase Authentication + Custom Claims|Firebase Authentication + Custom Claims]]
-    เก็บบทบาทผู้ใช้ไว้ใน token — ตรวจสอบระดับบทบาทใน **Firestore Security Rules** (Operation 0)
-    และในโค้ด **Cloud Functions** (Operation 1-6); การตรวจสอบระดับรายผู้ป่วย (PatientAssignment)
-    แยกจาก custom claims เสมอ (query/exists check กับ Firestore เพราะเปลี่ยนแปลงได้บ่อยกว่า) ทั้งสอง
-    ที่ — **ข้อควรระวัง:** [[technology-stack]] บันทึกไว้ว่าการเขียน logic ตรวจสอบสิทธิ์ 2 ระดับใน
-    Firestore Security Rules (สำหรับ Operation 0) มีความเสี่ยงตั้งค่าผิดพลาดสูงกว่าการตรวจสอบในโค้ด
-    Cloud Functions ต้องมี automated test ด้วย Firebase Emulator Suite ก่อนใช้งานจริง (ดู
+  - **กลไกจริง (แก้ไข 2026-09-24 — decision area 7/18/19 ของ technology-stack):** **Firebase
+    Authentication** ทำหน้าที่ยืนยันตัวตนบัญชีเท่านั้น **ไม่เก็บ role/isActive ใน custom claims อีก
+    ต่อไป** — ตรวจสอบระดับบทบาท/isActive โดยอ่าน **Firestore `users/{uid}` โดยตรงทุกครั้ง** ทั้งใน
+    **Firestore Security Rules** (Operation 0) และในโค้ด **Cloud Functions** ผ่าน shared helper module
+    (Operation 1-6); การตรวจสอบระดับรายผู้ป่วย (PatientAssignment) ยังคงแยกต่างหากเช่นเดิม
+    (query/exists check กับ Firestore) นอกจากนี้ทั้งสองจุดยังเพิ่มการตรวจสอบ **`email_verified`** จาก
+    Firebase ID token ที่ verify อยู่แล้ว (`decodedToken.email_verified` ใน Cloud Functions,
+    `request.auth.token.email_verified == true` ใน Security Rules ของ `patientAssignments`) เพื่อปิด
+    ช่องว่างที่ Client ถูกดัดแปลง/บั๊กข้ามการตรวจสอบ `emailVerified` เอง (ดู
+    [[technology-stack#19. การตรวจสอบ `emailVerified` ซ้ำฝั่ง Backend (FR-09, ฟีเจอร์ที่ 6) — ตรวจทั้ง Cloud Functions และ Security Rules|
+    decision area 19]]) — **ข้อควรระวัง:** [[technology-stack]] บันทึกไว้ว่าการเขียน logic ตรวจสอบสิทธิ์
+    หลายเงื่อนไข (role/isActive/email_verified + patient-level) ใน Firestore Security Rules (สำหรับ
+    Operation 0) มีความเสี่ยงตั้งค่าผิดพลาดสูงกว่าการตรวจสอบในโค้ด Cloud Functions ต้องมี automated
+    test ด้วย Firebase Emulator Suite ก่อนใช้งานจริง (ดู
     [[technology-stack#ความเสี่ยงที่ต้องพิจารณาเพิ่มเติม (สำคัญ — ผู้ใช้รับทราบและยืนยันให้ดำเนินการต่อแล้ว)|
     หัวข้อความเสี่ยงใน technology-stack]]) — ข้อกำหนดนี้เป็นเนื้อหาเดียวกับ **NFR-14 (Security Rules
     Verification)** ของฟีเจอร์ที่ 5 โดยตรง: ทุกกรณีสิทธิ์ (ผู้ใช้ไม่มี assignment, ผู้ใช้มี assignment
-    บางส่วน, บัญชีถูกระงับ, ไม่มี custom claims ที่ถูกต้อง) ต้องมี automated test ผ่าน Firebase Emulator
-    Suite ครอบคลุมก่อน deploy ใช้งานกับข้อมูลผู้ป่วยจริงเสมอ
+    บางส่วน, บัญชีถูกระงับ (`isActive=false`), บัญชียังไม่ยืนยันอีเมล (`emailVerified=false`)) ต้องมี
+    automated test ผ่าน Firebase Emulator Suite ครอบคลุมก่อน deploy ใช้งานกับข้อมูลผู้ป่วยจริงเสมอ
   - **ความสัมพันธ์กับ NFR-12 (Session Timeout) — รวมความเสี่ยงด้านความปลอดภัยที่ต้องรับทราบ:** การ
     ตรวจสอบสิทธิ์ระดับบทบาท/รายผู้ป่วยข้างต้นเกิดขึ้นทุกครั้งที่มีคำขอใหม่จาก Client อยู่แล้ว โดยตรวจสอบ
     เพียงว่า token ที่แนบมา**ถูกต้องและยังไม่หมดอายุ**เท่านั้น กลไกตรวจจับ "ไม่มีการใช้งานเกิน 30 นาที"
@@ -303,6 +427,36 @@ Firebase project เดียวกัน ตาม [[technology-stack#6. Hostin
     เสมอ (ดู [[technology-stack#5. Audit Log Store — Cloud Firestore collection แยก เขียนผ่าน Cloud Functions เท่านั้น|
     decision area 5 ใน technology-stack]]); Operation 5 (สืบค้น audit trail) เป็น callable function
     เช่นกัน
+- **การจัดการบัญชีผู้ใช้และการยืนยันตัวตน (Account Onboarding & Authentication Gateway) — ใหม่จาก
+  ฟีเจอร์ที่ 6:** รับคำขอสมัครบัญชี (FR-08) และคำขอรีเซ็ตรหัสผ่าน (FR-10) จาก Client เสมอ (ไม่ให้
+  Client เรียก Authentication Service ตรงสำหรับสองปฏิบัติการนี้ — ยืนยันโดยผู้ใช้แล้ว) ตรวจสอบว่า
+  รหัสผ่านที่กรอกเป็นไปตามนโยบายขั้นต่ำหรือไม่ก่อนเสมอ (ความยาว ≥ 8 ตัวอักษร มีทั้งตัวอักษรและตัวเลข
+  — NFR-17) แล้วจึงสร้างบัญชีใหม่ที่ Authentication Service (ผ่าน Admin SDK) พร้อมสร้างเอกสารบัญชี
+  เริ่มต้น `users/{uid}` (`isActive=false`, ยังไม่มี role) ใน Primary Data Store โดยอัตโนมัติทันที
+  ในขั้นตอนเดียวกัน (Client ไม่มีสิทธิ์เขียนเอกสารนี้เอง — ยืนยันโดยผู้ใช้แล้ว) จากนั้นสั่งส่งอีเมล
+  ยืนยันตัวตนผ่าน Authentication Service (FR-09) — ไม่ว่าอีเมลที่กรอกจะซ้ำกับบัญชีเดิมหรือไม่ก็ตาม
+  ต้องคืนข้อความ generic เดียวกันเสมอให้ Client (FR-08, NFR-18); สำหรับคำขอรีเซ็ตรหัสผ่าน ตรวจสอบว่า
+  มีบัญชีอยู่จริงหรือไม่ภายในกลุ่มงานนี้เท่านั้น แล้วสั่ง Authentication Service ส่งอีเมลลิงก์รีเซ็ต
+  เฉพาะเมื่อพบบัญชีจริง แต่คืนข้อความ generic เดียวกันให้ Client เสมอไม่ว่าผลลัพธ์จะเป็นอย่างไร
+  (FR-10, NFR-18); เมื่อผู้ใช้ตั้งรหัสผ่านใหม่ ตรวจสอบ password policy ซ้ำเช่นเดียวกับตอนสมัคร
+  (NFR-17)
+  - **กลไกจริง (เติมครบตาม decision area 13-17 ของ technology-stack รอบ 2026-09-24):** Cloud Function
+    `signUpUser` (callable) เรียก Firebase Admin SDK `createUser` แล้วเขียนเอกสาร `users/{uid}` ต่อใน
+    **ฟังก์ชันเดียวกัน** (sequential) — ถ้าเขียน Firestore ล้มเหลว **rollback ด้วย Admin SDK
+    `deleteUser`** ทันทีเพื่อไม่ให้เกิดบัญชี Authentication ที่ไม่มีเอกสาร Firestore คู่กัน (orphaned
+    account, ดู
+    [[technology-stack#17. กลไกสร้าง `users/{uid}` อัตโนมัติ (FR-08, ฟีเจอร์ที่ 6) — ภายใน Cloud Function `signUpUser` เดียวกัน|
+    decision area 17]]); ตรวจสอบ **password policy ด้วย regex ในโค้ดเดียวกัน** (NFR-17, ความยาว ≥ 8
+    ตัวอักษร มีตัวอักษร+ตัวเลข) ก่อนสร้างบัญชี ส่วน Operation 9 (ตั้งรหัสผ่านใหม่จริงหลังคลิกลิงก์) ไม่มี
+    Cloud Function คั่นกลาง จึงพึ่ง **Google Cloud Identity Platform password policy** เป็น backstop
+    แทน (decision area 13); คืนข้อความ generic เดียวกันเสมอทั้งกรณีอีเมลซ้ำ/ไม่ซ้ำ โดยอาศัย **Firebase
+    Email Enumeration Protection** ปิด error code ที่แยกแยะได้ของ Operation 7 (decision area 14) —
+    Operation 8/9 คืนข้อความ generic จากโค้ด Cloud Function เองอยู่แล้วไม่ต้องพึ่ง setting นี้; ส่งอีเมล
+    ยืนยันตัวตน/รีเซ็ตรหัสผ่านด้วย **template เริ่มต้นของ Firebase** ปรับ locale ไทย + ชื่อผู้ส่งผ่าน
+    Console เท่านั้น (decision area 15); **ไม่ใช้ Auth Blocking Functions** (`beforeUserCreated`/
+    `beforeUserSignedIn`) เพื่อความง่าย (decision area 16) — ผลคือ Operation 7 (เข้าสู่ระบบ) ยังไม่มี
+    จุดตรวจ `emailVerified`/`isActive` ซ้ำระดับ token issuance (ความเสี่ยงที่รับทราบแล้ว ดูหัวข้อ
+    ความเสี่ยงท้ายเอกสาร)
 - **การจัดการคำขอสิทธิของเจ้าของข้อมูลและนโยบายการเก็บรักษา (Data Subject Rights & Retention
   Management):** รับคำขอจากเจ้าหน้าที่ที่มีสิทธิ์ (แทนผู้ป่วยที่ยื่นคำขอผ่านกระบวนการของหน่วยงาน) เพื่อ
   ค้นหา/สกัด/แก้ไข/ลบข้อมูลส่วนบุคคลของผู้ป่วยรายบุคคลตามสิทธิที่ PDPA กำหนด (เข้าถึง/สำเนา/แก้ไข/ลบ/
@@ -317,6 +471,44 @@ Firebase project เดียวกัน ตาม [[technology-stack#6. Hostin
     technology-stack]]) — ค่าระยะเวลา schedule ที่แน่นอนยังรอค่า RetentionPolicy จริง
     (ดู "ประเด็นรอตัดสินใจ")
 
+### บริการยืนยันตัวตน (Authentication Service) — เทคโนโลยีจริง: [[technology-stack#7. Authentication/Authorization — Firebase Authentication (ไม่ใช้ Custom Claims เก็บบทบาท — แก้ไขในรอบสาม 2026-09-24)|Firebase Authentication]] (บางส่วนอัปเกรดเป็น Google Cloud Identity Platform สำหรับ password policy — decision area 13)
+
+component ใหม่จากฟีเจอร์ที่ 6 — ก่อนหน้านี้เป็นเพียง cross-cutting note (ทุก component เรียกใช้
+ร่วมกันเพื่อยืนยัน token) แต่ตอนนี้มี flow ที่ผู้ใช้โต้ตอบโดยตรงเป็นฟีเจอร์หลักแล้ว:
+
+- จัดเก็บบัญชีผู้ใช้ (อีเมล/รหัสผ่านที่ hash แล้ว) และสถานะการยืนยันอีเมล (`emailVerified`)
+- ตรวจสอบอีเมล/รหัสผ่านที่ผู้ใช้กรอกตอนเข้าสู่ระบบ (FR-07) โดยรับคำขอจาก Client **ตรง** (ไม่ผ่าน
+  Backend Service) แล้วออก Firebase ID token กลับให้ Client — **ตั้งแต่รอบ 2026-09-24 token นี้ไม่มี
+  custom claims เก็บบทบาท/isActive อีกต่อไป** (decision area 7/18); เปิดใช้ **Email Enumeration
+  Protection** ระดับโปรเจกต์เพื่อคืน error code เดียวกันเสมอไม่ว่าอีเมลจะมีบัญชีอยู่จริงหรือไม่
+  (NFR-18, decision area 14)
+- สร้างบัญชีใหม่ (FR-08) **เมื่อได้รับคำสั่งจาก Backend Service เท่านั้น** (ผ่าน Admin SDK ภายใน Cloud
+  Function `signUpUser` เดียวกับที่เขียน `users/{uid}` — decision area 17) ไม่รับคำขอสร้างบัญชีจาก
+  Client โดยตรง; รับคำขอ**ขอ**ลิงก์รีเซ็ตรหัสผ่าน (FR-10) จาก Backend Service เช่นกัน แต่รับการ
+  **ตั้งรหัสผ่านใหม่จริง** (`confirmPasswordReset`) จาก Client **โดยตรง** หลังคลิกลิงก์ (ไม่ผ่าน Cloud
+  Function) — บังคับ password policy ที่จุดนี้ด้วย **Google Cloud Identity Platform password policy**
+  ที่เปิดใช้เป็น backstop (decision area 13) ไม่ใช่ regex ในโค้ด
+- ส่งอีเมลยืนยันตัวตน (FR-09) และอีเมลลิงก์รีเซ็ตรหัสผ่าน (FR-10) ด้วย **template เริ่มต้นของ Firebase
+  Authentication** (ปรับ locale ไทย + ชื่อผู้ส่งผ่าน Console เท่านั้น ไม่ custom domain — decision
+  area 15) ไปยังผู้ใช้งานโดยตรง (ไม่ผ่าน Client/Backend Service เป็นตัวกลางในการส่งอีเมลเอง)
+- **ไม่ใช้ Auth Blocking Functions** (`beforeUserCreated`/`beforeUserSignedIn` — decision area 16) —
+  จึงไม่มีจุดตรวจ `emailVerified`/`isActive` ที่ระดับการออก token เอง (ตรวจซ้ำที่ Backend
+  Service/Security Rules แทน ดูหัวข้อ Backend Service — การควบคุมการเข้าถึง)
+- ให้บริการตรวจสอบ Firebase ID token แก่ Backend Service และ Firestore Security Rules สำหรับทุก
+  คำขอที่เข้าถึงข้อมูลผู้ป่วย (NFR-02) — **ไม่มีข้อมูลบทบาท/isActive ในตัว token ให้ตรวจสอบอีกต่อไป**
+  ทั้ง Backend Service และ Security Rules ต้อง query Firestore `users/{uid}` เพิ่มเองเสมอ (มีเฉพาะค่า
+  `email_verified` ที่ยังอ่านจาก token ได้ตรง — decision area 19)
+- **หมายเหตุ:** field `isActive`/role เก็บอยู่ใน Primary Data Store collection `users` เท่านั้น (ตาม
+  [[db-spec]]) — **ไม่มีการเก็บซ้ำหรือ sync ไปยัง custom claims ของ Authentication Service เลย**
+  (ตัดสินใจแล้วใน decision area 18 เพื่อไม่ให้ข้อมูลไม่ตรงกันระหว่าง Firestore กับ token ที่ refresh
+  ไม่บ่อย)
+- **กลไกจริง:** [[technology-stack#7. Authentication/Authorization — Firebase Authentication (ไม่ใช้ Custom Claims เก็บบทบาท — แก้ไขในรอบสาม 2026-09-24)|
+  Firebase Authentication]] + [[technology-stack#13. กลไก Validate Password Policy ฝั่งเซิร์ฟเวอร์ (NFR-17, ฟีเจอร์ที่ 6) — Regex ใน Cloud Function + Identity Platform เป็น Backstop|
+  Google Cloud Identity Platform password policy (backstop)]] + [[technology-stack#14. กลไกป้องกัน Account Enumeration (NFR-18, ฟีเจอร์ที่ 6) — Firebase Email Enumeration Protection|
+  Email Enumeration Protection]] — decision area 13–19 ของ technology-stack ปิดช่องว่างกลไกจริงของ
+  FR-07–FR-10/NFR-17/NFR-18 ที่เคยบันทึกไว้ว่า "ยังไม่ตัดสินใจ" ครบแล้ว (ดูหัวข้อความเสี่ยงที่ยังคง
+  เหลืออยู่ท้ายเอกสาร)
+
 ### ที่เก็บข้อมูลหลัก (Primary Data Store) — เทคโนโลยีจริง: [[technology-stack#4. Database Engine ของ Primary Data Store — Cloud Firestore (Native mode)|Cloud Firestore (Native mode)]]
 
 - เก็บข้อมูลประวัติการวินิจฉัยโรค NCD และผลตรวจ lab ย้อนหลังของผู้ป่วยแต่ละราย ในรูปแบบที่ Backend
@@ -326,6 +518,16 @@ Firebase project เดียวกัน ตาม [[technology-stack#6. Hostin
 - เก็บข้อมูล assignment ระดับรายผู้ป่วยระหว่างแพทย์/พยาบาลผู้ดูแลกับผู้ป่วยแต่ละราย เพื่อใช้ค้นหา/
   แสดงรายชื่อผู้ป่วยในความดูแล (FR-05) และใช้เป็นเงื่อนไขตรวจสอบสิทธิ์ระดับรายผู้ป่วยโดย Access
   Control (NFR-02)
+- **ใหม่จากฟีเจอร์ที่ 6:** เก็บเอกสารบัญชีผู้ใช้ (`users/{uid}`) ที่มี field `isActive` และ role —
+  สร้างโดย Backend Service (Cloud Function `signUpUser`) อัตโนมัติทันทีที่สมัคร
+  บัญชีสำเร็จด้วย `isActive=false` และยังไม่มี role กำหนด (พร้อม rollback ลบบัญชี Authentication ถ้า
+  เขียนเอกสารนี้ล้มเหลว — decision area 17) แล้วรอผู้ดูแลระบบแก้ไขด้วยตนเองผ่าน Firebase
+  Console/Firestore ให้เป็น `isActive=true` พร้อมกำหนด role — Client ไม่มีสิทธิ์เขียนเอกสารนี้เลย
+  ไม่ว่ากรณีใด (Security Rules ปฏิเสธ client write ทั้งหมด สอดคล้องกับรูปแบบเดียวกับ
+  `auditLogRecords`) (FR-08, NFR-02) — **ตั้งแต่รอบ 2026-09-24 เอกสารนี้เป็น source of truth เดียว**
+  ของ `role`/`isActive` (ไม่มีการเก็บซ้ำ/sync ไปยัง Custom Claims — decision area 7/18) ทั้ง Firestore
+  Security Rules (Operation 0) และ Cloud Functions (Operation 1-6) ต้อง query/อ่านเอกสารนี้โดยตรงทุก
+  ครั้งที่ตรวจสิทธิ์
 - ระหว่างพัฒนา/ทดสอบ ทำหน้าที่เป็นแหล่งข้อมูล mockup แทนข้อมูลจริงจาก HOSxP (NFR-01)
 - ต้องเข้ารหัสข้อมูลส่วนบุคคล/ข้อมูลสุขภาพของผู้ป่วยที่จัดเก็บไว้ขณะพัก (at rest) เสมอ (NFR-04)
 - ต้องรองรับนโยบายจำกัดระยะเวลาเก็บรักษาและการลบ/ทำลายข้อมูลเมื่อพ้นระยะเวลาที่กำหนด หรือเมื่อ
@@ -479,6 +681,77 @@ component ด้านบน และตาราง Mapping NFR ด้าน�
   Aggregation) และ External Clinical Data Source ในอนาคตเมื่อเชื่อมต่อ HOSxP จริง — ปัจจุบันไม่มีผล
   ต่อการออกแบบ component ใดๆ ในเฟสนี้ (ดู "ประเด็นรอตัดสินใจ")
 
+## Data Flow Diagram — Journey Authentication (สมัครบัญชี เข้าสู่ระบบ และจัดการรหัสผ่านด้วยอีเมล)
+
+journey นี้ใน
+[[user-journey#Journey ผู้ใช้งานสมัครบัญชี เข้าสู่ระบบ และจัดการรหัสผ่านด้วยอีเมล (Authentication)]]
+ครอบคลุมฟีเจอร์ที่ 6 (FR-07–FR-10, NFR-17, NFR-18) และเป็น **precondition ก่อน journey หลักด้านล่าง
+ทั้งหมด** แสดงเฉพาะ flow "สมัครบัญชี" และ "เข้าสู่ระบบ" (flow "ขอลิงก์รีเซ็ตรหัสผ่าน" มีรูปแบบ Backend
+Service เป็นตัวกลางเหมือนกับ flow สมัครบัญชีในส่วน "ส่งคำขอ → ตรวจสอบ → คืนข้อความ generic" ทุกประการ
+ต่างกันเพียงไม่สร้างเอกสารบัญชีใหม่ จึงไม่วาดซ้ำ — แต่ขั้นตอน**ตั้งรหัสผ่านใหม่จริง**หลังคลิกลิงก์ในอีเมล
+(`confirmPasswordReset`) เป็น Client เรียก Authentication Service **ตรง** ไม่ผ่าน Backend Service
+บังคับ password policy ด้วย Google Cloud Identity Platform password policy เป็น backstop แทน regex
+ในโค้ด — decision area 13 ของ [[technology-stack]]):
+
+```mermaid
+sequenceDiagram
+    actor User as ผู้ใช้งาน (แพทย์/พยาบาลผู้สมัครบัญชี/เข้าสู่ระบบ)
+    participant Client as ฝั่งไคลเอนต์ (Client)<br/>React+TS บน Firebase Hosting
+    participant Backend as บริการฝั่งเซิร์ฟเวอร์ (Backend Service)<br/>Cloud Functions — Account Onboarding
+    participant Auth as บริการยืนยันตัวตน (Authentication Service)<br/>Firebase Authentication
+    participant Store as ที่เก็บข้อมูลหลัก (Primary Data Store)<br/>Cloud Firestore — users/{uid}
+
+    User->>Client: กรอกอีเมล/รหัสผ่านเพื่อสมัครบัญชีใหม่ (FR-08)
+    Client->>Client: ตรวจสอบรูปแบบรหัสผ่านเบื้องต้น (UX เร็ว — ไม่ใช่การบังคับใช้จริง)
+    Client->>Backend: ส่งคำขอสมัครบัญชี (จริง: HTTPS Callable Function — ไม่เรียก Auth ตรง ตามที่ยืนยันแล้ว)
+    Backend->>Backend: ตรวจสอบ password policy ≥ 8 ตัวอักษร มีตัวอักษร+ตัวเลข (NFR-17)
+    alt รหัสผ่านไม่ผ่านนโยบาย
+        Backend-->>Client: แจ้งเตือนให้แก้ไขรหัสผ่าน (NFR-17)
+        Client-->>User: แสดงข้อความแจ้งเตือน
+    else ผ่านนโยบาย
+        Backend->>Auth: สร้างบัญชี Authentication ใหม่ (จริง: Admin SDK createUser ภายใน Cloud Function signUpUser) (FR-08)
+        Auth-->>Backend: ยืนยันผลลัพธ์ (สำเร็จ หรืออีเมลซ้ำ)
+        Backend->>Store: สร้างเอกสาร users/{uid} ทันที (isActive=false, ไม่มี role) — ในฟังก์ชันเดียวกัน (จริง: Admin SDK เท่านั้น, decision area 17)
+        alt เขียน Firestore ล้มเหลว
+            Store-->>Backend: แจ้งข้อผิดพลาด
+            Backend->>Auth: rollback — ลบบัญชี Authentication ที่เพิ่งสร้าง (Admin SDK deleteUser, decision area 17)
+            Backend-->>Client: แจ้งข้อผิดพลาด (ไม่ใช่ generic message เพราะไม่ใช่กรณี account enumeration)
+        else บันทึกสำเร็จ
+        Store-->>Backend: ยืนยันบันทึกสำเร็จ
+        Backend->>Auth: สั่งส่งอีเมลยืนยันตัวตนไปยังอีเมลที่สมัคร (template เริ่มต้นของ Firebase, locale ไทย — decision area 15) (FR-09)
+        Auth-->>User: ส่งอีเมลยืนยันตัวตน (ลิงก์)
+        Backend-->>Client: คืนข้อความ generic เดียวกันเสมอ ไม่ว่าอีเมลจะซ้ำหรือไม่ก็ตาม (FR-08, NFR-18)
+        Client-->>User: แสดงข้อความ "หากสมัครสำเร็จจะได้รับอีเมลยืนยันตัวตน"
+        User->>Auth: เปิดลิงก์ยืนยันอีเมลจากอีเมลที่ได้รับ (FR-09)
+        Auth-->>User: ยืนยันอีเมลสำเร็จ (emailVerified=true)
+        Note over Backend,Store: บัญชีรอผู้ดูแลระบบกำหนด role และ isActive=true ผ่าน Firebase Console/Firestore โดยตรง (นอกขอบเขตระบบ ไม่มีหน้าจออนุมัติใน MVP) — ไม่มีการ sync ไปยัง custom claims (decision area 18)
+        end
+    end
+    User->>Client: กรอกอีเมล/รหัสผ่านเพื่อเข้าสู่ระบบ (FR-07)
+    Client->>Auth: ส่งคำขอเข้าสู่ระบบ (จริง: เรียก Authentication Service ตรง ไม่ผ่าน Backend Service)
+    alt อีเมล/รหัสผ่านไม่ถูกต้อง
+        Auth-->>Client: ปฏิเสธ (error code เดียวกันเสมอ — Firebase Email Enumeration Protection เปิดใช้, decision area 14)
+        Client-->>User: แจ้ง "อีเมลหรือรหัสผ่านไม่ถูกต้อง" — ข้อความรวมเดียวกันเสมอไม่เปิดเผยว่าอีเมลมีอยู่หรือไม่ (NFR-18, ยังมี timing side-channel ที่ยังไม่ปิด — ดูหัวข้อความเสี่ยงท้ายเอกสาร)
+    else ถูกต้อง
+        Auth-->>Client: ออก Firebase ID token (ไม่มี custom claims บทบาท/isActive อีกต่อไป — decision area 7/18)
+        Client->>Client: ตรวจสอบ emailVerified จาก token/Auth (FR-09) — การบังคับใช้จริงเกิดซ้ำที่ Cloud Functions/Security Rules เมื่อเรียก journey หลัก (decision area 19)
+        alt ยังไม่ยืนยันอีเมล
+            Client-->>User: บล็อกการเข้าถึงฟีเจอร์อื่น แจ้งให้ยืนยันอีเมลก่อน (FR-09)
+        else ยืนยันแล้ว
+            Client-->>User: เข้าสู่ระบบสำเร็จ — เชื่อมต่อ journey หลัก (ตรวจสอบ role/isActive/patient assignment ต่อตาม NFR-02)
+        end
+    end
+```
+
+**เหตุผลการตัดสินใจ:** flow "สมัครบัญชี"/"ขอรีเซ็ตรหัสผ่าน" ผ่าน Backend Service เสมอ และการสร้าง
+เอกสาร `users/{uid}` อัตโนมัติโดย Backend Service เป็นผลจากคำถาม `NEEDS_USER_INPUT` ที่ถามผู้ใช้จริง
+ระหว่างการ sync รอบนี้ (spec/user-journey ไม่ได้ระบุรายละเอียดสถาปัตยกรรมระดับนี้ไว้ชัดเจน) ผู้ใช้
+ยืนยันให้เลือกแนวทางที่ปิดช่องโหว่ NFR-17/NFR-18 ได้แน่นอนที่สุด แม้จะเพิ่มขอบเขตความรับผิดชอบของ
+Backend Service เกินกว่าที่ `[[technology-stack]]` decision area 3 เคยกำหนดไว้เดิม (ดูหมายเหตุการ
+อัปเดตล่าสุดต้นเอกสาร) ส่วน "เข้าสู่ระบบ (FR-07)" ยังคงเป็น Client เรียก Authentication Service ตรง
+เช่นเดิม เพราะไม่มีข้อกำหนด NFR-17/NFR-18 ใดบังคับให้ต้องผ่าน Backend Service สำหรับปฏิบัติการนี้
+(ไม่มีการสร้าง/แก้ไขข้อมูลที่ต้อง fail-safe เหมือนสมัคร/รีเซ็ต)
+
 ## Data Flow Diagram — Journey หลัก
 
 journey แรกใน [[user-journey#Journey แพทย์/พยาบาลผู้ดูแลผู้ป่วย NCD ค้นหาผู้ป่วย ดูประวัติ และรับการ
@@ -507,8 +780,8 @@ sequenceDiagram
 
     Note over Client,AuditStore: หมายเหตุเทคโนโลยีจริง (ตาม technology-stack): ขั้นตอน Operation 0 (ค้นหา/แสดงรายชื่อผู้ป่วย FR-05, FR-06) ด้านล่างจนถึงก่อน "เลือกผู้ป่วยรายบุคคล" ในทางเทคนิคคือ Client อ่าน Store ตรงผ่าน Firebase SDK + Security Rules เท่านั้น ไม่ผ่าน Backend Service/Cloud Functions จริง — ลูกศร Client-Backend-Store ในช่วงนี้แสดงเพื่อคงความสอดคล้องเชิง logical เท่านั้น ดูรายละเอียด/ความเสี่ยงใน technology-stack
     User->>Client: เปิดหน้าจอค้นหา/รายชื่อผู้ป่วยในความดูแล
-    Client->>Backend: ส่งคำขอพร้อมข้อมูลยืนยันตัวตน/บทบาทผู้ใช้ (จริง: Firebase Auth token + custom claims แนบไปกับ query ตรงถึง Store)
-    Backend->>Backend: ตรวจสอบสิทธิ์การเข้าถึงระดับบทบาท (NFR-02) (จริง: ประเมินโดย Firestore Security Rules อัตโนมัติทุกครั้งที่ query)
+    Client->>Backend: ส่งคำขอพร้อม Firebase ID token (จริง: แนบไปกับ query ตรงถึง Store — token ไม่มี custom claims บทบาทอีกต่อไป, decision area 7/18)
+    Backend->>Backend: ตรวจสอบสิทธิ์การเข้าถึงระดับบทบาท (NFR-02) (จริง: ประเมินโดย Firestore Security Rules อัตโนมัติทุกครั้งที่ query — อ่าน role/isActive จาก users/{uid} ใน Firestore โดยตรง และตรวจ email_verified จาก token, decision area 19)
     alt ไม่มีสิทธิ์
         Backend-->>Client: ปฏิเสธการเข้าถึงข้อมูล (NFR-02)
         Client-->>User: แจ้งว่าไม่มีสิทธิ์เข้าถึงระบบ
@@ -628,7 +901,7 @@ sequenceDiagram
 | รหัส NFR | คำอธิบายสั้น | Component ที่รับผิดชอบหลัก | แนวทางเชิงหลักการ | กลไกจริงที่ใช้ (จาก [[technology-stack]]) |
 | --- | --- | --- | --- | --- |
 | NFR-01 | แหล่งข้อมูล/Integration (HOSxP จริง หรือ mockup ระหว่างพัฒนา) | Backend Service (Data Aggregation) + Primary Data Store + External Clinical Data Source | ออกแบบชั้นการรวบรวมข้อมูลใน Backend Service ให้แยกออกจาก logic วิเคราะห์ความเสี่ยงอย่างชัดเจน โดยยึด canonical data model กลางที่ไม่ผูกกับรูปแบบข้อมูลต้นทางใดโดยเฉพาะ เพื่อให้สลับจากข้อมูล mockup ไปเป็นข้อมูลจริงจาก External Clinical Data Source ในอนาคตได้โดยกระทบ component อื่นน้อยที่สุด | Cloud Functions (Operation 1, 2) อ่านข้อมูล mockup จาก Cloud Firestore ปัจจุบัน; ทราบแล้วว่า HOSxP ใช้ MySQL/MariaDB (relational) ต่างตระกูลกับ Firestore — การเชื่อมต่อจริง/ETL ยังไม่ตัดสินใจ (ดูประเด็นรอตัดสินใจ) |
-| NFR-02 | Security / Access Control (เฉพาะแพทย์/พยาบาลผู้ดูแลผู้ป่วย NCD และเฉพาะผู้ป่วยที่อยู่ในความดูแลของผู้ใช้งานคนนั้นตาม assignment รายผู้ป่วย — เชื่อมโยงกับ FR-05, FR-06) | Backend Service (Access Control + Data Aggregation) + Primary Data Store + Client | Backend Service ต้องตรวจสอบตัวตนและสิทธิ์ของผู้ใช้ทั้งระดับบทบาท (role) และระดับรายผู้ป่วย (patient-level assignment) ก่อนประมวลผลทุกคำขอที่เกี่ยวข้องกับข้อมูลผู้ป่วย ทั้งตอนค้นหาด้วย HN 7 หลัก (FR-06)/แสดงรายชื่อผู้ป่วยในความดูแล (FR-05) และตอนเข้าถึงข้อมูลรายบุคคล (ประวัติ/ผลตรวจ lab/ผลวิเคราะห์ความเสี่ยง) และปฏิเสธคำขอที่ไม่มีสิทธิ์ทันทีก่อนเข้าถึง Primary Data Store — ทั้งนี้การตรวจสอบรูปแบบ HN 7 หลัก/กรณีค้นหาไม่พบ (FR-06) เป็นคนละชั้นกับการตรวจสอบสิทธิ์: เกิดขึ้นในกลุ่มงาน Data Aggregation ก่อน แล้วจึงกรองผลลัพธ์ตาม assignment โดย Access Control อีกชั้นหนึ่งเสมอ; Primary Data Store ต้องเก็บข้อมูล assignment ผู้ป่วยต่อผู้ดูแลไว้เป็นเงื่อนไขกรองผลลัพธ์เสมอ ไม่ใช่กรองตามแผนก/หน่วยงานที่สังกัด; Client ต้องไม่แสดงหรือ cache ข้อมูลผู้ป่วยที่ละเอียดอ่อน (รวมถึงรายชื่อผู้ป่วยในความดูแล) ไว้เกินความจำเป็นบนฝั่งผู้ใช้ | Firebase Authentication + Custom Claims (บทบาทผู้ใช้); ตรวจสอบระดับบทบาทใน Firestore Security Rules (Operation 0) และในโค้ด Cloud Functions (Operation 1-6); ตรวจสอบระดับรายผู้ป่วย (PatientAssignment) แยกจาก custom claims เสมอ (query/exists check กับ Firestore) — ข้อควรระวัง: Security Rules สำหรับ Operation 0 มีความเสี่ยงตั้งค่าผิดพลาดสูงกว่า ต้องมี automated test ด้วย Firebase Emulator Suite ก่อนใช้งานจริง (ดูหัวข้อความเสี่ยงใน technology-stack) |
+| NFR-02 | Security / Access Control (เฉพาะแพทย์/พยาบาลผู้ดูแลผู้ป่วย NCD และเฉพาะผู้ป่วยที่อยู่ในความดูแลของผู้ใช้งานคนนั้นตาม assignment รายผู้ป่วย — เชื่อมโยงกับ FR-05, FR-06) | Backend Service (Access Control + Data Aggregation) + Primary Data Store + Client | Backend Service ต้องตรวจสอบตัวตนและสิทธิ์ของผู้ใช้ทั้งระดับบทบาท (role) และระดับรายผู้ป่วย (patient-level assignment) ก่อนประมวลผลทุกคำขอที่เกี่ยวข้องกับข้อมูลผู้ป่วย ทั้งตอนค้นหาด้วย HN 7 หลัก (FR-06)/แสดงรายชื่อผู้ป่วยในความดูแล (FR-05) และตอนเข้าถึงข้อมูลรายบุคคล (ประวัติ/ผลตรวจ lab/ผลวิเคราะห์ความเสี่ยง) และปฏิเสธคำขอที่ไม่มีสิทธิ์ทันทีก่อนเข้าถึง Primary Data Store — ทั้งนี้การตรวจสอบรูปแบบ HN 7 หลัก/กรณีค้นหาไม่พบ (FR-06) เป็นคนละชั้นกับการตรวจสอบสิทธิ์: เกิดขึ้นในกลุ่มงาน Data Aggregation ก่อน แล้วจึงกรองผลลัพธ์ตาม assignment โดย Access Control อีกชั้นหนึ่งเสมอ; Primary Data Store ต้องเก็บข้อมูล assignment ผู้ป่วยต่อผู้ดูแลไว้เป็นเงื่อนไขกรองผลลัพธ์เสมอ ไม่ใช่กรองตามแผนก/หน่วยงานที่สังกัด; Client ต้องไม่แสดงหรือ cache ข้อมูลผู้ป่วยที่ละเอียดอ่อน (รวมถึงรายชื่อผู้ป่วยในความดูแล) ไว้เกินความจำเป็นบนฝั่งผู้ใช้ | Firebase Authentication (ยืนยันตัวตนเท่านั้น — **ไม่เก็บ role/isActive ใน Custom Claims อีกต่อไป**, decision area 7/18); ตรวจสอบระดับบทบาท/isActive โดยอ่าน **Firestore `users/{uid}` โดยตรง** ทั้งใน Firestore Security Rules (Operation 0) และในโค้ด Cloud Functions (Operation 1-6); ตรวจสอบระดับรายผู้ป่วย (PatientAssignment) แยกต่างหากเช่นเดิม (query/exists check กับ Firestore); เพิ่มการตรวจ `email_verified` จาก Firebase ID token ในทั้งสองจุด (decision area 19) — ข้อควรระวัง: Security Rules สำหรับ Operation 0 มีความเสี่ยงตั้งค่าผิดพลาดสูงกว่า ต้องมี automated test ด้วย Firebase Emulator Suite ก่อนใช้งานจริง (ดูหัวข้อความเสี่ยงใน technology-stack) |
 | NFR-03 | PDPA / Lawful Basis & Purpose Limitation — จำกัดการประมวลผลข้อมูลเฉพาะเท่าที่จำเป็นตามวัตถุประสงค์การดูแลรักษา | Backend Service (Access Control) | ตรวจสอบและจำกัดขอบเขตข้อมูล/การประมวลผลที่ส่งต่อให้กลุ่มงานอื่นทุกครั้งให้อยู่ในขอบเขตวัตถุประสงค์การดูแลรักษาผู้ป่วยตาม FR-01–FR-04 เท่านั้น ไม่ส่งต่อ/เปิดเผยข้อมูลนอกวัตถุประสงค์โดยไม่มีฐานทางกฎหมายรองรับ การกำหนดฐานทางกฎหมายที่ชัดเจนต้องรอฝ่ายกฎหมาย/DPO ยืนยัน (ดูประเด็นรอตัดสินใจ) | บังคับใช้ในโค้ด Cloud Functions (Operation 1-6) ก่อนส่งต่อข้อมูล — ไม่มีกลไกทางเทคนิคเพิ่มเติมสำหรับฐานทางกฎหมาย เป็นการตีความเชิงกฎหมายที่รอ DPO ยืนยัน (ไม่เกี่ยวกับ technology stack) |
 | NFR-04 | PDPA / Encryption at rest & in transit | Client + Backend Service + Primary Data Store + Audit Log Store (cross-cutting ทุก component) | ทุกช่องทางสื่อสารระหว่าง component ต้องเข้ารหัสขณะส่งผ่านเครือข่าย และทุกที่จัดเก็บข้อมูล (Primary Data Store, Audit Log Store) ต้องเข้ารหัสข้อมูลขณะพัก | Google-managed encryption keys (ค่าเริ่มต้นของ Firestore — encryption at rest) + HTTPS/TLS บังคับโดย Firebase Hosting และ Cloud Functions (encryption in transit) โดยอัตโนมัติ ไม่ต้องตั้งค่าเพิ่มเติม — ยังไม่มี CMEK หรือ field-level encryption เพิ่มเติมในขั้นนี้ (ควรทบทวนก่อนใช้ข้อมูลผู้ป่วยจริง ดูประเด็นรอตัดสินใจ) |
 | NFR-05 | PDPA / Retention & Deletion — จำกัดระยะเวลาเก็บรักษาและรองรับการลบข้อมูล | Backend Service (Data Subject Rights & Retention Management) + Primary Data Store | Backend Service ต้องมีกลไกบังคับใช้นโยบายระยะเวลาเก็บรักษาและสั่งลบ/ทำลายข้อมูลเมื่อพ้นระยะเวลาหรือไม่มีความจำเป็นแล้ว โดย Primary Data Store ต้องรองรับการลบ/ทำลายข้อมูลตามคำสั่งนี้ได้ ระยะเวลาที่แน่นอนยังไม่ถูกกำหนด รอหน่วยงาน/ฝ่ายกฎหมายยืนยัน (ดูประเด็นรอตัดสินใจ) | Cloud Functions scheduled function (ผ่าน Cloud Scheduler) — Operation 6 บังคับใช้กับ Cloud Firestore ทั้ง Primary Data Store และ Audit Log Store (คนละ RetentionPolicy) — ค่าระยะเวลาจริงยังรอยืนยัน (ดูประเด็นรอตัดสินใจ) |
@@ -641,17 +914,50 @@ sequenceDiagram
 | NFR-11 | Clinical Safety Validation — การจับคู่โรค/threshold ใน Risk Rule Engine ต้องผ่านการยืนยันจากแพทย์ผู้เชี่ยวชาญก่อน deploy ทุกครั้ง (ข้อกำหนดถาวร) | Backend Service (Risk Rule Engine) — กระบวนการนอกระบบ | เป็น manual approval gate ในกระบวนการ deployment ไม่ใช่ behavior ที่ระบบต้อง implement เป็นโค้ด/UI ขณะรันจริง ทีมดูแล deployment pipeline ต้องเพิ่มขั้นตอนนี้ก่อน deploy Cloud Function ของ Risk Rule Engine ทุกครั้ง | ไม่มีกลไกทางเทคนิคที่เกี่ยวข้อง (เป็นกระบวนการของมนุษย์ล้วน) — เชื่อมโยงกับค่า threshold ที่ยังไม่ถูกกำหนดจริงใน spec (ดูประเด็นรอตัดสินใจอื่น) |
 | NFR-12 | Session Timeout — auto-logout เมื่อไม่มีการใช้งานเกิน 30 นาที | Client + Authentication/Backend Service (Access Control) | Client ต้องติดตาม inactivity ต่อเนื่องตลอด session แล้ว auto-logout เมื่อเกิน 30 นาที; Backend Service ปฏิเสธคำขอที่ไม่มี token ที่ถูกต้องแนบมาหลัง logout เสมออยู่แล้วจากกลไก Access Control เดิม **ความเสี่ยงด้านความปลอดภัยสำคัญ:** กลไกที่เลือกเป็น best-effort ฝั่ง Client เท่านั้น ไม่มี server-side token revocation — token ที่ถูกขโมย/ดักจับไว้ก่อนหน้า หรือ client ที่ถูกดัดแปลง/บั๊กจนไม่เรียก signOut() ยังใช้เรียก Backend Service/Primary Data Store ได้ต่อจนกว่าจะหมดอายุตามธรรมชาติ (สูงสุด ~1 ชม. นานกว่า 30 นาทีที่กำหนดไว้เกือบ 2 เท่า) กระทบ NFR-02 โดยตรง ผู้ใช้รับทราบและยืนยันให้ดำเนินการต่อแล้ว | Client custom inactivity timer (`setTimeout` + event listener บน mouse/keyboard/touch event) เรียก Firebase Authentication `signOut()` เมื่อ idle เกิน 30 นาที — ไม่มี library ภายนอก (เช่น `react-idle-timer`) และ**ไม่มี server-side token revocation** (ดู decision area 10 และหัวข้อความเสี่ยงใน [[technology-stack]]) มาตรการป้องกันก่อนใช้ข้อมูลจริง: ลด TTL ของ token + เพิ่ม server-side revocation (ดูประเด็นรอตัดสินใจ) |
 | NFR-13 | Accessibility — ห้ามใช้สีเป็นสัญญาณเดียว ต้องมีข้อความกำกับคู่กับสีเสมอ | Client | ทุกจุดที่สื่อความหมายด้วยสี (โดยเฉพาะ flag ความเสี่ยงจาก FR-04) ต้องออกแบบให้มีข้อความ/ไอคอน/label กำกับคู่กับสีเสมอ ไม่พึ่งพาสีเพียงอย่างเดียวในการสื่อสาร | WCAG 2.1 Level AA (contrast ratio ≥ 4.5:1/≥ 3:1) กำกับ design token สีใน [[DESIGN]] + Heroicons (open-source) เป็นชุดไอคอนกำกับคู่กับสี + Lighthouse Accessibility Audit ก่อน deploy ทุกครั้ง (ดู decision area 11 ใน [[technology-stack]]) — รายละเอียด mapping สี/ไอคอนเฉพาะจุดเป็นหน้าที่ของ [[DESIGN]]/detailed-design ต่อไป |
-| NFR-14 | Security Rules Verification — automated test ผ่าน Firebase Emulator Suite ครอบคลุมทุกกรณีสิทธิ์ | Backend Service (Access Control) + Primary Data Store + Audit Log Store | Firestore Security Rules ที่ควบคุมสิทธิ์การเข้าถึง collection ทั้งหมด (`patients`, `patientAssignments`, `auditLogRecords` ฯลฯ) ต้องมี automated test ครอบคลุมอย่างน้อย: ผู้ใช้ไม่มี assignment ใดเลย, ผู้ใช้มี assignment บางส่วน, บัญชีถูกระงับ, ไม่มี custom claims ที่ถูกต้อง ก่อน deploy ใช้งานจริงเสมอ | Firebase Emulator Suite (`@firebase/rules-unit-testing`) ตามที่ `[[technology-stack]]` ระบุไว้แล้วในหัวข้อความเสี่ยง — ควรรันเป็นส่วนหนึ่งของ CI/CD pipeline ก่อน deploy ทุกครั้ง |
+| NFR-14 | Security Rules Verification — automated test ผ่าน Firebase Emulator Suite ครอบคลุมทุกกรณีสิทธิ์ | Backend Service (Access Control) + Primary Data Store + Audit Log Store | Firestore Security Rules ที่ควบคุมสิทธิ์การเข้าถึง collection ทั้งหมด (`patients`, `patientAssignments`, `auditLogRecords` ฯลฯ) ต้องมี automated test ครอบคลุมอย่างน้อย: ผู้ใช้ไม่มี assignment ใดเลย, ผู้ใช้มี assignment บางส่วน, บัญชีถูกระงับ (`isActive=false`), บัญชียังไม่ยืนยันอีเมล (`emailVerified=false`) ก่อน deploy ใช้งานจริงเสมอ | Firebase Emulator Suite (`@firebase/rules-unit-testing`) ตามที่ `[[technology-stack]]` ระบุไว้แล้วในหัวข้อความเสี่ยง — ควรรันเป็นส่วนหนึ่งของ CI/CD pipeline ก่อน deploy ทุกครั้ง |
 | NFR-15 | Browser/Device Compatibility — รองรับ Chrome/Edge/Firefox เวอร์ชันล่าสุดบน desktop/tablet | Client | ออกแบบ/ทดสอบ UI ให้ทำงานถูกต้องบน browser หลักที่ระบุ บนอุปกรณ์ desktop/tablet | browserslist `">0.5%, last 2 versions, Firefox ESR, not dead"` ในไฟล์ build config ของ React SPA + ทดสอบ manual บน Chrome/Edge/Firefox desktop จริง และจำลอง tablet ผ่าน Chrome DevTools device emulation (ดู decision area 12 ใน [[technology-stack]]) |
 | NFR-16 | Interoperability (future, Won't have เฟสนี้) — พิจารณา HL7/FHIR เมื่อเชื่อมต่อ HOSxP จริง | Backend Service (Data Aggregation) + External Clinical Data Source (ในอนาคต) | ไม่มีผลต่อการออกแบบ component ในเฟสนี้ — บันทึกไว้เป็นทิศทางสำหรับตอนเชื่อมต่อ HOSxP จริงเท่านั้น | ยังไม่ตัดสินใจ (out of scope MVP ตามที่ `[[technology-stack]]` และ spec ต้นทางระบุไว้แล้ว) |
+| NFR-17 | Security / Password Policy — รหัสผ่านขั้นต่ำ 8 ตัวอักษร มีทั้งตัวอักษรและตัวเลข | Client (ตรวจสอบเบื้องต้นเพื่อ UX) + Backend Service (Account Onboarding & Authentication Gateway — บังคับใช้จริง) | Client ตรวจสอบรูปแบบรหัสผ่านเบื้องต้นเพื่อ feedback ที่รวดเร็ว แต่ Backend Service ต้องตรวจสอบซ้ำและเป็นผู้บังคับใช้จริงก่อนสร้างบัญชี/อัปเดตรหัสผ่านทุกครั้ง (ทั้งตอนสมัครบัญชีและตอนตั้งรหัสผ่านใหม่จากการรีเซ็ต) เพื่อไม่ให้พึ่งพา Client-side validation เพียงอย่างเดียว | regex ในโค้ด Cloud Function `signUpUser` (Operation 8, ความยาว ≥ 8 ตัวอักษร มีตัวอักษร+ตัวเลข) เป็นกลไกหลัก + **Google Cloud Identity Platform password policy** เป็น backstop ฝั่งเซิร์ฟเวอร์สำหรับ Operation 9 (`confirmPasswordReset` ที่ไม่ผ่าน Cloud Function) — ดู decision area 13 ใน [[technology-stack]] (การเปิด Identity Platform เป็นการอัปเกรดโปรเจกต์ Firebase ที่ทีม IT ต้องรับทราบ — ดูประเด็นรอตัดสินใจเรื่อง billing/quota) |
+| NFR-18 | Security / Account Enumeration Prevention — ไม่เปิดเผยว่าอีเมลมีบัญชีในระบบหรือไม่ (สมัครบัญชี, เข้าสู่ระบบผิดพลาด, ขอรีเซ็ตรหัสผ่าน) | Backend Service (Account Onboarding & Authentication Gateway) + Authentication Service + Client | Backend Service ต้องคืนข้อความ generic เดียวกันเสมอสำหรับผลลัพธ์การสมัครบัญชี/ขอรีเซ็ตรหัสผ่าน ไม่ว่าอีเมลที่กรอกจะมีบัญชีอยู่แล้วหรือไม่ก็ตาม (ทั้งเนื้อหาข้อความและพฤติกรรมที่สังเกตได้จากภายนอก เช่น เวลาตอบสนอง); Client ต้องแสดงข้อความรวมเดียวกันเสมอเมื่อเข้าสู่ระบบผิดพลาด ไม่แยกแยะว่าอีเมลผิดหรือรหัสผ่านผิด | **Firebase "Email Enumeration Protection"** เปิดใช้ระดับโปรเจกต์ (ปิดเฉพาะ Operation 7 ที่ Client เรียก Firebase Auth ตรง — Operation 8/9 คืนข้อความ generic จากโค้ด Cloud Function เองอยู่แล้ว) ดู decision area 14 ใน [[technology-stack]] — **ไม่เพิ่ม fixed minimum delay** ปิด**เฉพาะ**ความแตกต่างของ error code/ข้อความ **timing side-channel ยังไม่ปิด** (ผู้ใช้รับทราบและยืนยันให้ดำเนินการต่อแล้ว ดูหัวข้อความเสี่ยงท้ายเอกสาร) |
 
 หมายเหตุ: ตารางนี้ map เฉพาะรหัส **NFR** ไปยัง component ตามชื่อหัวข้อ (ยึดรูปแบบเดิมของเอกสาร) FR-06
 (ค้นหาด้วย HN 7 หลัก พร้อม validation) จึงไม่มีแถวแยกของตัวเอง แต่ถูกครอบคลุมแล้วใน (1) แถว NFR-02
 ด้านบน ในส่วนที่เกี่ยวกับการตรวจสอบสิทธิ์ระดับรายผู้ป่วยของผลการค้นหา และ (2) หัวข้อ "ขอบเขตความ
 รับผิดชอบของแต่ละ Component" ของ Client และ Backend Service (Data Aggregation) ด้านบน ซึ่งอธิบาย
-รายละเอียด validation logic ของ FR-06 ไว้ครบแล้ว
+รายละเอียด validation logic ของ FR-06 ไว้ครบแล้ว เช่นเดียวกัน FR-07–FR-10 (Authentication) ไม่มีแถว
+แยกของตัวเอง แต่ถูกครอบคลุมแล้วในแถว NFR-17/NFR-18 ด้านบน และในหัวข้อ "บริการยืนยันตัวตน
+(Authentication Service)" กับ "ขอบเขตความรับผิดชอบของแต่ละ Component" ของ Client/Backend Service
+(Account Onboarding & Authentication Gateway) ด้านบน
 
 ## ประเด็นรอตัดสินใจ
+
+**ฟีเจอร์ที่ 6 (Authentication) — ปิดแล้วในรอบ 2026-09-24:** `[[technology-stack]]` เพิ่ม decision
+area 13–19 ปิดกลไกทางเทคนิคที่เคยค้างไว้ในหัวข้อนี้ครบทุกข้อแล้ว (regex + Identity Platform backstop
+สำหรับ NFR-17, Email Enumeration Protection สำหรับ NFR-18, template อีเมลเริ่มต้นของ Firebase, ไม่ใช้
+Auth Blocking Functions, สร้าง `users/{uid}` ภายใน `signUpUser` พร้อม rollback, ไม่ sync
+role/isActive ไป custom claims, ตรวจ `email_verified` ซ้ำทั้ง Cloud Functions และ Security Rules) —
+รายละเอียดดูที่หัวข้อ "ขอบเขตความรับผิดชอบของแต่ละ Component" และตาราง Mapping NFR-17/NFR-18 ด้านบน
+รายการที่**ยังคงเหลือเป็นความเสี่ยง/ประเด็นรอทบทวนจริง** จากการตัดสินใจเหล่านี้มีดังนี้ (ผู้ใช้รับทราบ
+และยืนยันให้ดำเนินการต่อด้วยกลไกพื้นฐานในรอบ MVP นี้แล้วทุกข้อ):
+
+- **Timing side-channel ของ NFR-18 ยังไม่ปิด** — Email Enumeration Protection (decision area 14) ปิด
+  เฉพาะความแตกต่างของ error code/ข้อความเท่านั้น ไม่ได้ทำให้เวลาตอบสนองของ Operation 7/8/9 เท่ากันเสมอ
+  ระหว่างกรณีอีเมลมี/ไม่มีบัญชีอยู่จริง — ควรเพิ่ม fixed minimum delay (เช่น ~300ms) ก่อนเข้าสู่
+  production จริงกับข้อมูลผู้ป่วยจริง (ดู
+  [[technology-stack#ความเสี่ยงเพิ่มเติม: NFR-18 Account Enumeration — Timing Side-channel ยังไม่ปิด (ผู้ใช้รับทราบและยืนยันให้ดำเนินการต่อแล้ว)|
+  หัวข้อความเสี่ยงใน technology-stack]])
+- **Operation 7 (เข้าสู่ระบบ) ยังไม่มีจุดตรวจ `emailVerified`/`isActive` ซ้ำระดับ token issuance** —
+  decision area 16 เลือกไม่ใช้ Auth Blocking Functions (`beforeSignIn`) เพื่อความง่าย token จึงยัง
+  ถูกออกให้แม้ `emailVerified=false`/`isActive=false` (การบังคับใช้จริงเกิดที่ Cloud
+  Functions/Security Rules ตอนเข้าถึงข้อมูลผู้ป่วยแทน ตาม decision area 19) — ควรพิจารณาเปิด
+  `beforeSignIn` เมื่อเข้าสู่ production จริง โดยเฉพาะเมื่อโปรเจกต์อัปเกรดเป็น Identity Platform
+  เต็มรูปแบบอยู่แล้วบางส่วน (ดู decision area 13)
+- **การติดตาม billing/quota ของ Google Cloud Identity Platform** — decision area 13 อัปเกรดโปรเจกต์
+  เป็น Identity Platform บางส่วน (เฉพาะ password policy backstop ของ Operation 9) ทีม IT ที่รับช่วง
+  ดูแลต่อควรติดตาม pricing tier แยกจาก Firebase Authentication เปล่าเมื่อจำนวนผู้ใช้เพิ่มขึ้น
+- **Custom email service แทน template เริ่มต้นของ Firebase** — decision area 15 เลือก template
+  เริ่มต้นสำหรับ MVP (locale ไทย, ไม่ custom domain) ควรทบทวนเป็นบริการอีเมลภายนอก/custom domain เมื่อ
+  เข้าสู่ production จริงเพื่อความน่าเชื่อถือของอีเมลที่ส่งถึงแพทย์/พยาบาล
 
 `[[technology-stack]]` มีเนื้อหาแล้วและตัดสินใจ decision area ส่วนใหญ่ที่เคยค้างไว้ในหัวข้อนี้ไปแล้ว
 (เทคโนโลยี/framework ของ Client และ Backend Service, database engine ของ Primary Data Store,
@@ -692,10 +998,13 @@ server-side token revocation), NFR-13 (Accessibility — WCAG 2.1 AA + Heroicons
   SDK `revokeRefreshTokens()`) — ดู
   [[technology-stack#ความเสี่ยงเพิ่มเติม: NFR-12 Session Timeout เป็น Best-effort ฝั่ง Client เท่านั้น (ไม่มี Server-side Token Revocation)|
   หัวข้อความเสี่ยงเต็มใน technology-stack]]
-- **SSO / การเชื่อมต่อระบบยืนยันตัวตนของโรงพยาบาล** — กลไกพื้นฐาน (Firebase Authentication + Custom
-  Claims) ถูกตัดสินใจแล้วสำหรับ MVP แต่การอัปเกรดเป็น Google Cloud Identity Platform (รองรับ
-  SAML/OIDC) เพื่อเชื่อมกับระบบยืนยันตัวตนของโรงพยาบาลจริง ยังไม่ตัดสินใจ (ดู
-  [[technology-stack#7. Authentication/Authorization — Firebase Authentication + Custom Claims|
+- **SSO / การเชื่อมต่อระบบยืนยันตัวตนของโรงพยาบาล** — กลไกพื้นฐาน (Firebase Authentication, ไม่เก็บ
+  role/isActive ใน Custom Claims — Firestore `users/{uid}` เป็น source of truth เดียว) ถูกตัดสินใจ
+  แล้วสำหรับ MVP แต่การอัปเกรดเป็น Google Cloud Identity Platform **เต็มรูปแบบ** (รองรับ SAML/OIDC)
+  เพื่อเชื่อมกับระบบยืนยันตัวตนของโรงพยาบาลจริง ยังไม่ตัดสินใจ — ปัจจุบันอัปเกรดเป็น Identity Platform
+  แล้วเพียงบางส่วน (เฉพาะ password policy backstop ของ Operation 9 ตาม decision area 13) ไม่ใช่การ
+  อัปเกรดเต็มรูปแบบเพื่อ SSO/SAML (ดู
+  [[technology-stack#7. Authentication/Authorization — Firebase Authentication (ไม่ใช้ Custom Claims เก็บบทบาท — แก้ไขในรอบสาม 2026-09-24)|
   decision area 7 ใน technology-stack]])
 - **Customer-Managed Encryption Keys (CMEK)** — กลไกพื้นฐาน (Google-managed keys + TLS) ถูกตัดสินใจ
   แล้วสำหรับ MVP ที่ใช้ข้อมูลจำลอง แต่ควรทบทวนเปลี่ยนเป็น CMEK เมื่อเปลี่ยนไปใช้ข้อมูลผู้ป่วยจริง (ดู
@@ -773,3 +1082,4 @@ server-side token revocation), NFR-13 (Accessibility — WCAG 2.1 AA + Heroicons
 - [[20260917-01-patient-ncd-history-lab-complication-risk]]
 - [[20260921-01-pdpa-data-protection-compliance]]
 - [[20260922-01-operational-quality-nfr]]
+- [[20260923-01-user-authentication-email-password]]

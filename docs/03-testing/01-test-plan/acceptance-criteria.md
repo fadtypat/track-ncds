@@ -15,7 +15,18 @@ edge case table) — ไม่ใช่การตีความ/เดาเ�
 ไม่มี AC ในรอบนี้ ดูเหตุผลที่หัวข้อ NFR-16 ด้านล่าง — ตรวจสอบเพิ่มเติม 2026-09-22 (รอบสาม, ขอบเขตจำกัด
 เฉพาะฟีเจอร์ที่ 4/NFR-03–NFR-08 เทียบกับ [[technology-stack]]): แก้ไข NFR-04 AC-1/AC-2 ที่ยังเขียนว่า
 "รอ technology-stack.md" ทั้งที่ [[technology-stack]] มีเนื้อหาจริงแล้ว (Google-managed encryption keys
-+ HTTPS/TLS) — ดูหมายเหตุที่หัวข้อ NFR-04 ด้านล่าง
++ HTTPS/TLS) — ดูหมายเหตุที่หัวข้อ NFR-04 ด้านล่าง — ตรวจสอบเพิ่มเติม 2026-09-23: เพิ่มหัวข้อ
+"6. สมัครบัญชี เข้าสู่ระบบ และจัดการรหัสผ่านด้วยอีเมล (Authentication)" (FR-07–FR-10, NFR-17, NFR-18)
+ที่ขาดหายไปทั้งหมด เนื่องจาก `feature-list.md`/`user-journey.md` เพิ่งเพิ่มฟีเจอร์ที่ 6 ใหม่ (spec
+[[20260923-01-user-authentication-email-password]]) ทุกรหัสในหัวข้อนี้มีระดับความสำคัญ = สูง ตรงกับ
+[[backlog]] — ตรวจสอบเพิ่มเติม 2026-09-24 (เทียบกับ [[technology-stack]] รอบสาม decision area 13–19
+และ [[db-spec]] ที่อัปเดตตาม): แก้ไข NFR-14 AC-1 กรณี (ง) จาก "ผู้ใช้ที่ไม่มี custom claims บทบาทที่
+ถูกต้อง" (ล้าสมัย — ระบบไม่ใช้ Custom Claims เก็บบทบาท/isActive อีกต่อไป) เป็น "ผู้ใช้ที่บัญชียังไม่
+ยืนยันอีเมล (`email_verified=false`)" ตรงกับตาราง Security Rules Verification ล่าสุดใน [[db-spec]] —
+เพิ่ม AC ใหม่ที่ยังขาดหายไป: FR-08 AC-5 (rollback ลบ Auth user เมื่อเขียน Firestore ล้มเหลว), FR-09
+AC-4 (ตรวจสอบ `email_verified` ซ้ำฝั่งเซิร์ฟเวอร์ที่ Operation 0/Operation 1-6 ปิดช่องว่าง Client ถูก
+ดัดแปลง/บั๊ก), NFR-17 AC-3 (กลไกจริงที่ Operation 9b คือ Identity Platform password policy backstop
+ไม่ใช่ regex ในโค้ด)
 
 อ้างอิง: [[feature-list]], [[user-journey]], [[backlog]]
 
@@ -398,12 +409,19 @@ event มาตรฐานของ browser เมื่อ idle ครบ 30 �
 
 #### NFR-14 (สูง) — [[20260922-01-operational-quality-nfr#ความต้องการที่ไม่ใช่เชิงฟังก์ชัน (Non-Functional Requirements)|Security Rules Verification]]
 
-- **AC-1 (Automated test ผ่าน Firebase Emulator Suite ก่อน deploy):** Given Firestore Security Rules
-  ที่ควบคุมสิทธิ์ role-level/patient-level (NFR-02) ถูกเขียนหรือแก้ไข, When ทีมพัฒนาเตรียม deploy
-  Security Rules เหล่านั้นสู่ระบบที่ใช้กับข้อมูลผู้ป่วยจริง, Then ต้องมี automated test ผ่าน Firebase
-  Emulator Suite ที่ครอบคลุมอย่างน้อย 4 กรณี ได้แก่ (ก) ผู้ใช้ที่ไม่มี PatientAssignment กับผู้ป่วยรายใด
-  เลย (ข) ผู้ใช้ที่มี PatientAssignment กับผู้ป่วยบางรายเท่านั้นต้องไม่เห็นผู้ป่วยรายอื่น (ค) ผู้ใช้ที่
-  บัญชีถูกระงับ และ (ง) ผู้ใช้ที่ไม่มี custom claims บทบาทที่ถูกต้อง — ทั้งหมดต้องผ่านก่อน deploy จริงเสมอ
+- **AC-1 (Automated test ผ่าน Firebase Emulator Suite ก่อน deploy — อัปเดต 2026-09-24 ตาม
+  [[../../02-design/02-technical/db-spec#คุณสมบัติร่วม (Cross-cutting Property) — Security Rules Verification (NFR-14)|db-spec]]
+  และ
+  [[../../02-design/02-technical/technology-stack#19. การตรวจสอบ `emailVerified` ซ้ำฝั่ง Backend (FR-09, ฟีเจอร์ที่ 6) — ตรวจทั้ง Cloud Functions และ Security Rules|technology-stack decision area 19]]):**
+  Given Firestore Security Rules ที่ควบคุมสิทธิ์ role-level/patient-level (NFR-02) ถูกเขียนหรือแก้ไข,
+  When ทีมพัฒนาเตรียม deploy Security Rules เหล่านั้นสู่ระบบที่ใช้กับข้อมูลผู้ป่วยจริง, Then ต้องมี
+  automated test ผ่าน Firebase Emulator Suite ที่ครอบคลุมอย่างน้อย 4 กรณี ได้แก่ (ก) ผู้ใช้ที่ไม่มี
+  PatientAssignment กับผู้ป่วยรายใดเลย (ข) ผู้ใช้ที่มี PatientAssignment กับผู้ป่วยบางรายเท่านั้นต้องไม่
+  เห็นผู้ป่วยรายอื่น (ค) ผู้ใช้ที่บัญชีถูกระงับ (`isActive=false`) และ (ง) ผู้ใช้ที่บัญชียังไม่ยืนยันอีเมล
+  (`email_verified=false`) แม้ role/isActive/PatientAssignment จะถูกต้องครบก็ตาม (แก้ไขจากเดิมที่เคย
+  ระบุว่า "ผู้ใช้ที่ไม่มี custom claims บทบาทที่ถูกต้อง" — ล้าสมัยแล้วเพราะระบบไม่ใช้ Custom Claims เก็บ
+  บทบาท/isActive อีกต่อไป ดู FR-09 AC-4 ข้างต้นสำหรับพฤติกรรมเต็มรูปแบบ) — ทั้งหมดต้องผ่านก่อน deploy
+  จริงเสมอ
 - **AC-2 (ไม่ผ่านการทดสอบ — edge case):** Given automated test ชุดใดชุดหนึ่งใน 4 กรณีข้างต้นไม่ผ่าน,
   When เตรียม deploy Security Rules, Then ต้องไม่ deploy Security Rules ชุดนั้นจนกว่า automated test
   จะผ่านครบทุกกรณี
@@ -434,6 +452,117 @@ NFR-16 ถูกกำหนดสถานะ **Won't have** ยืนยัน
 ต้นทาง]]) เอกสารนี้จึงตั้งใจไม่กำหนด Acceptance Criteria สำหรับ NFR-16 ในรอบนี้ หากมีการนำ NFR-16
 กลับเข้าขอบเขตในอนาคต ให้เพิ่ม AC ที่นี่ในรอบถัดไป
 
+## 6. สมัครบัญชี เข้าสู่ระบบ และจัดการรหัสผ่านด้วยอีเมล (Authentication)
+
+ดู [[feature-list#6. สมัครบัญชี เข้าสู่ระบบ และจัดการรหัสผ่านด้วยอีเมล (Authentication)|รายละเอียดฟีเจอร์นี้ใน feature-list]]
+และ [[user-journey#Journey ผู้ใช้งานสมัครบัญชี เข้าสู่ระบบ และจัดการรหัสผ่านด้วยอีเมล (Authentication)|user-journey — journey สมัครบัญชี/เข้าสู่ระบบ/รีเซ็ตรหัสผ่าน]]
+ฟีเจอร์นี้เป็น precondition ก่อนฟีเจอร์ที่ 1-5 ทั้งหมด (ต้องเข้าสู่ระบบและยืนยันอีเมลสำเร็จก่อน)
+พฤติกรรม/ข้อความ/edge case ด้านล่างอ้างอิงจาก
+[[20260923-01-user-authentication-email-password]] และ
+[[../../02-design/02-technical/detailed-design/user-authentication-email-password|detailed-design ของฟีเจอร์นี้]]
+(มีเนื้อหาแล้วตั้งแต่ 2026-09-24 — sequence diagram/state diagram/edge case table) โดยตรง
+
+#### FR-07 (สูง) — [[20260923-01-user-authentication-email-password#ความต้องการเชิงฟังก์ชัน (Functional Requirements)|เข้าสู่ระบบด้วยอีเมลและรหัสผ่าน]]
+
+- **AC-1 (Happy path):** Given ผู้ใช้มีบัญชีที่สมัครไว้แล้วและยืนยันอีเมลเรียบร้อยแล้ว, When ผู้ใช้กรอก
+  อีเมล/รหัสผ่านที่ถูกต้องแล้วกดปุ่ม "เข้าสู่ระบบ", Then ระบบเข้าสู่ระบบสำเร็จ และส่งต่อไปตรวจสอบเงื่อนไข
+  role/isActive/patient assignment แยกต่างหาก
+  ([[20260917-01-patient-ncd-history-lab-complication-risk#ความต้องการที่ไม่ใช่เชิงฟังก์ชัน (Non-Functional Requirements)|NFR-02]])
+- **AC-2 (อีเมล/รหัสผ่านไม่ถูกต้อง — ไม่เปิดเผยข้อมูล):** Given ผู้ใช้กรอกอีเมลที่ไม่มีบัญชีอยู่ในระบบ
+  หรือกรอกรหัสผ่านไม่ตรงกับบัญชีที่มีอยู่จริง (ไม่ว่าจะเป็นกรณีใดก็ตาม), When ผู้ใช้กดปุ่ม "เข้าสู่ระบบ",
+  Then ระบบแจ้งข้อความเดียวกันเสมอว่า "อีเมลหรือรหัสผ่านไม่ถูกต้อง" โดยไม่เปิดเผยว่าอีเมลนั้นมีบัญชีอยู่
+  ในระบบหรือไม่ (NFR-18) และให้กรอกเข้าสู่ระบบใหม่ได้ทันที
+- **AC-3 (ยังไม่ยืนยันอีเมล — edge case):** Given อีเมล/รหัสผ่านที่กรอกถูกต้อง แต่บัญชีนี้ยังไม่ได้ยืนยัน
+  ความเป็นเจ้าของอีเมล, When ระบบตรวจสอบสถานะการยืนยันอีเมลหลังยืนยันอีเมล/รหัสผ่านผ่านแล้ว, Then ระบบ
+  บล็อกการเข้าถึงฟีเจอร์อื่นของระบบทั้งหมด และแจ้งให้ผู้ใช้ยืนยันอีเมลก่อน (ดู FR-09)
+
+#### FR-08 (สูง) — [[20260923-01-user-authentication-email-password#ความต้องการเชิงฟังก์ชัน (Functional Requirements)|สมัครบัญชีผู้ใช้งานด้วยตนเอง (Self Sign-up)]]
+
+- **AC-1 (Happy path):** Given ผู้ใช้กรอกอีเมลที่ยังไม่มีบัญชีอยู่ในระบบ และรหัสผ่านที่เป็นไปตามนโยบาย
+  ขั้นต่ำ (ดู NFR-17), When ผู้ใช้กดปุ่ม "สมัครบัญชี", Then ระบบสร้างบัญชีใหม่ด้วย `isActive = false` และ
+  ยังไม่มี role กำหนด แล้วแสดงข้อความทั่วไปที่ไม่ยืนยัน/ไม่ปฏิเสธว่าอีเมลนี้มีบัญชีอยู่แล้วหรือไม่
+- **AC-2 (สมัครด้วยอีเมลที่มีบัญชีอยู่แล้ว — account enumeration prevention):** Given อีเมลที่ผู้ใช้กรอก
+  มีบัญชีอยู่ในระบบแล้ว, When ผู้ใช้กดปุ่ม "สมัครบัญชี" ด้วยอีเมลนั้นอีกครั้ง, Then ระบบแสดงข้อความทั่วไป
+  เดียวกันกับกรณีสมัครสำเร็จใน AC-1 ทุกประการ ไม่เปิดเผยว่าอีเมลนี้มีบัญชีอยู่แล้ว (NFR-18) และไม่สร้าง
+  บัญชีซ้ำ
+- **AC-3 (รหัสผ่านไม่ผ่านนโยบายขั้นต่ำ — edge case):** Given รหัสผ่านที่ผู้ใช้กรอกไม่เป็นไปตามนโยบายขั้นต่ำ
+  (ดู NFR-17), When ผู้ใช้กดปุ่ม "สมัครบัญชี", Then ระบบปฏิเสธและแจ้งเตือนให้แก้ไขรหัสผ่านทันที ไม่สร้าง
+  บัญชีใหม่
+- **AC-4 (บัญชีที่ยังไม่ได้รับอนุมัติเข้าถึงข้อมูลผู้ป่วยไม่ได้):** Given บัญชีสมัครสำเร็จแล้วแต่ยังไม่ได้
+  รับการอนุมัติจากผู้ดูแลระบบผ่าน Firebase Console/Firestore (`isActive = false` และยังไม่มี role
+  กำหนด), When ผู้ใช้เข้าสู่ระบบสำเร็จ (ผ่าน FR-07) และยืนยันอีเมลแล้ว (ผ่าน FR-09) แล้วพยายามเข้าถึง
+  ข้อมูลผู้ป่วยใดๆ, Then ระบบปฏิเสธการเข้าถึงตามเงื่อนไข role/isActive
+  ([[20260917-01-patient-ncd-history-lab-complication-risk#ความต้องการที่ไม่ใช่เชิงฟังก์ชัน (Non-Functional Requirements)|NFR-02]])
+- **AC-5 (Rollback เมื่อเขียน Firestore ล้มเหลว — edge case, กลไกจริงตาม
+  [[../../02-design/02-technical/technology-stack#17. กลไกสร้าง `users/{uid}` อัตโนมัติ (FR-08, ฟีเจอร์ที่ 6) — ภายใน Cloud Function `signUpUser` เดียวกัน|technology-stack decision area 17]]):**
+  Given Cloud Function `signUpUser` สร้างบัญชี Firebase Authentication สำเร็จแล้ว แต่การเขียนเอกสาร
+  `users/{uid}` ลง Firestore ในขั้นตอนถัดไปล้มเหลว (เช่น ปัญหาเชื่อมต่อ Firestore ชั่วคราว), When ระบบ
+  ตรวจพบความล้มเหลวของการเขียน Firestore นั้น, Then ระบบต้อง rollback โดยลบบัญชี Firebase
+  Authentication ที่เพิ่งสร้างทันทีในคำขอเดียวกัน (Admin SDK `deleteUser`) เพื่อไม่ให้เกิดบัญชี
+  Authentication ที่ไม่มีเอกสาร Firestore คู่กัน (orphaned account) และแจ้งข้อผิดพลาดแก่ผู้ใช้ให้ลองสมัคร
+  ใหม่อีกครั้ง (ไม่ใช่ข้อความ generic ตาม NFR-18 เพราะไม่เกี่ยวกับการเปิดเผยว่าอีเมลมีบัญชีอยู่หรือไม่)
+
+#### FR-09 (สูง) — [[20260923-01-user-authentication-email-password#ความต้องการเชิงฟังก์ชัน (Functional Requirements)|ยืนยันอีเมลก่อนเข้าใช้งาน (Email Verification)]]
+
+- **AC-1 (ส่งอีเมลยืนยันหลังสมัครสำเร็จ):** Given บัญชีถูกสร้างสำเร็จผ่าน FR-08, When ระบบสร้างบัญชีเสร็จ
+  สมบูรณ์, Then ระบบต้องส่งอีเมลยืนยันตัวตน (verification link) ไปยังอีเมลที่ใช้สมัครทันที
+- **AC-2 (ยืนยันอีเมลสำเร็จ):** Given ผู้ใช้เปิดลิงก์ยืนยันตัวตนจากอีเมลที่ได้รับ, When ลิงก์นั้นยังไม่
+  หมดอายุและตรงกับบัญชีที่สมัครไว้, Then ระบบทำเครื่องหมายว่าอีเมลนี้ยืนยันตัวตนแล้ว และอนุญาตให้ผ่านการ
+  ตรวจสอบในขั้นตอนเข้าสู่ระบบ (FR-07 AC-3) ต่อไปได้
+- **AC-3 (บล็อกจนกว่าจะยืนยัน — edge case):** Given บัญชีสมัครสำเร็จแล้ว (ไม่ว่าจะผ่านการอนุมัติบัญชีตาม
+  FR-08 แล้วหรือไม่ก็ตาม) แต่ยังไม่ได้ยืนยันความเป็นเจ้าของอีเมล, When ผู้ใช้เข้าสู่ระบบสำเร็จด้วยอีเมล/
+  รหัสผ่านที่ถูกต้อง, Then ระบบต้องบล็อกการเข้าถึงฟีเจอร์อื่นของระบบทั้งหมดจนกว่าจะยืนยันอีเมลสำเร็จ
+  (ไม่มีข้อยกเว้นแม้บัญชีจะผ่านการอนุมัติแล้ว)
+- **AC-4 (ตรวจสอบ `email_verified` ซ้ำฝั่งเซิร์ฟเวอร์ — ปิดช่องว่าง Client ถูกดัดแปลง/บั๊ก, กลไกจริงตาม
+  [[../../02-design/02-technical/technology-stack#19. การตรวจสอบ `emailVerified` ซ้ำฝั่ง Backend (FR-09, ฟีเจอร์ที่ 6) — ตรวจทั้ง Cloud Functions และ Security Rules|technology-stack decision area 19]]):**
+  Given ผู้ใช้มีเงื่อนไข role/isActive/PatientAssignment ถูกต้องครบตาม NFR-02 แต่บัญชียังไม่ยืนยันอีเมล
+  (`email_verified = false`) เช่น กรณี Client ถูกดัดแปลง/บั๊กจนข้าม logic ตรวจสอบที่ชั้น UI แล้วเรียก
+  Operation ตรง, When ผู้ใช้เรียก Operation 0 (อ่าน `patientAssignments` ผ่าน Firestore ตรง) หรือ
+  Operation 1-6 ใดๆ (ผ่าน Cloud Functions), Then ระบบต้องปฏิเสธคำขอนั้นก่อนเข้าถึงข้อมูลผู้ป่วยจริงเสมอ —
+  ที่ Firestore Security Rules ของ `patientAssignments` (ตรวจ
+  `request.auth.token.email_verified == true`) สำหรับ Operation 0 และที่ shared helper module ของ
+  Cloud Functions (ตรวจ `decodedToken.email_verified`) สำหรับ Operation 1-6
+
+#### FR-10 (สูง) — [[20260923-01-user-authentication-email-password#ความต้องการเชิงฟังก์ชัน (Functional Requirements)|ขอรีเซ็ตรหัสผ่านทางอีเมล (Forgot Password)]]
+
+- **AC-1 (ข้อความเดียวกันเสมอไม่ว่าอีเมลจะมีอยู่จริงหรือไม่):** Given ผู้ใช้เลือก "ลืมรหัสผ่าน" จากหน้า
+  เข้าสู่ระบบแล้วกรอกอีเมล, When ผู้ใช้กดส่งคำขอ, Then ระบบต้องแจ้งข้อความเดียวกันเสมอว่า "หากอีเมลนี้มี
+  อยู่ในระบบ จะได้รับลิงก์รีเซ็ตรหัสผ่านทางอีเมล" ไม่ว่าอีเมลที่กรอกจะมีบัญชีอยู่ในระบบจริงหรือไม่ (NFR-18)
+- **AC-2 (ตั้งรหัสผ่านใหม่สำเร็จ — Happy path):** Given ผู้ใช้มีบัญชีอยู่จริงและเปิดลิงก์รีเซ็ตรหัสผ่านที่
+  ถูกต้องและยังไม่หมดอายุจากอีเมล แล้วกรอกรหัสผ่านใหม่ที่เป็นไปตามนโยบายขั้นต่ำ (ดู NFR-17), When ผู้ใช้
+  กดยืนยัน, Then ระบบอัปเดตรหัสผ่านสำเร็จ และผู้ใช้สามารถกลับไปเข้าสู่ระบบด้วยรหัสผ่านใหม่ได้ (FR-07)
+- **AC-3 (รหัสผ่านใหม่ไม่ผ่านนโยบาย — edge case):** Given รหัสผ่านใหม่ที่ผู้ใช้กรอกระหว่างขั้นตอนรีเซ็ต
+  ไม่เป็นไปตามนโยบายขั้นต่ำ (ดู NFR-17), When ผู้ใช้กดยืนยัน, Then ระบบปฏิเสธและแจ้งเตือนให้แก้ไขรหัสผ่าน
+  ใหม่ทันที ไม่อัปเดตรหัสผ่าน และให้กรอกใหม่ที่ลิงก์เดิมได้จนกว่าลิงก์จะหมดอายุ
+
+#### NFR-17 (สูง) — [[20260923-01-user-authentication-email-password#ความต้องการที่ไม่ใช่เชิงฟังก์ชัน (Non-Functional Requirements)|Security / Password Policy]]
+
+- **AC-1 (ปฏิเสธรหัสผ่านที่ไม่ผ่านนโยบาย):** Given ผู้ใช้กรอกรหัสผ่านที่มีความยาวน้อยกว่า 8 ตัวอักษร หรือ
+  ไม่มีทั้งตัวอักษรและตัวเลขอย่างน้อยอย่างละ 1 ตัว ระหว่างสมัครบัญชี (FR-08) หรือตั้งรหัสผ่านใหม่ผ่านการ
+  รีเซ็ต (FR-10), When ระบบตรวจสอบรหัสผ่านที่กรอก, Then ระบบต้องปฏิเสธและแจ้งเตือนทันที ไม่สร้าง/อัปเดต
+  รหัสผ่านนั้น
+- **AC-2 (ยอมรับรหัสผ่านที่ผ่านนโยบาย):** Given รหัสผ่านที่ผู้ใช้กรอกมีความยาวตั้งแต่ 8 ตัวอักษรขึ้นไป และ
+  มีทั้งตัวอักษรและตัวเลขอย่างน้อยอย่างละ 1 ตัว, When ระบบตรวจสอบรหัสผ่านที่กรอก (ไม่ว่าจะเป็นขั้นตอน
+  สมัครบัญชีหรือรีเซ็ตรหัสผ่าน), Then ระบบต้องยอมรับรหัสผ่านนั้นและดำเนินการขั้นตอนถัดไปต่อ
+- **AC-3 (กลไกจริงที่ Operation 9b — Identity Platform password policy เป็น backstop ไม่ใช่ regex ในโค้ด,
+  ตาม [[../../02-design/02-technical/technology-stack#13. กลไก Validate Password Policy ฝั่งเซิร์ฟเวอร์ (NFR-17, ฟีเจอร์ที่ 6) — Regex ใน Cloud Function + Identity Platform เป็น Backstop|technology-stack decision area 13]]):**
+  Given ขั้นตอนตั้งรหัสผ่านใหม่จริงหลังคลิกลิงก์รีเซ็ต (Operation 9b, `confirmPasswordReset`) ไม่มี Cloud
+  Function คั่นกลาง (Client เรียก Firebase Authentication SDK ตรง ต่างจาก Operation 8 ที่มี Cloud
+  Function `signUpUser` ตรวจด้วย regex ในโค้ด), When ผู้ใช้กรอกรหัสผ่านใหม่ที่ไม่ผ่านนโยบายขั้นต่ำผ่าน
+  ลิงก์รีเซ็ต, Then การบังคับใช้นโยบายรหัสผ่านที่จุดนี้ต้องมาจาก **Google Cloud Identity Platform
+  password policy** (ตั้งค่าระดับโปรเจกต์ เป็น backstop ฝั่งเซิร์ฟเวอร์) ไม่ใช่ regex ในโค้ด และ error
+  code ที่ผู้ใช้ได้รับต้องเป็นมาตรฐานของ Identity Platform ให้ Client แปลงเป็นข้อความแจ้งเตือนที่ชั้น UI
+  (ไม่ใช่กรณี generic ตาม NFR-18 เพราะไม่เกี่ยวกับการเปิดเผยว่าอีเมลมีบัญชีอยู่หรือไม่)
+
+#### NFR-18 (สูง) — [[20260923-01-user-authentication-email-password#ความต้องการที่ไม่ใช่เชิงฟังก์ชัน (Non-Functional Requirements)|Security / Account Enumeration Prevention]]
+
+- **AC-1 (ข้อความไม่เปิดเผยการมีอยู่ของอีเมลในทุกจุดที่เกี่ยวข้อง):** Given หนึ่งในสถานการณ์ต่อไปนี้เกิดขึ้น
+  — (ก) เข้าสู่ระบบผิดพลาดไม่ว่าจะเพราะอีเมลไม่มีอยู่จริงหรือรหัสผ่านผิด (FR-07 AC-2), (ข) สมัครบัญชีด้วย
+  อีเมลที่มีบัญชีอยู่แล้ว (FR-08 AC-2) หรือ (ค) ขอรีเซ็ตรหัสผ่านด้วยอีเมลที่ไม่มีบัญชีอยู่ในระบบ (FR-10
+  AC-1), When ระบบตอบกลับข้อความแก่ผู้ใช้ในแต่ละสถานการณ์, Then ข้อความที่แสดงต้องเหมือนกันทุกประการไม่ว่า
+  อีเมลนั้นจะมีบัญชีอยู่จริงในระบบหรือไม่ ห้ามมีความแตกต่างใดๆ (ข้อความ, การนำทาง) ที่ทำให้ผู้ใช้อนุมานได้
+  ว่าอีเมลนั้นมีบัญชีอยู่ในระบบหรือไม่
+
 ## เอกสารที่เกี่ยวข้อง
 
 - [[feature-list]]
@@ -442,6 +571,7 @@ NFR-16 ถูกกำหนดสถานะ **Won't have** ยืนยัน
 - [[20260917-01-patient-ncd-history-lab-complication-risk]]
 - [[20260921-01-pdpa-data-protection-compliance]]
 - [[20260922-01-operational-quality-nfr]]
+- [[20260923-01-user-authentication-email-password]]
 - [[technology-stack]]
 - [[architecture]]
 - [[db-spec]]
@@ -450,4 +580,5 @@ NFR-16 ถูกกำหนดสถานะ **Won't have** ยืนยัน
 - [[../../02-design/02-technical/detailed-design/patient-ncd-diagnosis-lab-history|detailed-design — ดูประวัติการวินิจฉัยและผลตรวจ lab]]
 - [[../../02-design/02-technical/detailed-design/complication-risk-analysis-alert|detailed-design — วิเคราะห์และแจ้งเตือนความเสี่ยงโรคแทรกซ้อน]]
 - [[../../02-design/02-technical/detailed-design/pdpa-data-protection-compliance|detailed-design — คุ้มครองข้อมูลส่วนบุคคลของผู้ป่วยตาม PDPA]]
+- [[../../02-design/02-technical/detailed-design/user-authentication-email-password|detailed-design — สมัครบัญชี เข้าสู่ระบบ และจัดการรหัสผ่านด้วยอีเมล]]
 - [[test-plan]]

@@ -33,6 +33,12 @@ Operation 4, 5 และ Audit Logging ผ่าน Cloud Functions จริง
 ของ RetentionPolicy ยังไม่ถูกกำหนด (ดู [[api-spec#ประเด็นรอตัดสินใจ|ประเด็นรอตัดสินใจใน api-spec]] และ
 [[db-spec#ประเด็นรอตัดสินใจ|ประเด็นรอตัดสินใจใน db-spec]])
 
+**อัปเดต 2026-09-23 — ตรวจสอบความสอดคล้องกับฟีเจอร์ที่ 6 (Authentication):** ตรวจสอบแล้วว่า
+**ไม่กระทบเอกสารนี้** — Operation 4/5 ใน [[api-spec]] ยังคงใช้บทบาทแพทย์/พยาบาลเดียวกัน การเปลี่ยน
+`บทบาท` เป็นไม่บังคับใน [[db-spec#ผู้ใช้ (User)|User]] ไม่กระทบเงื่อนไข role-level ที่ Operation ร่วม
+Access Control ใช้อยู่แล้ว (บัญชีที่ยังไม่มี `role` ไม่ผ่านอัตโนมัติ) ดู
+[[user-authentication-email-password]] ซึ่งเป็นฟีเจอร์ precondition ก่อนฟีเจอร์นี้ทั้งหมด
+
 **อัปเดต 2026-09-22 (รอบสอง) — ตรวจสอบความสอดคล้องกับฟีเจอร์ที่ 5 (NFR-09–NFR-16):** ดูหัวข้อใหม่
 [[#Cross-cutting: คุณภาพเชิงปฏิบัติการของระบบ (NFR-09–NFR-16)|Cross-cutting: คุณภาพเชิงปฏิบัติการของระบบ]]
 ก่อนหัวข้อ Edge Case ด้านล่าง สำหรับผลกระทบของ
@@ -57,7 +63,7 @@ sequenceDiagram
 
     Staff->>Client: เลือกประเภทคำขอสิทธิ (ขอเข้าถึง/ขอสำเนา/ขอแก้ไข/ขอลบ/คัดค้านการประมวลผล) + รายละเอียดคำขอ (ถ้าจำเป็น)
     Client->>Backend: ส่งคำขอ Operation 4 พร้อมรหัสผู้ป่วย, ประเภทคำขอ, รายละเอียดคำขอ, auth context
-    Backend->>Backend: [Access Control] ตรวจสอบสิทธิ์ระดับบทบาท + ระดับรายผู้ป่วย + purpose limitation (NFR-02, NFR-03)
+    Backend->>Backend: [Access Control] ตรวจสอบสิทธิ์ระดับบทบาท + ระดับรายผู้ป่วย + purpose limitation + email_verified (NFR-02, NFR-03, FR-09 — เพิ่มเงื่อนไข email_verified ในรอบ 2026-09-24 ตาม decision area 19)
     Backend->>Store: อ่าน User, PatientAssignment (ตรวจสอบสิทธิ์)
     Store-->>Backend: ผลการตรวจสอบสิทธิ์
     alt ไม่ผ่านสิทธิ์
@@ -124,7 +130,7 @@ sequenceDiagram
 
     Staff->>Client: ขอตรวจสอบ audit log (ระบุผู้ป่วย/ช่วงเวลา/ผู้ใช้ที่ต้องการตรวจสอบ — ไม่บังคับ)
     Client->>Backend: ส่งคำขอ Operation 5 พร้อม auth context
-    Backend->>Backend: [Access Control] ตรวจสอบสิทธิ์ระดับบทบาท (NFR-02)
+    Backend->>Backend: [Access Control] ตรวจสอบสิทธิ์ระดับบทบาท + email_verified (NFR-02, FR-09 — เพิ่มเงื่อนไข email_verified ในรอบ 2026-09-24 ตาม decision area 19)
     alt ไม่ผ่านสิทธิ์ระดับบทบาท
         Backend-->>Client: ปฏิเสธการเข้าถึง (NFR-02)
         Client-->>Staff: แสดงข้อความไม่มีสิทธิ์
@@ -202,7 +208,7 @@ Sequence Diagram 1 (Operation 4 กรณี "ขอลบ" — การลบ�
 
 | ลำดับ | Operation | Entity ที่กระทบ | การกระทำ | หมายเหตุ |
 | --- | --- | --- | --- | --- |
-| 1 | [[api-spec#Operation ร่วม — ตรวจสอบสิทธิ์การเข้าถึงข้อมูลผู้ป่วย (Access Control)\|Operation ร่วม (role-level + patient-level + purpose limitation)]] | [[db-spec#ผู้ใช้ (User)\|User]], [[db-spec#การมอบหมายผู้ป่วยในความดูแล (PatientAssignment)\|PatientAssignment]] | อ่าน | precondition ของ Operation 4 เสมอ (NFR-02, NFR-03) |
+| 1 | [[api-spec#Operation ร่วม — ตรวจสอบสิทธิ์การเข้าถึงข้อมูลผู้ป่วย (Access Control)\|Operation ร่วม (role-level + patient-level + purpose limitation + email_verified)]] | [[db-spec#ผู้ใช้ (User)\|User]], [[db-spec#การมอบหมายผู้ป่วยในความดูแล (PatientAssignment)\|PatientAssignment]] | อ่าน | precondition ของ Operation 4 เสมอ (NFR-02, NFR-03) — เพิ่มเงื่อนไข `email_verified` ในรอบ 2026-09-24 ตาม decision area 19 (FR-09) |
 | 2 | [[api-spec#Operation 4 — ยื่นและดำเนินการคำขอใช้สิทธิของเจ้าของข้อมูล (Data Subject Rights Request)\|Operation 4]] | [[db-spec#คำขอใช้สิทธิของเจ้าของข้อมูล (DataSubjectRequest)\|DataSubjectRequest]] | สร้าง | สถานะเริ่มต้น = "รอดำเนินการ" — ต้องสร้างก่อนเรียก Audit Logging เสมอ เพราะ AuditLogRecord ต้องการรหัสคำขอนี้เพื่ออ้างอิง |
 | 3 | [[api-spec#Operation ร่วม — บันทึกร่องรอยการเข้าถึงข้อมูลผู้ป่วย (Audit Logging)\|Operation ร่วม — Audit Logging]] | [[db-spec#บันทึกการเข้าถึงข้อมูล (AuditLogRecord)\|AuditLogRecord]] | สร้าง | ระบุ DataSubjectRequest.id ที่เกี่ยวข้อง; ต้องสำเร็จก่อนค้นหา/สกัด/แก้ไข/ลบข้อมูลจริงเสมอ (fail-safe, NFR-06) |
 | 4 | [[api-spec#Operation 4 — ยื่นและดำเนินการคำขอใช้สิทธิของเจ้าของข้อมูล (Data Subject Rights Request)\|Operation 4]] (กรณี "ขอเข้าถึง"/"ขอสำเนา") | [[db-spec#ผู้ป่วย (Patient)\|Patient]], [[db-spec#ประวัติการวินิจฉัยโรค NCD (NcdDiagnosis)\|NcdDiagnosis]], [[db-spec#ผลตรวจ lab (LabResult)\|LabResult]], [[db-spec#ผลการประเมินความเสี่ยงโรคแทรกซ้อน (ComplicationRiskAssessment)\|ComplicationRiskAssessment]] (+[[db-spec#รายละเอียดผลการประเมินต่อโรคแทรกซ้อน (RiskFinding)\|RiskFinding]]) | อ่าน | สกัดข้อมูลส่วนบุคคลตามขอบเขตของ [[20260921-01-pdpa-data-protection-compliance#ขอบเขต\|spec PDPA]] |
@@ -210,7 +216,7 @@ Sequence Diagram 1 (Operation 4 กรณี "ขอลบ" — การลบ�
 | 6 | [[api-spec#Operation 4 — ยื่นและดำเนินการคำขอใช้สิทธิของเจ้าของข้อมูล (Data Subject Rights Request)\|Operation 4]] (กรณี "ขอลบ" ที่ไม่มีข้อจำกัดเพิ่มเติม) | [[db-spec#ประวัติการวินิจฉัยโรค NCD (NcdDiagnosis)\|NcdDiagnosis]], [[db-spec#ผลตรวจ lab (LabResult)\|LabResult]] (หรือ entity อื่นตามขอบเขตคำขอ) | ลบ | เฉพาะเมื่อไม่มีข้อจำกัดตาม RetentionPolicy/ฐานกฎหมายอื่น (ลำดับ 5) |
 | 7 | [[api-spec#Operation 4 — ยื่นและดำเนินการคำขอใช้สิทธิของเจ้าของข้อมูล (Data Subject Rights Request)\|Operation 4]] | [[db-spec#คำขอใช้สิทธิของเจ้าของข้อมูล (DataSubjectRequest)\|DataSubjectRequest]] | แก้ไข | อัปเดตสถานะคำขอ ("ดำเนินการสำเร็จ"/"ปฏิเสธคำขอ") + วันที่ดำเนินการเสร็จสิ้น เมื่อดำเนินการเสร็จสิ้น |
 | 7b | [[api-spec#Operation 4 — ยื่นและดำเนินการคำขอใช้สิทธิของเจ้าของข้อมูล (Data Subject Rights Request)\|Operation 4]] (กรณี "ขอแก้ไข" ที่กระทบ Patient.hn/fullName เท่านั้น) | [[db-spec#การมอบหมายผู้ป่วยในความดูแล (PatientAssignment)\|PatientAssignment]] | แก้ไข | **ผลจาก denormalize `patientHn`/`patientFullName` ใน db-spec** — ต้องอัปเดตทุกระเบียนที่มี `patientId` ตรงกันภายใน transaction/batch เดียวกับการแก้ไข Patient เสมอ มิฉะนั้น Operation 0 จะแสดงข้อมูลไม่ตรงกัน (ดู [[db-spec#การมอบหมายผู้ป่วยในความดูแล (PatientAssignment)\|Firestore Technical Binding ของ PatientAssignment ใน db-spec]]) |
-| 8 | [[api-spec#Operation ร่วม — ตรวจสอบสิทธิ์การเข้าถึงข้อมูลผู้ป่วย (Access Control)\|Operation ร่วม (role-level)]] | [[db-spec#ผู้ใช้ (User)\|User]] | อ่าน | precondition ของ Operation 5 เสมอ |
+| 8 | [[api-spec#Operation ร่วม — ตรวจสอบสิทธิ์การเข้าถึงข้อมูลผู้ป่วย (Access Control)\|Operation ร่วม (role-level + email_verified)]] | [[db-spec#ผู้ใช้ (User)\|User]] | อ่าน | precondition ของ Operation 5 เสมอ — เพิ่มเงื่อนไข `email_verified` ในรอบ 2026-09-24 ตาม decision area 19 (FR-09) |
 | 9 | [[api-spec#Operation ร่วม — ตรวจสอบสิทธิ์การเข้าถึงข้อมูลผู้ป่วย (Access Control)\|Operation ร่วม (patient-level, ถ้าระบุรหัสผู้ป่วย)]] | [[db-spec#การมอบหมายผู้ป่วยในความดูแล (PatientAssignment)\|PatientAssignment]] | อ่าน | ตรวจสอบเพิ่มเติมเฉพาะเมื่อ Operation 5 ระบุรหัสผู้ป่วย |
 | 10 | [[api-spec#Operation ร่วม — บันทึกร่องรอยการเข้าถึงข้อมูลผู้ป่วย (Audit Logging)\|Operation ร่วม — Audit Logging]] | [[db-spec#บันทึกการเข้าถึงข้อมูล (AuditLogRecord)\|AuditLogRecord]] | สร้าง | บันทึกการเรียก Operation 5 เอง (การดำเนินการ = "ดูข้อมูลผู้ป่วย") เพื่อรักษา Accountability (NFR-06) |
 | 11 | [[api-spec#Operation 5 — สืบค้นบันทึกการเข้าถึงข้อมูล (Audit Trail Retrieval)\|Operation 5]] | [[db-spec#บันทึกการเข้าถึงข้อมูล (AuditLogRecord)\|AuditLogRecord]] | อ่าน | สืบค้นตามเงื่อนไข (ผู้ป่วย/ช่วงเวลา/ผู้ใช้ — ทั้งหมดไม่บังคับ) เรียงตามวันที่-เวลาที่เข้าถึง |
@@ -394,3 +400,4 @@ attribute ใดรองรับ (ไม่ใช่ gap ของ db-spec —
 - [[patient-search-selection]]
 - [[patient-ncd-diagnosis-lab-history]]
 - [[complication-risk-analysis-alert]]
+- [[user-authentication-email-password]]

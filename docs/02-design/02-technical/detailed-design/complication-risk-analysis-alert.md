@@ -28,6 +28,11 @@ Operation 0) — ดูหัวข้อ "หมายเหตุการ Imp
 [[db-spec#ประเด็นรอตัดสินใจ|ประเด็นรอตัดสินใจใน db-spec]]) เอกสารนี้จึงอธิบายเฉพาะลำดับการประมวลผล
 เชิง logical เท่านั้น ไม่ระบุค่าตัวเลขจริง
 
+**อัปเดต 2026-09-23 — ตรวจสอบความสอดคล้องกับฟีเจอร์ที่ 6 (Authentication):** ตรวจสอบแล้วว่า
+**ไม่กระทบเอกสารนี้** — เหตุผลเดียวกับที่ [[patient-ncd-diagnosis-lab-history]] บันทึกไว้ (บัญชีที่ยังไม่มี
+`role` จาก [[db-spec#ผู้ใช้ (User)|User]] ไม่ผ่านการตรวจสอบสิทธิ์ระดับบทบาทที่มีอยู่แล้วโดยอัตโนมัติ) ดู
+[[user-authentication-email-password]]
+
 **อัปเดต 2026-09-22 (รอบสอง) — ตรวจสอบความสอดคล้องกับฟีเจอร์ที่ 5 (NFR-09–NFR-16):** ฟีเจอร์นี้เป็น
 ไฟล์ที่ [[feature-list#5. รับประกันคุณภาพเชิงปฏิบัติการของระบบ (Performance, Availability, Clinical Safety, Session Security, Accessibility, Compatibility, Interoperability)|ฟีเจอร์ที่ 5]]
 กระทบมากเป็นอันดับสองรองจาก [[patient-search-selection]] เพราะ Operation 3 คือจุดเดียวที่ NFR-11
@@ -55,7 +60,7 @@ sequenceDiagram
     Note over User,Store: สืบเนื่องจาก [[patient-search-selection]] — ผู้ใช้เลือกผู้ป่วยรายบุคคลแล้ว
 
     Client->>Backend: ส่งคำขอวิเคราะห์ความเสี่ยงโรคแทรกซ้อน (Operation 3) พร้อมรหัสผู้ป่วย + auth context
-    Backend->>Backend: [Access Control] ตรวจสอบสิทธิ์ระดับบทบาท + ระดับรายผู้ป่วย (NFR-02, NFR-03)
+    Backend->>Backend: [Access Control] ตรวจสอบสิทธิ์ระดับบทบาท + ระดับรายผู้ป่วย + email_verified (NFR-02, NFR-03, FR-09 — เพิ่มเงื่อนไข email_verified ในรอบ 2026-09-24 ตาม decision area 19)
     Backend->>Store: อ่าน User, PatientAssignment (ตรวจสอบสิทธิ์)
     Store-->>Backend: ผลการตรวจสอบสิทธิ์
     alt ไม่ผ่านสิทธิ์
@@ -232,7 +237,7 @@ Client แสดงเป็นข้อมูลสุขภาพที่ล�
 
 | Edge Case | วิธีจัดการ | อ้างอิง |
 | --- | --- | --- |
-| ไม่มีสิทธิ์เข้าถึง (บทบาทไม่ถูกต้อง หรือผู้ป่วยรายนี้ไม่ได้อยู่ในความดูแลของผู้ใช้ตาม PatientAssignment) | ปฏิเสธการเข้าถึงข้อมูลผู้ป่วยรายนี้ ก่อนอ่าน LabResult/ComplicationRiskThreshold ใดๆ | [[backlog#Non-Functional Requirements\|NFR-02]], [[backlog#สูง (MVP)\|FR-05]] |
+| ไม่มีสิทธิ์เข้าถึง (บทบาทไม่ถูกต้อง หรือผู้ป่วยรายนี้ไม่ได้อยู่ในความดูแลของผู้ใช้ตาม PatientAssignment หรือ `email_verified` เป็นเท็จ) | ปฏิเสธการเข้าถึงข้อมูลผู้ป่วยรายนี้ ก่อนอ่าน LabResult/ComplicationRiskThreshold ใดๆ — เงื่อนไข `email_verified` เพิ่มใหม่ 2026-09-24 ตาม decision area 19 | [[backlog#Non-Functional Requirements\|NFR-02]], [[backlog#สูง (MVP)\|FR-05]], [[backlog#สูง (MVP)\|FR-09]] |
 | ผู้ใช้ถูก auto-logout เนื่องจากไม่มีการใช้งาน (inactivity) เกิน 30 นาที (NFR-12) แล้วส่งคำขอ Operation 3 โดยไม่มี auth context ที่ถูกต้องแนบมา | ปฏิเสธการเข้าถึงที่ step ตรวจสอบสิทธิ์เช่นเดียวกับกรณีไม่มีสิทธิ์เข้าถึงข้างต้น — Client นำผู้ใช้กลับไปหน้าจอเข้าสู่ระบบใหม่ | [[backlog#Non-Functional Requirements\|NFR-12]] |
 | threshold/rule ที่ใช้ในการประเมินยังไม่ผ่านการยืนยันจากแพทย์ผู้เชี่ยวชาญก่อน deploy (NFR-11) | ไม่ deploy โค้ด Risk Rule Engine ที่มี rule ใหม่/แก้ไข จนกว่าจะผ่านการยืนยัน — เป็นกระบวนการเชิงองค์กร (approval gate) นอกขอบเขตของ sequence diagram/edge case ที่ระบบต้อง implement เป็น behavior ขณะรันจริง | [[backlog#Non-Functional Requirements\|NFR-11]] |
 | flag/สัญญาณเตือนความเสี่ยงแสดงด้วยสีเพียงอย่างเดียวโดยไม่มีข้อความกำกับ (ความเสี่ยงด้าน Accessibility) | ต้องไม่เกิดขึ้น — Client ต้องแสดงข้อความระดับความเสี่ยง (จาก RiskFinding.ระดับความเสี่ยงที่ประเมินได้) คู่กับสี + ไอคอน **Heroicons** เสมอตาม WCAG 2.1 AA (NFR-13) ตรวจสอบด้วย **Lighthouse Accessibility Audit** ก่อน deploy ทุกครั้ง (เป็นส่วนหนึ่งของการรีวิว UI ตาม [[DESIGN]]) | [[backlog#Non-Functional Requirements\|NFR-13]], [[technology-stack#11. Design Token/Icon Library สำหรับ Accessibility (NFR-13) — WCAG 2.1 Level AA + Heroicons + Lighthouse\|technology-stack decision area 11]] |
@@ -288,3 +293,4 @@ Client แสดงเป็นข้อมูลสุขภาพที่ล�
 - [[patient-ncd-diagnosis-lab-history]]
 - [[pdpa-data-protection-compliance]]
 - [[20260922-01-operational-quality-nfr]]
+- [[user-authentication-email-password]]
