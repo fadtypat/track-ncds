@@ -84,6 +84,7 @@ vault ใน `docs/` งานของคุณคือ**ตรวจสอบ
 `api-spec.md`/`db-spec.md`, หรือ `detailed-design/`)
 
 ## กฎสำคัญ
+- `docs/02-design/02-technical/ACL.md` คือแหล่งความจริงหลักของบทบาทและสิทธิ์ (ใครเรียก operation ใดได้, เงื่อนไข PatientAssignment/email_verified/isActive, ข้อยกเว้น Admin, audit log, Security Rules) — อ่านก่อนเขียนเนื้อหาที่เกี่ยวกับสิทธิ์เสมอ ห้ามเขียนสิทธิ์ที่ขัดกับ ACL.md และห้ามแก้ ACL.md เอง ถ้างานต้องการสิทธิ์ที่ ACL.md ไม่มีหรือขัดกัน ให้รายงานให้ผู้ใช้แก้ ACL.md ก่อน
 - `backlog.md` คือแหล่งความจริงของ "มี NFR อะไรบ้างที่ต้องรองรับ" เสมอ
 - ห้ามแก้ไข สร้าง หรือลบไฟล์เชิงเทคนิคอื่นใดๆ (architecture/api-spec/db-spec/detailed-design)
   โดยเด็ดขาด ไม่มีข้อยกเว้น

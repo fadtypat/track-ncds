@@ -25,11 +25,11 @@ This file provides guidance to Claude Code (claude.ai/code) when working with co
 
 | ส่วน | สถานะ |
 | --- | --- |
-| Spec (`01-spec/`) | มี 4 ไฟล์: NCD history/lab/risk (20260917), PDPA (20260921), operational-quality NFR (20260922), user authentication email/password (20260923) |
-| `backlog.md` | FR-01–FR-10 (สูงทั้งหมด), NFR-01–NFR-18 — ทุกรายการสถานะ `Backlog` ยังไม่มีรายการใดเริ่มพัฒนา |
-| `feature-list.md` / `user-journey.md` / `DESIGN.md` | มีเนื้อหาแล้ว (6 ฟีเจอร์; DESIGN.md ยังไม่มีหน้าจอ auth) |
-| Technical (`architecture`, `api-spec` Operation 0–9, `db-spec`, `detailed-design/` 5 ไฟล์, `nfr-review` 18/18 Addressed, `technology-stack` decision area 1–19) | มีเนื้อหาครบและผูก Firebase แล้ว |
-| Testing (`acceptance-criteria`, `test-plan`, `test-cases/` 6 ไฟล์) | มีเนื้อหาแล้ว |
+| Spec (`01-spec/`) | มี 5 ไฟล์: NCD history/lab/risk (20260917), PDPA (20260921), operational-quality NFR (20260922), user authentication email/password (20260923), admin role/account management (20260924) |
+| `backlog.md` | FR-01–FR-16 (สูงทั้งหมด), NFR-01–NFR-20 — Phase 1 (FR-07–FR-10) มีโค้ดแล้ว รายการอื่นยังไม่เริ่มพัฒนา |
+| `feature-list.md` / `user-journey.md` / `DESIGN.md` | มีเนื้อหาแล้ว (7 ฟีเจอร์, 4 journey; DESIGN.md ยังไม่มีหน้าจอ auth/admin) |
+| Technical (`architecture`, `api-spec` Operation 0–16, `db-spec`, `ACL.md`, `detailed-design/` 6 ไฟล์, `nfr-review` 20/20 Addressed, `technology-stack` decision area 1–19) | มีเนื้อหาครบและผูก Firebase แล้ว |
+| Testing (`acceptance-criteria`, `test-plan`, `test-cases/` 7 ไฟล์) | มีเนื้อหาแล้ว |
 | `02-test-result/`, `04-retrospectives/`, `00-archived/` | ว่าง |
 | `01-requirements/02-plan/`, `03-task/` | `release-plan.md` 6 phase (P1 Authentication → P2 ค้นหาผู้ป่วย+data protection → P3 ประวัติ/lab → P4 ความเสี่ยง → P5 PDPA ส่วนขยาย → P6 hardening) + task 6 ไฟล์ (20260924) |
 | Prototype `20260918-01-v1` | Clickable HTML mockup มาตรฐานของ pipeline (ข้อมูล hardcode) |
@@ -86,6 +86,7 @@ Firestore demo ใช้ชื่อ collection ชุดเดียวกั�
 - ทุกความต้องการมีรหัสกำกับ (`FR-xx` / `NFR-xx`) และระดับความสำคัญ (สูง/กลาง/ต่ำ โดย "สูง" คือสิ่งที่ต้องมีใน MVP) — ดูสรุปล่าสุดที่ `docs/01-requirements/backlog.md` ก่อนอ้างอิงรหัสเสมอ
 - เอกสารทุกชั้นอ้างอิงกันด้วย `[[wikilink]]` แบบ Obsidian และควรอ้างอิงกลับไปยัง spec ต้นทางเสมอ
 - เอกสารเชิงเทคนิค (`architecture.md`, `api-spec.md`, `db-spec.md`, `detailed-design/`) ออกแบบเชิง logical แล้วเสริมรายละเอียดเทคโนโลยีจริงตาม `technology-stack.md` — ชื่อ collection/field ของ Firestore ให้ยึดตาม `db-spec.md`
+- บทบาทและสิทธิ์ (ใครเรียก operation ใดได้, เงื่อนไข PatientAssignment/email_verified/isActive, ข้อยกเว้น Admin, audit log, Security Rules) ยึด `docs/02-design/02-technical/ACL.md` เป็นแหล่งความจริงหลัก — เปลี่ยนสิทธิ์ให้แก้ ACL.md ก่อน (ไม่มี skill ดูแล แก้ตรงได้เมื่อผู้ใช้สั่ง) แล้วจึง sync เอกสารเทคนิค/ทดสอบ/โค้ดตาม agent สาย technical/test/prototype อ่าน ACL.md แต่ห้ามแก้เอง
 
 ## โครงสร้างพื้นที่เอกสาร (`docs/`)
 
@@ -103,6 +104,7 @@ docs/
     01-prototypes/<YYYYMMDD>-<NN>-<version>/   HTML mockup + prototype.md
     02-technical/
       architecture.md, api-spec.md, db-spec.md, nfr-review.md, technology-stack.md
+      ACL.md                      บทบาท × สิทธิ์ต่อ operation (แหล่งความจริงหลักของสิทธิ์)
       detailed-design/{feature-slug}.md
     feature-list.md, user-journey.md
     DESIGN.md                     Design System หลัก (single source of truth)
