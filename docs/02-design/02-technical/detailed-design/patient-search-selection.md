@@ -54,6 +54,16 @@ partial match) เลข HN ต้องเป็นตัวเลขล้ว�
 ยืนยันไว้แล้ว) ฟีเจอร์ที่ 6 เป็น precondition ก่อนฟีเจอร์นี้ทั้งหมด (ผ่าน Operation 7 เข้าสู่ระบบ +
 ยืนยันอีเมลก่อน) — ดูรายละเอียดขั้นตอนก่อนหน้าไฟล์นี้ที่ [[user-authentication-email-password]]
 
+**อัปเดต 2026-09-24 — ฟีเจอร์ที่ 7 (Admin, NFR-19): ไม่กระทบ Operation 0 ของเอกสารนี้:** Admin
+**ไม่เรียก Operation 0** ในเอกสารนี้ — [[api-spec]] ให้ Admin ค้นหา/แสดงรายชื่อผู้ป่วยทั้งหมดในระบบผ่าน
+[[api-spec#Operation 15 — ค้นหา/แสดงรายชื่อผู้ป่วยทั้งหมดในระบบ (สำหรับ Admin)|Operation 15]] แยกต่างหาก
+แทน (ผ่าน Cloud Function เสมอ ไม่ใช่ Client อ่าน Firestore ตรงแบบ Operation 0 เพราะ Security Rules ของ
+`patients` ปฏิเสธ Client ทั้งหมดอยู่แล้ว และ Admin ไม่มีระเบียนใน `patientAssignments` ให้ query) — ดู
+sequence diagram ฝั่ง Admin ที่
+[[admin-role-account-management#Sequence Diagram 4 — Admin ดูข้อมูลผู้ป่วยทุกรายแบบอ่านอย่างเดียว (Operation 15 + Operation 1/2/3 ผ่านข้อยกเว้น NFR-19)|admin-role-account-management]]
+sequence/state diagram ของเอกสารนี้ (Operation 0, เฉพาะแพทย์/พยาบาล) จึงไม่ต้องแก้ไขเพิ่มเติมสำหรับ
+ฟีเจอร์ที่ 7
+
 **อัปเดต 2026-09-22 (รอบสาม) — ตรวจสอบความสอดคล้องกับ `[[technology-stack]]`/`[[architecture]]` ฉบับ
 ล่าสุด:** เพิ่ม `loop` block ตรวจสอบ inactivity/auto-logout (NFR-12) เข้าไปใน Sequence Diagram ด้านล่าง
 ให้ตรงกับที่ [[architecture#Data Flow Diagram — Journey หลัก|architecture — Sequence Diagram ของ
@@ -367,3 +377,4 @@ diagram นี้ (เป็น request-scoped process state ทั้งหม�
 - [[pdpa-data-protection-compliance]]
 - [[20260922-01-operational-quality-nfr]]
 - [[user-authentication-email-password]]
+- [[admin-role-account-management]]

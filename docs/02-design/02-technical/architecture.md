@@ -1,15 +1,50 @@
 # Architecture (Logical/Conceptual)
 
 เอกสารนี้อธิบายสถาปัตยกรรมระดับ hi-level (logical component + data flow) ของระบบที่รองรับฟีเจอร์ทั้ง
-หกรายการใน [[feature-list]] และทั้งสาม journey ใน [[user-journey]] อ้างอิงความต้องการต้นทางจาก
+เจ็ดรายการใน [[feature-list]] และทั้งสี่ journey ใน [[user-journey]] อ้างอิงความต้องการต้นทางจาก
 [[backlog]] และ spec
-[[20260917-01-patient-ncd-history-lab-complication-risk]],
+[[20260917-01-patient-ncd-history-lab-complication-risk]] (รวม FR-16 — ยืนยัน/แก้ไขผลการประเมิน
+ความเสี่ยง เพิ่มเข้ามาในฟีเจอร์ที่ 2),
 [[20260921-01-pdpa-data-protection-compliance]] (ฟีเจอร์ที่ 4 — คุ้มครองข้อมูลส่วนบุคคลตาม PDPA,
 NFR-03–NFR-08),
 [[20260922-01-operational-quality-nfr]] (ฟีเจอร์ที่ 5 — รับประกันคุณภาพเชิงปฏิบัติการของระบบ,
-NFR-09–NFR-16) และ
+NFR-09–NFR-16),
 [[20260923-01-user-authentication-email-password]] (ฟีเจอร์ที่ 6 — สมัครบัญชี เข้าสู่ระบบ และจัดการ
-รหัสผ่านด้วยอีเมล, FR-07–FR-10, NFR-17–NFR-18)
+รหัสผ่านด้วยอีเมล, FR-07–FR-10, NFR-17–NFR-18) และ
+[[20260924-01-admin-role-account-management]] (ฟีเจอร์ที่ 7 — จัดการบัญชีผู้ใช้งาน สิทธิ์ และการ
+มอบหมายผู้ป่วยโดยบทบาท Admin ใหม่, FR-11–FR-15, NFR-19–NFR-20)
+
+**หมายเหตุการอัปเดตล่าสุด (2026-09-24, รอบ sync ที่หก — เพิ่มฟีเจอร์ที่ 7 Admin และ FR-16):**
+`[[feature-list]]`/`[[user-journey]]` เพิ่มฟีเจอร์ที่ 7 (จัดการบัญชีผู้ใช้งาน สิทธิ์ และการมอบหมาย
+ผู้ป่วย — Admin: FR-11–FR-15, NFR-19, NFR-20 ตาม
+[[20260924-01-admin-role-account-management]]) และเพิ่ม FR-16 (ยืนยัน/แก้ไขผลการประเมินความเสี่ยง
+โรคแทรกซ้อนโดยแพทย์/พยาบาล) เข้าไปในฟีเจอร์ที่ 2 เดิม ฟีเจอร์ที่ 6 ยังถูกแก้ไขด้วย: **การอนุมัติบัญชี
+(FR-11) เปลี่ยนจากการแก้ไข Firebase Console/Firestore โดยตรง เป็นหน้าจอ Admin ในระบบ** (บัญชี Admin
+คนแรก/bootstrap ยังคงตั้งผ่าน Console อยู่นอกขอบเขต) เอกสารนี้จึงถูกปรับปรุงเพิ่ม:
+
+- **บทบาทผู้ใช้ใหม่ Admin (ผู้ดูแลระบบ)** ในหัวข้อภาพรวม — ใช้ component เดิมทั้งหมด (Client, Backend
+  Service, Primary Data Store, Audit Log Store, Authentication Service) ไม่ต้องการ component ใหม่
+- Backend Service: กลุ่มงานใหม่ "การจัดการบัญชีผู้ใช้และสิทธิ์ (Admin — Account, Role & Patient
+  Assignment Management)" ครอบคลุม FR-11–FR-14 และส่วนขยายของ Access Control/Audit Logging สำหรับ
+  NFR-19 (ข้อยกเว้นสิทธิ์เข้าถึงผู้ป่วยทุกรายของ Admin โดยไม่ต้องมี PatientAssignment) และ NFR-20
+  (audit log แบบ fail-safe เฉพาะการเข้าถึงข้อมูลผู้ป่วยของ Admin)
+- Backend Service (Risk Rule Engine): เพิ่มความรับผิดชอบยืนยัน/แก้ไข (override) ผลการประเมินความเสี่ยง
+  โดยแพทย์/พยาบาลผู้ดูแลผู้ป่วยรายนั้น พร้อม audit log (FR-16)
+- Client: เพิ่มหน้าจอ Admin (อนุมัติบัญชี, เปลี่ยน role, ระงับ/เปิดใช้งานบัญชี, จัดการ
+  PatientAssignment, ดูประวัติผู้ป่วยทุกรายแบบอ่านอย่างเดียว) และหน้าจอยืนยัน/แก้ไขผลประเมินความเสี่ยง
+  สำหรับแพทย์/พยาบาล (FR-16)
+- Component Diagram: เพิ่มเส้นทาง Client↔Backend↔Primary Data Store สำหรับ FR-11–FR-15/NFR-19/NFR-20
+  และ FR-16
+- Data Flow Diagram ใหม่ 1 ภาพสำหรับ journey ที่สี่ (Admin) และเพิ่มขั้นตอนยืนยัน/แก้ไขผลประเมินความ
+  เสี่ยง (FR-16) ต่อท้าย sequence diagram ของ Journey หลัก
+- ตาราง Mapping NFR: เพิ่มแถว NFR-19, NFR-20
+
+**กลไกเทคโนโลยีจริงของฟีเจอร์ที่ 7/FR-16 ยังไม่มีใน `[[technology-stack]]`** (ตรวจแล้วว่าเอกสารนั้น
+ยังไม่มี decision area ใดครอบคลุม Admin/FR-11–FR-20) จึงเขียนเฉพาะระดับ logical component/กลไกที่ต่อ
+ยอดจากรูปแบบเดิมที่มีอยู่แล้วอย่างสมเหตุสมผล (เช่น เขียนผ่าน Cloud Functions ด้วย Admin SDK รูปแบบ
+เดียวกับ `signUpUser`/Audit Logging เดิม) แต่**ไม่ระบุรายละเอียด implementation ใหม่ที่ยังไม่มีเหตุผล
+รองรับจาก technology-stack** (เช่น จะแยกเป็น Cloud Function กี่ตัว) — บันทึกไว้เป็น "ประเด็นรอ
+ตัดสินใจ" ท้ายเอกสาร แนะนำให้รัน `/build-tech-stack` เพื่อเติมรายละเอียด
 
 **หมายเหตุการอัปเดตล่าสุด (2026-09-24, รอบ sync ที่ห้า):** `[[technology-stack]]` ปรับปรุงรอบสามเพิ่ม
 decision area 13–19 (กลไกจริงของฟีเจอร์ที่ 6 — Authentication) และ **แก้ไข decision area 7**: **ไม่ใช้
@@ -99,7 +134,12 @@ component/diagram ทุกจุดตามที่ `[[technology-stack]]` �
 
 ## ภาพรวม
 
-ระบบมีผู้ใช้บทบาทเดียวคือแพทย์/พยาบาลผู้ดูแลผู้ป่วย NCD (ตามที่ระบุใน [[user-journey]]) ซึ่งต้อง:
+ระบบมี **2 บทบาทผู้ใช้** ตามที่ระบุใน [[user-journey]]: **แพทย์/พยาบาลผู้ดูแลผู้ป่วย NCD** และ
+**Admin (ผู้ดูแลระบบ)** — บทบาทใหม่ตาม [[20260924-01-admin-role-account-management]] ที่ดูแลบัญชี
+ผู้ใช้งาน สิทธิ์ และการมอบหมายผู้ป่วย (ดูหัวข้อ
+[[feature-list#7. จัดการบัญชีผู้ใช้งาน สิทธิ์ และการมอบหมายผู้ป่วย (Admin)|ฟีเจอร์ที่ 7 ใน
+feature-list]] และหัวข้อ [[#บริการฝั่งเซิร์ฟเวอร์ (Backend Service)|Backend Service]] ด้านล่างของ
+เอกสารนี้) แพทย์/พยาบาลผู้ดูแลผู้ป่วย NCD ต้อง:
 
 0. ค้นหาผู้ป่วยเฉพาะรายด้วยเลข HN รูปแบบตัวเลขล้วน 7 หลักเท่านั้น (ไม่รองรับการค้นหาด้วยชื่ออีกต่อไป —
    FR-06) และ/หรือเรียกดูรายชื่อผู้ป่วย NCD ที่อยู่ในความดูแลของตนเองทั้งหมด (FR-05) เพื่อเลือกผู้ป่วย
@@ -109,7 +149,9 @@ component/diagram ทุกจุดตามที่ `[[technology-stack]]` �
    ทั้งหมด (FR-06)
 1. ดูประวัติการวินิจฉัยโรค NCD และผลตรวจ lab ย้อนหลังของผู้ป่วยรายบุคคล (FR-01, FR-02)
 2. รับผลการวิเคราะห์ความเสี่ยงโรคแทรกซ้อนแบบ rule-based พร้อม flag/สัญญาณเตือนบนหน้าจอ (FR-03,
-   FR-04)
+   FR-04) และยืนยัน/แก้ไข (override) ผลการประเมินความเสี่ยงนั้นได้เฉพาะผู้ป่วยที่อยู่ในความดูแลของตน
+   (FR-16 — เพิ่มใหม่ตาม [[20260924-01-admin-role-account-management]] ที่แก้ไขเอกสาร spec ฉบับแรก
+   ไม่ใช่สิทธิ์ของ Admin)
 
 ทั้งสามความสามารถต้องอยู่ภายใต้การควบคุมการเข้าถึงเฉพาะบทบาทที่มีสิทธิ์ (NFR-02) และข้อมูลประวัติ/
 ผลตรวจ lab ที่ใช้ต้องอ้างอิงแหล่งข้อมูล HOSxP หรือข้อมูล mockup ระหว่างพัฒนา (NFR-01) นอกจากนี้
@@ -143,20 +185,34 @@ uptime (NFR-10), การจับคู่โรค/threshold ที่ใช�
 นอกจากนี้ ฟีเจอร์ที่ 6 "สมัครบัญชี เข้าสู่ระบบ และจัดการรหัสผ่านด้วยอีเมล (Authentication)" (FR-07–
 FR-10, NFR-17, NFR-18 ดู
 [[feature-list#6. สมัครบัญชี เข้าสู่ระบบ และจัดการรหัสผ่านด้วยอีเมล (Authentication)|feature-list]])
-เป็น **precondition ก่อนฟีเจอร์ที่ 1-5 ทั้งหมด** — ผู้ใช้งานต้องสมัครบัญชี ยืนยันอีเมล และรอผู้ดูแล
-ระบบอนุมัติ (กำหนด role และ `isActive=true` ผ่าน Firebase Console/Firestore โดยตรง ไม่มีหน้าจออนุมัติ
-ในระบบสำหรับ MVP) ก่อนจึงจะเข้าสู่ระบบและเริ่ม journey ค้นหา/ดูข้อมูลผู้ป่วยได้ (NFR-02 ยังคงควบคุม
-สิทธิ์เข้าถึงข้อมูลผู้ป่วยแยกต่างหากหลังเข้าสู่ระบบสำเร็จแล้วเหมือนเดิม) ฟีเจอร์นี้ต้องการ component
-ใหม่หนึ่งตัวคือ **บริการยืนยันตัวตน (Authentication Service)** ที่แยกออกมาจากที่เคยเป็นเพียง
-cross-cutting note ใต้ Component Diagram (ดูหัวข้อ
-[[#บริการยืนยันตัวตน (Authentication Service)]] ด้านล่าง) เนื่องจากตอนนี้มี flow ที่ผู้ใช้โต้ตอบกับ
-component นี้โดยตรงเป็นฟีเจอร์หลักแล้ว (ไม่ใช่แค่การแนบ token ไปกับคำขออื่น)
+เป็น **precondition ก่อนฟีเจอร์ที่ 1-5 ทั้งหมด** — ผู้ใช้งานต้องสมัครบัญชี ยืนยันอีเมล และรอ **Admin**
+อนุมัติผ่าน**หน้าจอในระบบ** (กำหนด role และ `isActive=true` — FR-11 **แก้ไข 2026-09-24: แทนที่กลไก
+เดิมที่เคยเป็นการแก้ไข Firebase Console/Firestore โดยตรง** ดูฟีเจอร์ที่ 7 ด้านล่าง; การสร้างบัญชี
+Admin คนแรก/bootstrap ยังคงดำเนินการผ่าน Firebase Console/Firestore โดยตรง อยู่นอกขอบเขต) ก่อนจึงจะ
+เข้าสู่ระบบและเริ่ม journey ค้นหา/ดูข้อมูลผู้ป่วยได้ (NFR-02 ยังคงควบคุม สิทธิ์เข้าถึงข้อมูลผู้ป่วยแยก
+ต่างหากหลังเข้าสู่ระบบสำเร็จแล้วเหมือนเดิม) ฟีเจอร์นี้ต้องการ component ใหม่หนึ่งตัวคือ **บริการยืนยัน
+ตัวตน (Authentication Service)** ที่แยกออกมาจากที่เคยเป็นเพียง cross-cutting note ใต้ Component
+Diagram (ดูหัวข้อ [[#บริการยืนยันตัวตน (Authentication Service)]] ด้านล่าง) เนื่องจากตอนนี้มี flow
+ที่ผู้ใช้โต้ตอบกับ component นี้โดยตรงเป็นฟีเจอร์หลักแล้ว (ไม่ใช่แค่การแนบ token ไปกับคำขออื่น)
 
-สถาปัตยกรรมจึงถูกแบ่งเป็น 6 logical component หลัก ได้แก่ Client, Backend Service, Primary Data
-Store, ที่เก็บบันทึกการเข้าถึง (Audit Log Store), บริการยืนยันตัวตน (Authentication Service) และ
-External Clinical Data Source (ระบบภายนอกที่ไม่ได้พัฒนาในโปรเจกต์นี้) — ฟีเจอร์ที่ 5 ไม่ต้องการ
-component ใหม่เพิ่มเติม เพราะ NFR-09–NFR-16 ทุกรหัสอธิบายได้ด้วย component เดิม (ดูรายละเอียดในหัวข้อ
-ขอบเขตความรับผิดชอบของแต่ละ component และตาราง Mapping NFR ด้านล่าง)
+นอกจากนี้ ฟีเจอร์ที่ 7 "จัดการบัญชีผู้ใช้งาน สิทธิ์ และการมอบหมายผู้ป่วย (Admin)" (FR-11–FR-15,
+NFR-19, NFR-20 ดู
+[[feature-list#7. จัดการบัญชีผู้ใช้งาน สิทธิ์ และการมอบหมายผู้ป่วย (Admin)|feature-list]]) เป็น
+บทบาทผู้ใช้ใหม่ที่**ใช้ component เดิมทั้งหมด** (Client, Backend Service, Primary Data Store,
+Authentication Service) **ไม่ต้องการ component ใหม่เพิ่มเติม** — Admin เข้าสู่ระบบด้วยกลไกเดียวกับ
+แพทย์/พยาบาล (FR-07) แล้วดำเนินการอนุมัติบัญชี/เปลี่ยน role/ระงับ-เปิดใช้งานบัญชี/จัดการ
+PatientAssignment ผ่าน Backend Service (เขียน `users/{uid}`/`patientAssignments` ผ่าน Admin SDK
+เท่านั้น เช่นเดียวกับรูปแบบที่ใช้กับ Account Onboarding เดิม) และดูประวัติผู้ป่วยทุกรายแบบอ่านอย่าง
+เดียวโดยไม่ต้องมี PatientAssignment เป็นของตนเอง (NFR-19 — ข้อยกเว้น Access Control) ทุกครั้งที่เข้าถึง
+ข้อมูลผู้ป่วยต้องบันทึก audit log แบบ fail-safe ก่อนเสมอเช่นเดียวกับ NFR-06 (NFR-20) ดูรายละเอียดที่
+หัวข้อ Backend Service ด้านล่าง
+
+สถาปัตยกรรมจึงยังคงแบ่งเป็น 6 logical component หลักเท่าเดิม ได้แก่ Client, Backend Service, Primary
+Data Store, ที่เก็บบันทึกการเข้าถึง (Audit Log Store), บริการยืนยันตัวตน (Authentication Service)
+และ External Clinical Data Source (ระบบภายนอกที่ไม่ได้พัฒนาในโปรเจกต์นี้) — ทั้งฟีเจอร์ที่ 5 และ
+ฟีเจอร์ที่ 7 (Admin) ไม่ต้องการ component ใหม่เพิ่มเติม เพราะ NFR-09–NFR-16 และ FR-11–FR-15/NFR-19–
+NFR-20 ทุกรหัสอธิบายได้ด้วย component เดิม (ดูรายละเอียดในหัวข้อขอบเขตความรับผิดชอบของแต่ละ
+component และตาราง Mapping NFR ด้านล่าง)
 
 ## Component Diagram
 
@@ -183,6 +239,12 @@ flowchart LR
     Backend -->|"Op.8 signUpUser: createUser (Admin SDK) แล้วเขียน users/{uid} ในฟังก์ชันเดียวกัน, rollback deleteUser ถ้าเขียน Firestore ล้มเหลว (decision area 17); Op.9 requestPasswordReset: สั่งส่งอีเมลลิงก์รีเซ็ต"| AuthSvc
     Backend -->|"สร้างเอกสารบัญชีเริ่มต้น users/{uid} (isActive=false, ไม่มี role) — เขียนผ่าน Admin SDK เท่านั้น ภายใน signUpUser เดียวกับที่สร้างบัญชี Authentication (decision area 17)"| DataStore
     AuthSvc -->|"ส่งอีเมลยืนยันตัวตน (FR-09) / อีเมลลิงก์รีเซ็ตรหัสผ่าน (FR-10) — template เริ่มต้นของ Firebase ปรับ locale ไทย+ชื่อผู้ส่งผ่าน Console (decision area 15) ไปยังผู้ใช้งานโดยตรง"| Client
+    Client -->|"FR-11-FR-14 (Admin) — อนุมัติบัญชีใหม่/เปลี่ยน role/ระงับ-เปิดใช้งานบัญชี/จัดการ PatientAssignment ผ่าน HTTPS Callable Functions เสมอ (แทนที่กลไกเดิม Firebase Console/Firestore โดยตรง ยกเว้น bootstrap Admin คนแรก)"| Backend
+    Backend -->|"เขียน/แก้ไข users/{uid} (role, isActive) และ patientAssignments ตามคำสั่ง Admin (FR-11-FR-14) — ผ่าน Admin SDK เท่านั้น เช่นเดียวกับรูปแบบของ signUpUser"| DataStore
+    Client -->|"FR-15, NFR-19 (Admin) — ขอดูประวัติวินิจฉัย/ผล lab/ผลวิเคราะห์ความเสี่ยงของผู้ป่วยรายใดก็ได้ในระบบแบบอ่านอย่างเดียว โดยไม่ต้องมี PatientAssignment ของตนเอง"| Backend
+    Backend -->|"บันทึก audit log แบบ fail-safe ก่อนคืนข้อมูลเสมอ (NFR-20) — ปฏิเสธการเข้าถึงถ้าบันทึกไม่สำเร็จ, เขียนผ่าน Admin SDK เท่านั้นเช่นเดียวกับ NFR-06"| AuditStore
+    Client -->|"FR-16 — ยืนยัน/แก้ไข (override) ผลการประเมินความเสี่ยงของผู้ป่วยที่อยู่ในความดูแลของตน พร้อมเหตุผล ผ่าน HTTPS Callable Function"| Backend
+    Backend -->|"เขียนผลการยืนยัน/แก้ไข (override) ผลการประเมินความเสี่ยงพร้อมเหตุผล (FR-16) — ผ่าน Admin SDK เท่านั้น"| DataStore
 ```
 
 หมายเหตุ: ทุกเส้นทางการสื่อสารระหว่าง component ข้างต้นที่มีข้อมูลส่วนบุคคล/ข้อมูลสุขภาพของผู้ป่วยไหล
@@ -224,6 +286,16 @@ Service ตรงโดยไม่ผ่าน Cloud Function จึงต้�
 decision area 13]],
 [[technology-stack#14. กลไกป้องกัน Account Enumeration (NFR-18, ฟีเจอร์ที่ 6) — Firebase Email Enumeration Protection|
 decision area 14]] ใน technology-stack)
+
+**หมายเหตุเทคโนโลยีจริง (Admin — ฟีเจอร์ที่ 7 / FR-16):** เส้นทาง Client↔Backend↔Primary Data Store/
+Audit Log Store ที่เพิ่มเข้ามาด้านบนสำหรับ FR-11–FR-15/NFR-19/NFR-20 และ FR-16 **ยังไม่มี decision
+area ใดใน `[[technology-stack]]` รองรับโดยตรง** (ตรวจสอบแล้วว่าเอกสารนั้นยังไม่มีเนื้อหาเกี่ยวกับ
+Admin/FR-11–FR-20) แนวทางที่ระบุไว้ (เขียนผ่าน Cloud Functions ด้วย Admin SDK, บันทึก audit log แบบ
+fail-safe ก่อนคืนข้อมูลเสมอ) เป็นการต่อยอดจากรูปแบบเดียวกับ Account Onboarding (decision area 3/17)
+และ Audit Logging (decision area 5) ที่มีอยู่แล้วอย่างสมเหตุสมผลในระดับ logical เท่านั้น — จำนวน/การ
+แบ่ง Cloud Function ที่แน่นอนสำหรับแต่ละปฏิบัติการของ Admin (เช่น จะรวมเป็น callable function เดียว
+`manageUserAccount` หรือแยกเป็นหลายฟังก์ชันตาม FR-11/FR-12/FR-13/FR-14) ยังไม่ตัดสินใจ — บันทึกไว้เป็น
+"ประเด็นรอตัดสินใจ" ท้ายเอกสาร แนะนำให้รัน `/build-tech-stack`
 
 ## ขอบเขตความรับผิดชอบของแต่ละ Component
 
@@ -321,6 +393,31 @@ decision area 14]] ใน technology-stack)
   Enumeration Protection" เปิดใช้ระดับโปรเจกต์ (decision area 14) ปิดเฉพาะความแตกต่างของ error
   code/ข้อความเท่านั้น **ยังไม่ปิด timing side-channel** (ดูหัวข้อความเสี่ยงท้ายเอกสาร)
 
+**ความรับผิดชอบเพิ่มเติมสำหรับฟีเจอร์ที่ 2 (FR-16 — ยืนยัน/แก้ไขผลการประเมินความเสี่ยง):**
+
+- แสดงตัวเลือกให้แพทย์/พยาบาลผู้ดูแลผู้ป่วยรายนั้น (เฉพาะผู้ป่วยในความดูแลของตนตาม NFR-02) ยืนยันผล
+  เดิมหรือแก้ไข (override) ผลการประเมินความเสี่ยงที่ระบบประมวลผลอัตโนมัติ ต่อจากหน้าจอแสดง flag/
+  สัญญาณเตือนความเสี่ยง (FR-04) เสมอ
+- เมื่อเลือกแก้ไข (override) ต้องบังคับให้ระบุเหตุผลก่อนส่งคำขอไปยัง Backend Service
+- ไม่อนุญาตให้แก้ไขประวัติวินิจฉัย (FR-01) หรือผลตรวจ lab (FR-02) จากหน้าจอนี้หรือหน้าจอใดๆ — ยังคง
+  เป็นข้อมูลอ่านอย่างเดียวเสมอ
+
+**ความรับผิดชอบเพิ่มเติมสำหรับฟีเจอร์ที่ 7 (Admin — FR-11–FR-15, NFR-19, NFR-20):**
+
+- แสดงหน้าจอเข้าสู่ระบบเดียวกับแพทย์/พยาบาล (FR-07) — Admin ไม่มีหน้าจอเข้าสู่ระบบแยกต่างหาก
+- แสดงรายชื่อบัญชีที่สมัครเองแล้วรอการอนุมัติ (`isActive = false`, ยังไม่มี role) และหน้าจอกำหนด role
+  (แพทย์/พยาบาล) พร้อมเปลี่ยน `isActive = true` (FR-11) — แทนที่กลไกเดิมที่เคยดำเนินการผ่าน Firebase
+  Console/Firestore โดยตรง
+- แสดงหน้าจอเปลี่ยน role ของผู้ใช้งานที่เคยอนุมัติแล้ว (FR-12)
+- แสดงหน้าจอระงับ (`isActive = false`)/เปิดใช้งาน (`isActive = true`) บัญชีผู้ใช้งาน (FR-13)
+- แสดงหน้าจอมอบหมาย/ยกเลิกการมอบหมายผู้ป่วยรายบุคคลให้แพทย์/พยาบาล (จัดการ `patientAssignments`)
+  (FR-14)
+- แสดงหน้าจอเลือกผู้ป่วยรายบุคคลรายใดก็ได้ในระบบ (ไม่จำกัดเฉพาะที่อยู่ใน PatientAssignment ของตนเอง —
+  NFR-19) แล้วแสดงประวัติการวินิจฉัย ผลตรวจ lab และผลวิเคราะห์ความเสี่ยงแบบอ่านอย่างเดียว (read-only)
+  โดยไม่มีปุ่ม/ตัวเลือกใดให้แก้ไขข้อมูลทางคลินิกหรือยืนยัน/แก้ไขผลประเมินความเสี่ยง (สิทธิ์นั้นยังคง
+  เป็นของแพทย์/พยาบาลตาม FR-16 เท่านั้น) (FR-15)
+- แสดงข้อความปฏิเสธการเข้าถึงเมื่อ Backend Service แจ้งว่าบันทึก audit log ไม่สำเร็จ (NFR-20)
+
 ### บริการฝั่งเซิร์ฟเวอร์ (Backend Service) — เทคโนโลยีจริง: [[technology-stack#2. ภาษา/Framework ฝั่ง Backend Logic — Node.js + TypeScript บน Cloud Functions|Cloud Functions (2nd gen), Node.js + TypeScript]]
 
 **หมายเหตุเทคโนโลยีจริงสำคัญ:** ตาม
@@ -333,7 +430,7 @@ implement เป็น Client อ่าน Primary Data Store ตรงผ่า
 เข้าถึง" และ "การรวบรวมข้อมูล" ด้านล่างจึงยังคงถูกต้องเสมอในระดับหลักการ แต่ **กลไกจริงที่บังคับใช้
 ส่วนที่เกี่ยวกับ Operation 0 คือ Firestore Security Rules ไม่ใช่โค้ดของ Cloud Functions**
 
-แบ่งความรับผิดชอบภายในเป็น 5 กลุ่มงานเชิงตรรกะ (ไม่ใช่ deployment unit แยกกันจริงทั้งหมด — ทุกกลุ่มงาน
+แบ่งความรับผิดชอบภายในเป็น 6 กลุ่มงานเชิงตรรกะ (ไม่ใช่ deployment unit แยกกันจริงทั้งหมด — ทุกกลุ่มงาน
 ยกเว้นส่วนที่กล่าวถึงข้างต้น implement เป็น Cloud Functions (2nd gen) แยกฟังก์ชันตามกลุ่มงาน (callable
 functions สำหรับ Operation 1-5, scheduled function ผ่าน Cloud Scheduler สำหรับ Operation 6) ภายใน
 Firebase project เดียวกัน ตาม [[technology-stack#6. Hosting/Deployment Environment|decision area 6
@@ -381,6 +478,18 @@ Firebase project เดียวกัน ตาม [[technology-stack#6. Hostin
     หัวข้อความเสี่ยงใน technology-stack]] และหัวข้อ Client ด้านบน) — มาตรการป้องกันที่ควรพิจารณาก่อน
     ใช้งานจริงกับข้อมูลผู้ป่วยจริง (ลด TTL ของ token, เพิ่ม server-side revocation) บันทึกไว้ใน "ประเด็น
     รอตัดสินใจ" ท้ายเอกสาร
+  - **ข้อยกเว้นสำหรับบทบาท Admin (NFR-19 — เพิ่มใหม่ 2026-09-24):** เมื่อผู้ใช้ที่ตรวจสอบแล้วมีบทบาท
+    `role = admin` ใน `users/{uid}` ให้**ข้าม**การตรวจสอบระดับรายผู้ป่วย (PatientAssignment) สำหรับ
+    การอ่านข้อมูลประวัติวินิจฉัย/ผลตรวจ lab/ผลวิเคราะห์ความเสี่ยงเท่านั้น (FR-15) — ยังคงตรวจสอบระดับ
+    บทบาท/isActive/emailVerified ตามปกติทุกเงื่อนไข เพียงแต่ไม่บังคับเงื่อนไข "อยู่ในความดูแล" อีก
+    เงื่อนไขหนึ่ง Admin **ไม่มี**สิทธิ์แก้ไขข้อมูลทางคลินิกใดๆ (ประวัติวินิจฉัย, ผล lab, ผลวิเคราะห์
+    ความเสี่ยง) และไม่มีสิทธิ์ยืนยัน/แก้ไขผลประเมินความเสี่ยง (FR-16 ยังคงเป็นสิทธิ์ของแพทย์/พยาบาล
+    เท่านั้น) — ข้อยกเว้นนี้ต้องเพิ่มเป็นกรณีทดสอบใหม่ในชุด automated test ของ NFR-14 (Admin ที่มี
+    role ถูกต้องแต่ไม่มี PatientAssignment ต้องเข้าถึงได้สำหรับการอ่านเท่านั้น ไม่ใช่การแก้ไข)
+  - **Audit log แบบ fail-safe เฉพาะการเข้าถึงของ Admin (NFR-20 — เพิ่มใหม่ 2026-09-24):** ทุกครั้งที่
+    Admin เข้าถึงข้อมูลผู้ป่วยรายบุคคลผ่านข้อยกเว้นข้างต้น ต้องบันทึก audit log ก่อนคืนข้อมูลเสมอ (รูป
+    แบบ fail-safe เดียวกับ NFR-06 — ถ้าบันทึกไม่สำเร็จต้องปฏิเสธการเข้าถึงทันที) ดูรายละเอียดที่กลุ่มงาน
+    "การบันทึกและตรวจสอบร่องรอยการเข้าถึง" ด้านล่าง
 - **การรวบรวมข้อมูล (Data Aggregation):** รับคำขอค้นหาผู้ป่วยด้วยเลข HN จาก Client หลังผู้ใช้กดค้นหา
   แล้วเท่านั้น (ไม่ real-time) แล้วตรวจสอบก่อนว่ากรอกครบรูปแบบตัวเลขล้วน 7 หลักหรือไม่ — ถ้าไม่ครบ
   ส่งข้อความแจ้งเตือนกลับให้ Client ทันทีโดยไม่ค้นหาต่อ; ถ้าครบจึงค้นหาในข้อมูล assignment ของผู้ใช้งาน
@@ -414,6 +523,16 @@ Firebase project เดียวกัน ตาม [[technology-stack#6. Hostin
     ก่อน deploy Cloud Function ของ Risk Rule Engine ทุกครั้ง — ดูรายละเอียดที่เกี่ยวข้องเรื่องค่า
     threshold ที่ยังไม่ถูกกำหนดจริงใน spec ต้นทางที่หัวข้อ "ประเด็นรอตัดสินใจอื่น" ด้านล่างด้วย (เป็น
     ประเด็นที่เชื่อมโยงกัน)
+  - **การยืนยัน/แก้ไขผลการประเมินความเสี่ยง (FR-16 — เพิ่มใหม่ 2026-09-24):** รับคำขอจากแพทย์/พยาบาล
+    ผู้ดูแลผู้ป่วยรายนั้น (เฉพาะผู้ป่วยที่อยู่ในความดูแลของตนตาม NFR-02 — ตรวจสอบซ้ำก่อนทุกครั้ง) เพื่อ
+    ยืนยันผลเดิม หรือแก้ไข (override) ผลการประเมินความเสี่ยงที่ประมวลผลอัตโนมัติไว้ พร้อมเหตุผลที่ระบุ
+    (บังคับกรอกกรณี override) แล้วบันทึกผลลัพธ์ที่ Primary Data Store พร้อม audit log เสมอ (NFR-06)
+    สิทธิ์นี้ครอบคลุมเฉพาะผลการวิเคราะห์ความเสี่ยงเท่านั้น ไม่ครอบคลุมการแก้ไขประวัติวินิจฉัย (FR-01)
+    หรือผลตรวจ lab (FR-02) ซึ่งยังคงเป็นข้อมูลอ่านอย่างเดียว และไม่ใช่สิทธิ์ของ Admin (ดูกลุ่มงาน "การ
+    จัดการบัญชีผู้ใช้และสิทธิ์" ด้านล่าง)
+    - **กลไกจริง:** ยังไม่มี decision area ใน `[[technology-stack]]` ระบุไว้โดยตรง — คาดว่า implement
+      เป็น Cloud Functions (callable) เพิ่มเติมในกลุ่มงานเดียวกับ Operation 3 (Risk Rule Engine) ตาม
+      รูปแบบที่มีอยู่แล้ว (ดู "ประเด็นรอตัดสินใจ")
 - **การบันทึกและตรวจสอบร่องรอยการเข้าถึง (Audit Logging & Accountability):** บันทึกทุกเหตุการณ์
   ที่มีการเข้าถึง/ดู/แก้ไขข้อมูลส่วนบุคคลหรือข้อมูลสุขภาพของผู้ป่วยลง Audit Log Store โดยระบุอย่างน้อย
   ว่าผู้ใช้งานคนใดเข้าถึงข้อมูลของผู้ป่วยรายใด เมื่อใด และผ่านการดำเนินการใด (ค้นหา/ดู/แก้ไข/สกัด
@@ -427,6 +546,11 @@ Firebase project เดียวกัน ตาม [[technology-stack#6. Hostin
     เสมอ (ดู [[technology-stack#5. Audit Log Store — Cloud Firestore collection แยก เขียนผ่าน Cloud Functions เท่านั้น|
     decision area 5 ใน technology-stack]]); Operation 5 (สืบค้น audit trail) เป็น callable function
     เช่นกัน
+  - **ส่วนขยายสำหรับ Admin (NFR-20 — เพิ่มใหม่ 2026-09-24):** ทุกครั้งที่ Admin เข้าถึงข้อมูลผู้ป่วย
+    รายบุคคลผ่านข้อยกเว้น NFR-19 ต้องบันทึก audit log ก่อนคืนข้อมูลเสมอ (fail-safe รูปแบบเดียวกับ
+    NFR-06 — ถ้าบันทึกไม่สำเร็จต้องปฏิเสธการเข้าถึงข้อมูลผู้ป่วยรายนั้นทันที ไม่ใช่คืนข้อมูลไปก่อนแล้ว
+    ค่อยบันทึกทีหลัง) ระเบียนควรระบุว่าเป็นการเข้าถึงโดย Admin แยกจากการเข้าถึงโดยแพทย์/พยาบาลปกติ
+    เพื่อรองรับการสืบสวน/ตรวจสอบย้อนหลังตามหลัก Accountability ได้ชัดเจนยิ่งขึ้น
 - **การจัดการบัญชีผู้ใช้และการยืนยันตัวตน (Account Onboarding & Authentication Gateway) — ใหม่จาก
   ฟีเจอร์ที่ 6:** รับคำขอสมัครบัญชี (FR-08) และคำขอรีเซ็ตรหัสผ่าน (FR-10) จาก Client เสมอ (ไม่ให้
   Client เรียก Authentication Service ตรงสำหรับสองปฏิบัติการนี้ — ยืนยันโดยผู้ใช้แล้ว) ตรวจสอบว่า
@@ -457,6 +581,26 @@ Firebase project เดียวกัน ตาม [[technology-stack#6. Hostin
     `beforeUserSignedIn`) เพื่อความง่าย (decision area 16) — ผลคือ Operation 7 (เข้าสู่ระบบ) ยังไม่มี
     จุดตรวจ `emailVerified`/`isActive` ซ้ำระดับ token issuance (ความเสี่ยงที่รับทราบแล้ว ดูหัวข้อ
     ความเสี่ยงท้ายเอกสาร)
+- **การจัดการบัญชีผู้ใช้และสิทธิ์ (Admin — Account, Role & Patient Assignment Management) — ใหม่จาก
+  ฟีเจอร์ที่ 7:** รับคำขอจาก Admin เท่านั้น (ตรวจสอบ `role = admin` ก่อนเสมอ) เพื่อดำเนินการ: (1)
+  อนุมัติบัญชีผู้ใช้งานใหม่ที่สมัครเอง — กำหนด role (แพทย์/พยาบาล) และเปลี่ยน `isActive = true` ให้
+  บัญชีที่มี `isActive = false` และยังไม่มี role (FR-11 — แทนที่กลไกเดิมที่เคยดำเนินการผ่าน Firebase
+  Console/Firestore โดยตรง); (2) เปลี่ยน role ของผู้ใช้งานที่เคยอนุมัติแล้ว (FR-12); (3) ระงับ
+  (`isActive = false`) หรือเปิดใช้งาน (`isActive = true`) บัญชีภายหลัง — ผู้ใช้งานที่ถูกระงับต้องไม่
+  สามารถเข้าถึงข้อมูลผู้ป่วยใดๆ ได้ทันที (บังคับใช้ที่ Access Control ซึ่งอ่าน `isActive` จาก
+  `users/{uid}` ทุกครั้งอยู่แล้ว ไม่ต้องมีกลไกเพิ่มเติม) (FR-13); (4) มอบหมาย/ยกเลิกการมอบหมายผู้ป่วย
+  ให้แพทย์/พยาบาล โดยเขียน/ลบเอกสารใน `patientAssignments` ซึ่งเป็นเงื่อนไข "อยู่ในความดูแล" ที่ควบคุม
+  การมองเห็นผู้ป่วยของแพทย์/พยาบาลตามฟีเจอร์ที่ 3 (FR-05, NFR-02) โดยตรง (FR-14) ทุกการดำเนินการต้อง
+  บันทึก audit log เช่นเดียวกับกลุ่มงาน Audit Logging & Accountability ด้านบน (การเปลี่ยนแปลงสิทธิ์/
+  บัญชีผู้ใช้งานเป็นเหตุการณ์ที่ควรตรวจสอบย้อนหลังได้เช่นกัน แม้ NFR-06/NFR-20 จะเน้นการเข้าถึงข้อมูล
+  ผู้ป่วยเป็นหลัก) Admin ไม่มีสิทธิ์แก้ไขข้อมูลทางคลินิกใดๆ ผ่านกลุ่มงานนี้ (ประวัติวินิจฉัย, ผล lab,
+  ผลวิเคราะห์ความเสี่ยง — สิทธิ์แก้ไข/ยืนยันผลวิเคราะห์ความเสี่ยงยังคงเป็นของแพทย์/พยาบาลตาม FR-16
+  เท่านั้น)
+  - **กลไกจริง:** ยังไม่มี decision area ใน `[[technology-stack]]` ระบุไว้โดยตรง — คาดว่า implement
+    เป็น Cloud Functions (callable) เขียนผ่าน Firebase Admin SDK เท่านั้น (Client รวมถึง Admin ไม่มี
+    สิทธิ์เขียน `users/{uid}`/`patientAssignments` โดยตรง — Security Rules ปฏิเสธ client write
+    ทั้งหมด สอดคล้องกับรูปแบบเดียวกับ Account Onboarding/Audit Log Store) จำนวน/การแบ่ง Cloud
+    Function ที่แน่นอนสำหรับ FR-11/FR-12/FR-13/FR-14 ยังไม่ตัดสินใจ (ดู "ประเด็นรอตัดสินใจ")
 - **การจัดการคำขอสิทธิของเจ้าของข้อมูลและนโยบายการเก็บรักษา (Data Subject Rights & Retention
   Management):** รับคำขอจากเจ้าหน้าที่ที่มีสิทธิ์ (แทนผู้ป่วยที่ยื่นคำขอผ่านกระบวนการของหน่วยงาน) เพื่อ
   ค้นหา/สกัด/แก้ไข/ลบข้อมูลส่วนบุคคลของผู้ป่วยรายบุคคลตามสิทธิที่ PDPA กำหนด (เข้าถึง/สำเนา/แก้ไข/ลบ/
@@ -521,13 +665,19 @@ component ใหม่จากฟีเจอร์ที่ 6 — ก่อน
 - **ใหม่จากฟีเจอร์ที่ 6:** เก็บเอกสารบัญชีผู้ใช้ (`users/{uid}`) ที่มี field `isActive` และ role —
   สร้างโดย Backend Service (Cloud Function `signUpUser`) อัตโนมัติทันทีที่สมัคร
   บัญชีสำเร็จด้วย `isActive=false` และยังไม่มี role กำหนด (พร้อม rollback ลบบัญชี Authentication ถ้า
-  เขียนเอกสารนี้ล้มเหลว — decision area 17) แล้วรอผู้ดูแลระบบแก้ไขด้วยตนเองผ่าน Firebase
-  Console/Firestore ให้เป็น `isActive=true` พร้อมกำหนด role — Client ไม่มีสิทธิ์เขียนเอกสารนี้เลย
-  ไม่ว่ากรณีใด (Security Rules ปฏิเสธ client write ทั้งหมด สอดคล้องกับรูปแบบเดียวกับ
-  `auditLogRecords`) (FR-08, NFR-02) — **ตั้งแต่รอบ 2026-09-24 เอกสารนี้เป็น source of truth เดียว**
-  ของ `role`/`isActive` (ไม่มีการเก็บซ้ำ/sync ไปยัง Custom Claims — decision area 7/18) ทั้ง Firestore
-  Security Rules (Operation 0) และ Cloud Functions (Operation 1-6) ต้อง query/อ่านเอกสารนี้โดยตรงทุก
-  ครั้งที่ตรวจสิทธิ์
+  เขียนเอกสารนี้ล้มเหลว — decision area 17) แล้วรอ **Admin แก้ไขผ่านหน้าจอในระบบ (FR-11 — เขียนผ่าน
+  Backend Service ด้วย Admin SDK เท่านั้น แก้ไข 2026-09-24 แทนที่กลไกเดิมที่เคยเป็นการแก้ไข Firebase
+  Console/Firestore โดยตรง — ยกเว้นบัญชี Admin คนแรก/bootstrap ที่ยังคงตั้งผ่าน Console)** ให้เป็น
+  `isActive=true` พร้อมกำหนด role — Client (รวมถึง Admin) ไม่มีสิทธิ์เขียนเอกสารนี้เองโดยตรงไม่ว่า
+  กรณีใด (Security Rules ปฏิเสธ client write ทั้งหมด สอดคล้องกับรูปแบบเดียวกับ
+  `auditLogRecords`) (FR-08, FR-11, NFR-02) — **ตั้งแต่รอบ 2026-09-24 เอกสารนี้เป็น source of truth
+  เดียว** ของ `role`/`isActive` (ไม่มีการเก็บซ้ำ/sync ไปยัง Custom Claims — decision area 7/18) ทั้ง
+  Firestore Security Rules (Operation 0) และ Cloud Functions (Operation 1-6) ต้อง query/อ่านเอกสารนี้
+  โดยตรงทุกครั้งที่ตรวจสิทธิ์ — **ใหม่จากฟีเจอร์ที่ 7:** field `role` เพิ่มค่าที่เป็นไปได้ `admin`
+  (นอกเหนือจากแพทย์/พยาบาล) ที่ Access Control ใช้ตรวจสอบข้อยกเว้น NFR-19; และ Admin เปลี่ยน role/
+  isActive ของบัญชีอื่นได้ผ่าน Backend Service เช่นกัน (FR-12, FR-13); เก็บเอกสาร `patientAssignments`
+  ที่ Admin จัดการโดยตรง (มอบหมาย/ยกเลิกการมอบหมายผู้ป่วย — FR-14) เป็นเงื่อนไข "อยู่ในความดูแล" ของ
+  แพทย์/พยาบาลตามฟีเจอร์ที่ 3 เช่นเดิม
 - ระหว่างพัฒนา/ทดสอบ ทำหน้าที่เป็นแหล่งข้อมูล mockup แทนข้อมูลจริงจาก HOSxP (NFR-01)
 - ต้องเข้ารหัสข้อมูลส่วนบุคคล/ข้อมูลสุขภาพของผู้ป่วยที่จัดเก็บไว้ขณะพัก (at rest) เสมอ (NFR-04)
 - ต้องรองรับนโยบายจำกัดระยะเวลาเก็บรักษาและการลบ/ทำลายข้อมูลเมื่อพ้นระยะเวลาที่กำหนด หรือเมื่อ
@@ -724,7 +874,7 @@ sequenceDiagram
         Client-->>User: แสดงข้อความ "หากสมัครสำเร็จจะได้รับอีเมลยืนยันตัวตน"
         User->>Auth: เปิดลิงก์ยืนยันอีเมลจากอีเมลที่ได้รับ (FR-09)
         Auth-->>User: ยืนยันอีเมลสำเร็จ (emailVerified=true)
-        Note over Backend,Store: บัญชีรอผู้ดูแลระบบกำหนด role และ isActive=true ผ่าน Firebase Console/Firestore โดยตรง (นอกขอบเขตระบบ ไม่มีหน้าจออนุมัติใน MVP) — ไม่มีการ sync ไปยัง custom claims (decision area 18)
+        Note over Backend,Store: บัญชีรอ Admin กำหนด role และ isActive=true ผ่านหน้าจอในระบบ (FR-11 — แก้ไข 2026-09-24 แทนที่กลไกเดิม Firebase Console/Firestore โดยตรง ยกเว้น bootstrap Admin คนแรก; ดู journey ที่สี่/Data Flow Diagram — Journey Admin ด้านล่าง) — ไม่มีการ sync ไปยัง custom claims (decision area 18)
         end
     end
     User->>Client: กรอกอีเมล/รหัสผ่านเพื่อเข้าสู่ระบบ (FR-07)
@@ -756,7 +906,8 @@ Backend Service เกินกว่าที่ `[[technology-stack]]` decisio
 
 journey แรกใน [[user-journey#Journey แพทย์/พยาบาลผู้ดูแลผู้ป่วย NCD ค้นหาผู้ป่วย ดูประวัติ และรับการ
 แจ้งเตือนความเสี่ยงโรคแทรกซ้อน]] ครอบคลุมทั้งสามฟีเจอร์แรกต่อเนื่องกัน (ค้นหา/เลือกผู้ป่วย แล้วดู
-ประวัติ/ผล lab แล้วต่อด้วยผลวิเคราะห์ความเสี่ยง) พร้อมการบันทึก audit log ตามฟีเจอร์ที่ 4 จึงแสดงเป็น
+ประวัติ/ผล lab แล้วต่อด้วยผลวิเคราะห์ความเสี่ยงและการยืนยัน/แก้ไข (override) ผลนั้น — FR-16 เพิ่มใหม่
+2026-09-24) พร้อมการบันทึก audit log ตามฟีเจอร์ที่ 4 จึงแสดงเป็น
 sequence diagram เดียวดังนี้ — FR-05/FR-06 เป็นขั้นตอนแรกสุดที่ตรวจสิทธิ์ระดับบทบาทก่อน (NFR-02) จาก
 นั้นผู้ใช้เลือกค้นหาด้วยเลข HN 7 หลักหรือเรียกดูรายชื่อทั้งหมด — กรณีค้นหาด้วย HN การตรวจสอบความครบ
 ของรูปแบบ 7 หลักและผลการค้นหา (พบ/ไม่พบ) เกิดขึ้น**หลังกดค้นหาแล้วเท่านั้น** ไม่ใช่แบบ real-time
@@ -842,6 +993,20 @@ sequenceDiagram
             Backend->>Backend: ประมวลผลค่า lab เทียบ threshold วิเคราะห์ความเสี่ยงโรคแทรกซ้อนแบบ rule-based (FR-03)
             Backend-->>Client: ส่งประวัติวินิจฉัย + แนวโน้มผล lab + ผลวิเคราะห์ความเสี่ยง (flag) (FR-04) (ผ่านช่องทางเข้ารหัส TLS — NFR-04)
             Client-->>User: แสดงประวัติ, แนวโน้มผล lab และ flag/สัญญาณเตือนความเสี่ยงพร้อมข้อความกำกับคู่กับสีเสมอ (หรือข้อความว่าไม่พบความเสี่ยง) (NFR-13)
+            User->>Client: เลือกยืนยันผลเดิม หรือแก้ไข (override) ผลการประเมินความเสี่ยง (FR-16 — เพิ่มใหม่)
+            alt ยืนยันผลเดิม
+                Client->>Backend: ส่งคำขอยืนยันผลการประเมินความเสี่ยงเดิม (FR-16)
+            else แก้ไข (override)
+                User->>Client: ระบุผลที่แก้ไขพร้อมเหตุผล (บังคับกรอก)
+                Client->>Backend: ส่งคำขอแก้ไข (override) ผลการประเมินความเสี่ยงพร้อมเหตุผล (FR-16)
+            end
+            Backend->>Backend: ตรวจสอบซ้ำว่าผู้ป่วยรายนี้อยู่ในความดูแลของผู้ใช้งานคนนี้จริง (NFR-02)
+            Backend->>AuditStore: บันทึกการยืนยัน/แก้ไขผลการประเมินความเสี่ยงลง audit log (NFR-06) (จริง: เขียนผ่าน Admin SDK เท่านั้น)
+            AuditStore-->>Backend: ยืนยันบันทึกสำเร็จ
+            Backend->>Store: บันทึกผลการยืนยัน/แก้ไข (override) ผลการประเมินความเสี่ยง (FR-16) (จริง: ผ่าน Admin SDK — กลไกจริงยังไม่มีใน technology-stack ดู "ประเด็นรอตัดสินใจ")
+            Store-->>Backend: ยืนยันบันทึกสำเร็จ
+            Backend-->>Client: ยืนยันผลลัพธ์การบันทึก (FR-16)
+            Client-->>User: แสดงผลลัพธ์การยืนยัน/แก้ไข — จุดสิ้นสุดของ journey นี้ (FR-16)
         end
     end
 ```
@@ -896,6 +1061,85 @@ sequenceDiagram
     end
 ```
 
+## Data Flow Diagram — Journey ที่สี่ (Admin อนุมัติบัญชี จัดการสิทธิ์ และดูประวัติผู้ป่วยทุกรายแบบอ่านอย่างเดียว)
+
+journey ใหม่ใน
+[[user-journey#Journey Admin อนุมัติบัญชีผู้ใช้งาน จัดการสิทธิ์ และดูประวัติผู้ป่วยทุกรายแบบอ่านอย่างเดียว]]
+ครอบคลุมฟีเจอร์ที่ 7 ทั้งหมด (FR-11–FR-15, NFR-19, NFR-20) เป็นชุดงานบริหารจัดการที่ Admin เลือกทำ
+อย่างใดอย่างหนึ่งแล้ววนกลับมาเลือกงานอื่นต่อได้ ไม่ใช่ flow เชิงเส้น จึงแสดงเป็น `alt` แยกตามงานที่
+เลือก — Admin เข้าสู่ระบบด้วยกลไกเดียวกับแพทย์/พยาบาล (FR-07) การอนุมัติบัญชี (FR-11) แทนที่กลไกเดิม
+ที่เคยเป็นการแก้ไข Firebase Console/Firestore โดยตรง (ดู Data Flow Diagram — Journey Authentication
+ด้านบน) และการดูประวัติผู้ป่วยทุกรายต้องบันทึก audit log แบบ fail-safe ก่อนคืนข้อมูลเสมอ (NFR-20)
+**หมายเหตุเทคโนโลยีจริง:** ยังไม่มี decision area ใดใน `[[technology-stack]]` ระบุกลไกจริงของ
+ฟีเจอร์นี้โดยตรง (ดูหมายเหตุใต้ Component Diagram ด้านบน) diagram นี้จึงระบุเฉพาะระดับ logical
+component/ทิศทางข้อมูล ไม่ระบุรายละเอียด Cloud Function/implementation ที่ยังไม่มีเหตุผลรองรับ:
+
+```mermaid
+sequenceDiagram
+    actor Admin as Admin (ผู้ดูแลระบบ)
+    participant Client as ฝั่งไคลเอนต์ (Client)<br/>React+TS บน Firebase Hosting
+    participant Backend as บริการฝั่งเซิร์ฟเวอร์ (Backend Service)<br/>Cloud Functions — Admin Account & Assignment Management
+    participant Store as ที่เก็บข้อมูลหลัก (Primary Data Store)<br/>Cloud Firestore — users, patientAssignments
+    participant AuditStore as ที่เก็บบันทึกการเข้าถึง (Audit Log Store)<br/>Firestore collection auditLogRecords
+
+    Admin->>Client: เข้าสู่ระบบสำเร็จ (FR-07, กลไกเดียวกับแพทย์/พยาบาล)
+    Client->>Backend: ทุกคำขอด้านล่างตรวจสอบ role=admin ก่อนเสมอ (ผ่าน HTTPS Callable Function)
+    alt อนุมัติบัญชีใหม่ (FR-11)
+        Admin->>Client: ดูรายชื่อบัญชีที่รอการอนุมัติ (isActive=false, ยังไม่มี role)
+        Client->>Backend: ขอรายชื่อบัญชีที่รอการอนุมัติ
+        Backend->>Store: อ่าน users ที่ isActive=false และยังไม่มี role
+        Store-->>Backend: ส่งรายชื่อ
+        Backend-->>Client: แสดงรายชื่อบัญชีที่รอการอนุมัติ
+        Admin->>Client: กำหนด role (แพทย์/พยาบาล) และอนุมัติ
+        Client->>Backend: ส่งคำสั่งกำหนด role + isActive=true (FR-11)
+        Backend->>Store: เขียน users/{uid} (role, isActive=true) — ผ่าน Admin SDK เท่านั้น
+        Store-->>Backend: ยืนยันบันทึกสำเร็จ
+        Backend-->>Client: ยืนยันผลลัพธ์
+    else เปลี่ยนบทบาทผู้ใช้งาน (FR-12)
+        Admin->>Client: เลือกผู้ใช้งานที่เคยอนุมัติแล้ว และเปลี่ยน role
+        Client->>Backend: ส่งคำสั่งเปลี่ยน role (FR-12)
+        Backend->>Store: เขียน users/{uid} (role ใหม่) — ผ่าน Admin SDK เท่านั้น
+        Store-->>Backend: ยืนยันบันทึกสำเร็จ
+        Backend-->>Client: ยืนยันผลลัพธ์
+    else ระงับ/เปิดใช้งานบัญชี (FR-13)
+        Admin->>Client: เลือกผู้ใช้งานแล้วระงับ/เปิดใช้งานบัญชี
+        Client->>Backend: ส่งคำสั่งเปลี่ยน isActive (FR-13)
+        Backend->>Store: เขียน users/{uid} (isActive ใหม่) — ผ่าน Admin SDK เท่านั้น
+        Store-->>Backend: ยืนยันบันทึกสำเร็จ
+        Backend-->>Client: ยืนยันผลลัพธ์
+        Note over Backend,Store: ผู้ใช้งานที่ถูกระงับ (isActive=false) ไม่สามารถเข้าถึงข้อมูลผู้ป่วยได้ทันที — Access Control อ่าน isActive จาก users/{uid} ทุกครั้งอยู่แล้ว (NFR-02)
+    else จัดการมอบหมายผู้ป่วย (FR-14)
+        Admin->>Client: มอบหมาย/ยกเลิกการมอบหมายผู้ป่วยให้แพทย์/พยาบาล
+        Client->>Backend: ส่งคำสั่งมอบหมาย/ยกเลิกมอบหมาย (FR-14)
+        Backend->>Store: เขียน/ลบเอกสาร patientAssignments — ผ่าน Admin SDK เท่านั้น
+        Store-->>Backend: ยืนยันบันทึกสำเร็จ
+        Backend-->>Client: ยืนยันผลลัพธ์
+    else ดูประวัติผู้ป่วยทุกราย (FR-15, NFR-19, NFR-20)
+        Admin->>Client: เลือกผู้ป่วยรายบุคคลรายใดก็ได้ในระบบ (ไม่ต้องมี PatientAssignment ของตนเอง)
+        Client->>Backend: ส่งคำขอดูประวัติ/ผล lab/ผลวิเคราะห์ความเสี่ยงของผู้ป่วยที่เลือก (FR-15)
+        Backend->>Backend: ตรวจสอบ role=admin (ข้ามการตรวจสอบ PatientAssignment ตามข้อยกเว้น NFR-19)
+        Backend->>AuditStore: บันทึกการเข้าถึงข้อมูลผู้ป่วยแบบ fail-safe ก่อนคืนข้อมูลเสมอ (NFR-20)
+        alt บันทึกไม่สำเร็จ
+            AuditStore-->>Backend: แจ้งข้อผิดพลาด
+            Backend-->>Client: ปฏิเสธการเข้าถึงข้อมูลผู้ป่วยรายนี้ (NFR-20)
+            Client-->>Admin: แจ้งว่าไม่สามารถเข้าถึงข้อมูลได้ในขณะนี้
+        else บันทึกสำเร็จ
+            AuditStore-->>Backend: ยืนยันบันทึกสำเร็จ
+            Backend->>Store: อ่านประวัติวินิจฉัย, ผลตรวจ lab และผลวิเคราะห์ความเสี่ยงของผู้ป่วยที่เลือก
+            Store-->>Backend: ส่งข้อมูล
+            Backend-->>Client: ส่งข้อมูลแบบอ่านอย่างเดียว (read-only) (FR-15)
+            Client-->>Admin: แสดงประวัติ/ผล lab/ผลวิเคราะห์ความเสี่ยงแบบอ่านอย่างเดียว — ไม่มีตัวเลือกแก้ไข/ยืนยันผลใดๆ
+        end
+    end
+```
+
+**เหตุผลการตัดสินใจ:** โครงสร้าง diagram นี้ (Cloud Functions เป็นตัวกลางเสมอ, เขียนผ่าน Admin SDK
+เท่านั้น, audit log แบบ fail-safe ก่อนคืนข้อมูล) เป็นการต่อยอดจากรูปแบบที่มีอยู่แล้วในสถาปัตยกรรมนี้
+(Account Onboarding, Audit Logging & Accountability) อย่างสมเหตุสมผลตามที่ spec/user-journey ระบุไว้
+ชัดเจนแล้ว (FR-11–FR-15, NFR-19, NFR-20 ไม่มีความคลุมเครือเชิงสถาปัตยกรรมที่ต้องถามผู้ใช้เพิ่มเติมในรอบ
+นี้) ส่วนรายละเอียดว่าจะ implement เป็น Cloud Function กี่ตัว/ชื่อ operation ใด ยังไม่ตัดสินใจและปล่อย
+ให้เป็นขอบเขตของ `[[api-spec]]`/`[[technology-stack]]` ต่อไป (ดู "ประเด็นรอตัดสินใจ")
+
 ## ตาราง Mapping NFR ไปยัง Component
 
 | รหัส NFR | คำอธิบายสั้น | Component ที่รับผิดชอบหลัก | แนวทางเชิงหลักการ | กลไกจริงที่ใช้ (จาก [[technology-stack]]) |
@@ -919,6 +1163,8 @@ sequenceDiagram
 | NFR-16 | Interoperability (future, Won't have เฟสนี้) — พิจารณา HL7/FHIR เมื่อเชื่อมต่อ HOSxP จริง | Backend Service (Data Aggregation) + External Clinical Data Source (ในอนาคต) | ไม่มีผลต่อการออกแบบ component ในเฟสนี้ — บันทึกไว้เป็นทิศทางสำหรับตอนเชื่อมต่อ HOSxP จริงเท่านั้น | ยังไม่ตัดสินใจ (out of scope MVP ตามที่ `[[technology-stack]]` และ spec ต้นทางระบุไว้แล้ว) |
 | NFR-17 | Security / Password Policy — รหัสผ่านขั้นต่ำ 8 ตัวอักษร มีทั้งตัวอักษรและตัวเลข | Client (ตรวจสอบเบื้องต้นเพื่อ UX) + Backend Service (Account Onboarding & Authentication Gateway — บังคับใช้จริง) | Client ตรวจสอบรูปแบบรหัสผ่านเบื้องต้นเพื่อ feedback ที่รวดเร็ว แต่ Backend Service ต้องตรวจสอบซ้ำและเป็นผู้บังคับใช้จริงก่อนสร้างบัญชี/อัปเดตรหัสผ่านทุกครั้ง (ทั้งตอนสมัครบัญชีและตอนตั้งรหัสผ่านใหม่จากการรีเซ็ต) เพื่อไม่ให้พึ่งพา Client-side validation เพียงอย่างเดียว | regex ในโค้ด Cloud Function `signUpUser` (Operation 8, ความยาว ≥ 8 ตัวอักษร มีตัวอักษร+ตัวเลข) เป็นกลไกหลัก + **Google Cloud Identity Platform password policy** เป็น backstop ฝั่งเซิร์ฟเวอร์สำหรับ Operation 9 (`confirmPasswordReset` ที่ไม่ผ่าน Cloud Function) — ดู decision area 13 ใน [[technology-stack]] (การเปิด Identity Platform เป็นการอัปเกรดโปรเจกต์ Firebase ที่ทีม IT ต้องรับทราบ — ดูประเด็นรอตัดสินใจเรื่อง billing/quota) |
 | NFR-18 | Security / Account Enumeration Prevention — ไม่เปิดเผยว่าอีเมลมีบัญชีในระบบหรือไม่ (สมัครบัญชี, เข้าสู่ระบบผิดพลาด, ขอรีเซ็ตรหัสผ่าน) | Backend Service (Account Onboarding & Authentication Gateway) + Authentication Service + Client | Backend Service ต้องคืนข้อความ generic เดียวกันเสมอสำหรับผลลัพธ์การสมัครบัญชี/ขอรีเซ็ตรหัสผ่าน ไม่ว่าอีเมลที่กรอกจะมีบัญชีอยู่แล้วหรือไม่ก็ตาม (ทั้งเนื้อหาข้อความและพฤติกรรมที่สังเกตได้จากภายนอก เช่น เวลาตอบสนอง); Client ต้องแสดงข้อความรวมเดียวกันเสมอเมื่อเข้าสู่ระบบผิดพลาด ไม่แยกแยะว่าอีเมลผิดหรือรหัสผ่านผิด | **Firebase "Email Enumeration Protection"** เปิดใช้ระดับโปรเจกต์ (ปิดเฉพาะ Operation 7 ที่ Client เรียก Firebase Auth ตรง — Operation 8/9 คืนข้อความ generic จากโค้ด Cloud Function เองอยู่แล้ว) ดู decision area 14 ใน [[technology-stack]] — **ไม่เพิ่ม fixed minimum delay** ปิด**เฉพาะ**ความแตกต่างของ error code/ข้อความ **timing side-channel ยังไม่ปิด** (ผู้ใช้รับทราบและยืนยันให้ดำเนินการต่อแล้ว ดูหัวข้อความเสี่ยงท้ายเอกสาร) |
+| NFR-19 | Security / Access Control ข้อยกเว้นสำหรับบทบาท Admin — เข้าถึงประวัติ/ผล lab/ผลวิเคราะห์ความเสี่ยงของผู้ป่วยทุกรายได้โดยไม่ต้องมี PatientAssignment เป็นของตนเอง (เฉพาะการอ่าน) | Backend Service (Access Control + การจัดการบัญชีผู้ใช้และสิทธิ์) + Primary Data Store | Access Control ต้องตรวจสอบ `role = admin` จาก `users/{uid}` ก่อน แล้ว**ข้าม**เงื่อนไขตรวจสอบระดับรายผู้ป่วย (PatientAssignment) เฉพาะกรณีนี้เท่านั้น — ยังคงตรวจสอบ role/isActive/emailVerified ตามปกติทุกเงื่อนไข และ Admin ต้องไม่มีสิทธิ์แก้ไขข้อมูลทางคลินิกหรือยืนยัน/แก้ไขผลประเมินความเสี่ยง (FR-16 ยังเป็นสิทธิ์ของแพทย์/พยาบาลเท่านั้น) ต้องเพิ่มเป็นกรณีทดสอบใหม่ในชุด automated test ของ NFR-14 | ยังไม่มี decision area ใน `[[technology-stack]]` ระบุไว้โดยตรง — คาดว่า implement เป็นเงื่อนไข `role == 'admin'` เพิ่มเติมในโค้ด Cloud Functions (Operation 1-3 เดิม) รูปแบบเดียวกับการตรวจสอบ role/isActive ที่มีอยู่แล้ว (ดู "ประเด็นรอตัดสินใจ") |
+| NFR-20 | PDPA / Audit Log & Accountability แบบ fail-safe เฉพาะการเข้าถึงข้อมูลผู้ป่วยของ Admin | Backend Service (Audit Logging & Accountability + การจัดการบัญชีผู้ใช้และสิทธิ์) + Audit Log Store | ทุกครั้งที่ Admin เข้าถึงข้อมูลผู้ป่วยผ่านข้อยกเว้น NFR-19 ต้องบันทึก audit log ก่อนคืนข้อมูลเสมอ (fail-safe รูปแบบเดียวกับ NFR-06 — ถ้าบันทึกไม่สำเร็จต้องปฏิเสธการเข้าถึงข้อมูลผู้ป่วยรายนั้นทันที ไม่คืนข้อมูลไปก่อน) ควรระบุแยกว่าเป็นการเข้าถึงโดย Admin เพื่อรองรับการตรวจสอบย้อนหลัง | ยังไม่มี decision area ใน `[[technology-stack]]` ระบุไว้โดยตรง — คาดว่าใช้กลไกเดียวกับ NFR-06 (Cloud Functions เขียนผ่าน Firebase Admin SDK เท่านั้น ลง `auditLogRecords`) เพิ่ม field ระบุว่าเป็นการเข้าถึงโดย Admin (ดู "ประเด็นรอตัดสินใจ") |
 
 หมายเหตุ: ตารางนี้ map เฉพาะรหัส **NFR** ไปยัง component ตามชื่อหัวข้อ (ยึดรูปแบบเดิมของเอกสาร) FR-06
 (ค้นหาด้วย HN 7 หลัก พร้อม validation) จึงไม่มีแถวแยกของตัวเอง แต่ถูกครอบคลุมแล้วใน (1) แถว NFR-02
@@ -927,9 +1173,34 @@ sequenceDiagram
 รายละเอียด validation logic ของ FR-06 ไว้ครบแล้ว เช่นเดียวกัน FR-07–FR-10 (Authentication) ไม่มีแถว
 แยกของตัวเอง แต่ถูกครอบคลุมแล้วในแถว NFR-17/NFR-18 ด้านบน และในหัวข้อ "บริการยืนยันตัวตน
 (Authentication Service)" กับ "ขอบเขตความรับผิดชอบของแต่ละ Component" ของ Client/Backend Service
-(Account Onboarding & Authentication Gateway) ด้านบน
+(Account Onboarding & Authentication Gateway) ด้านบน เช่นเดียวกัน FR-11–FR-15 (Admin) ไม่มีแถวแยก
+ของตัวเอง แต่ถูกครอบคลุมแล้วในแถว NFR-19/NFR-20 ด้านบน และในหัวข้อ "การจัดการบัญชีผู้ใช้และสิทธิ์
+(Admin — Account, Role & Patient Assignment Management)" ของ Backend Service ด้านบน ส่วน FR-16
+(ยืนยัน/แก้ไขผลการประเมินความเสี่ยง) ไม่มีแถวแยกของตัวเองเช่นกัน แต่ถูกครอบคลุมแล้วในแถว NFR-06/
+NFR-02 (การตรวจสอบสิทธิ์ระดับรายผู้ป่วยก่อนแก้ไข) และในหัวข้อ "การวิเคราะห์ความเสี่ยง (Risk Rule
+Engine)" ของ Backend Service ด้านบน
 
 ## ประเด็นรอตัดสินใจ
+
+**ฟีเจอร์ที่ 7 (Admin) และ FR-16 — ใหม่ 2026-09-24, ยังไม่มีกลไกจริงใน `[[technology-stack]]`:**
+ตรวจสอบแล้วว่า `[[technology-stack]]` (อัปเดตล่าสุด 2026-09-24 รอบสาม) ยังไม่มี decision area ใด
+ครอบคลุม Admin/FR-11–FR-15/NFR-19/NFR-20 หรือ FR-16 โดยตรง เอกสารนี้จึงเขียนเฉพาะระดับ logical
+component/data flow และระบุแนวทางที่ต่อยอดจากกลไกเดิมที่มีอยู่แล้วอย่างสมเหตุสมผล (ดูหัวข้อ "การจัดการ
+บัญชีผู้ใช้และสิทธิ์ (Admin)" และ "การยืนยัน/แก้ไขผลการประเมินความเสี่ยง (FR-16)" ของ Backend Service
+ด้านบน) รายการที่ยังต้องตัดสินใจจริงในรอบ `/build-tech-stack` ถัดไป:
+
+- **จำนวน/การแบ่ง Cloud Function สำหรับ FR-11/FR-12/FR-13/FR-14** — จะรวมเป็น callable function เดียว
+  (เช่น `manageUserAccount`) หรือแยกเป็นฟังก์ชันตาม FR แต่ละข้อ ยังไม่ตัดสินใจ
+- **กลไกจริงของ FR-15/NFR-19** (การเขียนเงื่อนไข `role == 'admin'` เพื่อข้ามการตรวจสอบ
+  PatientAssignment) — ยังไม่ระบุว่าจะเขียนเป็น shared helper module เดียวกับที่ตรวจสอบ role/isActive
+  อยู่แล้ว (ตาม decision area 7 ของ technology-stack) หรือเป็น logic แยกต่างหาก
+- **กลไกจริงของ NFR-20** (audit log แบบ fail-safe เฉพาะ Admin) — ยังไม่ระบุว่าจะใช้ collection
+  `auditLogRecords` เดียวกับ NFR-06 พร้อม field แยกประเภทผู้เข้าถึง หรือแยก collection ใหม่
+- **กลไกจริงของ FR-16** (ยืนยัน/แก้ไขผลการประเมินความเสี่ยง) — ยังไม่ระบุว่าจะบันทึกเป็นการแก้ไข field
+  ในเอกสาร `complicationRiskAssessments`/`riskFindings` เดิม หรือสร้างเอกสารประวัติการยืนยัน/แก้ไข
+  แยกต่างหาก (มีผลต่อ `[[db-spec]]`/`[[api-spec]]` โดยตรงมากกว่าเอกสารนี้)
+- **NFR-14 (Security Rules Verification)** ต้องเพิ่มกรณีทดสอบใหม่ครอบคลุมข้อยกเว้นของ Admin (NFR-19)
+  แต่ยังไม่มี decision area ระบุรายละเอียด test case ที่แน่นอน
 
 **ฟีเจอร์ที่ 6 (Authentication) — ปิดแล้วในรอบ 2026-09-24:** `[[technology-stack]]` เพิ่ม decision
 area 13–19 ปิดกลไกทางเทคนิคที่เคยค้างไว้ในหัวข้อนี้ครบทุกข้อแล้ว (regex + Identity Platform backstop
@@ -1083,3 +1354,4 @@ server-side token revocation), NFR-13 (Accessibility — WCAG 2.1 AA + Heroicons
 - [[20260921-01-pdpa-data-protection-compliance]]
 - [[20260922-01-operational-quality-nfr]]
 - [[20260923-01-user-authentication-email-password]]
+- [[20260924-01-admin-role-account-management]]

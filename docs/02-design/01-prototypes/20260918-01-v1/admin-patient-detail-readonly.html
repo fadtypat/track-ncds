@@ -1,0 +1,234 @@
+<!DOCTYPE html>
+<html lang="th">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>NCDs History &amp; Risk — Prototype v1 — Admin: ดูประวัติ (read-only)</title>
+<link rel="stylesheet" href="style.css">
+</head>
+<body>
+
+<nav class="proto-bar">
+  <div class="proto-bar-inner">
+    <div class="proto-bar-top">
+      <span class="proto-bar-title">NCDS CLINIC · PROTOTYPE v1 · Admin: ดูประวัติ (read-only)</span>
+      <div class="proto-bar-nav">
+        <a href="index.html">หน้ารวม</a>
+        <a href="login.html">เข้าสู่ระบบ</a>
+        <a href="signup.html">สมัครบัญชี</a>
+        <a href="verify-email-notice.html">ยืนยันอีเมล/รออนุมัติ</a>
+        <a href="forgot-password.html">ลืมรหัสผ่าน</a>
+        <a href="reset-password.html">ตั้งรหัสผ่านใหม่</a>
+        <a href="patient-list.html">ค้นหา/รายชื่อผู้ป่วย</a>
+        <a href="patient-detail-risk-found.html">ประวัติ+ความเสี่ยง (พบ)</a>
+        <a href="patient-detail-no-risk.html">ประวัติ+ความเสี่ยง (ไม่พบ)</a>
+        <a href="access-denied.html">ปฏิเสธการเข้าถึง</a>
+        <a href="pdpa-data-subject-request.html">PDPA คำขอใช้สิทธิ</a>
+        <a href="pdpa-audit-trail.html">PDPA audit trail</a>
+        <a href="admin-dashboard.html">Admin: หน้าหลัก</a>
+        <a href="admin-account-approval.html">Admin: อนุมัติบัญชี</a>
+        <a href="admin-user-directory.html">Admin: จัดการผู้ใช้งาน</a>
+        <a href="admin-patient-assignment.html">Admin: มอบหมายผู้ป่วย</a>
+        <a href="admin-patient-directory.html">Admin: ผู้ป่วยทุกราย</a>
+        <a href="admin-patient-detail-readonly.html" class="current">Admin: ดูประวัติ (read-only)</a>
+      </div>
+    </div>
+    <div class="proto-bar-codes">
+      <span class="proto-code">FR-15</span>
+      <span class="proto-code">NFR-19</span>
+      <span class="proto-code">NFR-20</span>
+    </div>
+  </div>
+</nav>
+
+<div class="app-bg">
+<div class="container stack gap-section">
+
+  <a href="admin-patient-directory.html" class="type-caption" style="display:inline-block;">← กลับไปผู้ป่วยทั้งหมด (มุมมอง Admin)</a>
+
+  <div class="callout note">
+    <span class="callout-title">โหมดอ่านอย่างเดียวสำหรับ Admin</span>
+    <p class="type-body" style="color:inherit; margin:0;">
+      Admin ไม่มีสิทธิ์แก้ไขข้อมูลทางคลินิกใดๆ ในหน้านี้ (ประวัติวินิจฉัย, ผล lab, ผลวิเคราะห์ความเสี่ยง)
+      สิทธิ์ยืนยัน/แก้ไข (override) ผลวิเคราะห์ความเสี่ยงยังคงเป็นของแพทย์/พยาบาลผู้ดูแลผู้ป่วยรายนั้น
+      เท่านั้น (FR-16) — จึงไม่มีปุ่มดำเนินการใดๆ ในหน้านี้
+    </p>
+  </div>
+
+  <!-- หมายเหตุ (bugfix 20260924): ห้ามใส่ attribute "hidden" ไว้บน element เดียวกับ class ที่กำหนด
+       display:flex ตรงๆ (เช่น .callout, .denied-shell) เพราะกฎ cascade ของ CSS ทำให้ author rule
+       (class ใน style.css) ชนะ UA rule "[hidden]{display:none}" เสมอไม่ว่าค่า specificity จะเท่ากัน
+       ทำให้ setting .hidden = true ทาง JS ไม่ซ่อน element จริง — จึงห่อด้วย wrapper div เปล่า (ไม่มี
+       class ที่กำหนด display) แล้วสลับ hidden ที่ wrapper แทน ไม่ใช่การเพิ่ม CSS ใหม่ใดๆ -->
+  <div id="access-check">
+    <div class="callout tip" role="status">
+      <span class="callout-title">บันทึก audit log สำเร็จ</span>
+      <p class="type-body" style="color:inherit; margin:0;">
+        ระบบบันทึก audit log (ผู้เข้าถึง: กานดา ตรวจตรา (Admin), ผู้ป่วย: HN-6500123, เวลา: ขณะนี้) ก่อน
+        แสดงข้อมูลด้านล่างสำเร็จแล้ว (NFR-20)
+        <button type="button" class="btn btn-secondary btn-sm" id="simulate-fail-btn" style="margin-left:var(--space-2);">จำลอง: บันทึก audit log ไม่สำเร็จ</button>
+      </p>
+    </div>
+  </div>
+
+  <div id="denied-panel" hidden>
+    <div class="denied-shell">
+      <div class="denied-card">
+        <div class="denied-icon" aria-hidden="true">⛔</div>
+        <h1 class="type-section-title">ระบบปฏิเสธการเข้าถึงข้อมูลผู้ป่วยรายนี้</h1>
+        <p class="type-body">
+          เนื่องจากระบบบันทึก audit log ก่อนแสดงข้อมูลไม่สำเร็จ (NFR-20 — fail-safe: ต้องบันทึกก่อนคืน
+          ข้อมูลเสมอ หากบันทึกไม่สำเร็จต้องปฏิเสธการเข้าถึง) กรุณาลองใหม่อีกครั้ง
+        </p>
+        <button type="button" class="btn btn-primary" id="retry-btn">ลองบันทึก audit log อีกครั้ง</button>
+      </div>
+    </div>
+  </div>
+
+  <div id="patient-content">
+
+  <header class="patient-header">
+    <div class="patient-header-id">
+      <div class="patient-header-namerow">
+        <div class="patient-avatar" aria-hidden="true">สก</div>
+        <div>
+          <h1 class="type-page-title" style="font-size:24px; line-height:32px;">นายสมชาย ใจกล้า</h1>
+          <div class="patient-card-meta">HN-6500123 · ชาย · 58 ปี</div>
+        </div>
+        <span class="risk-badge veryhigh">ความเสี่ยงโดยรวม: สูงมาก</span>
+      </div>
+      <div class="patient-header-chips">
+        <span class="chip chip-chronic">เบาหวานชนิดที่ 2 (E11)</span>
+        <span class="chip chip-chronic">ความดันโลหิตสูง (I10)</span>
+        <span class="chip chip-ckd">CKD stage 3</span>
+        <span class="chip chip-neutral">ผู้ดูแล: พญ. อรุณี ศรีสุข</span>
+      </div>
+    </div>
+    <div class="patient-header-actions">
+      <button type="button" class="btn btn-secondary btn-sm">Copy link</button>
+    </div>
+  </header>
+
+  <section class="section-card">
+    <div class="section-head">
+      <h2 class="type-section-title">ประวัติการวินิจฉัยโรค NCD</h2>
+      <span class="type-caption">เรียงตามช่วงเวลา (เก่า → ใหม่) · อ่านอย่างเดียว (FR-15)</span>
+    </div>
+    <ul class="dx-list">
+      <li class="dx-item">
+        <div class="dx-item-main">
+          <span class="dx-item-name">เบาหวานชนิดที่ 2</span>
+          <span class="dx-item-code">ICD-10: E11</span>
+        </div>
+        <span class="dx-item-date">12 มี.ค. 2566</span>
+      </li>
+      <li class="dx-item">
+        <div class="dx-item-main">
+          <span class="dx-item-name">ความดันโลหิตสูง</span>
+          <span class="dx-item-code">ICD-10: I10</span>
+        </div>
+        <span class="dx-item-date">12 มี.ค. 2566</span>
+      </li>
+      <li class="dx-item" style="border-color: var(--rose-200); background: var(--rose-50);">
+        <div class="dx-item-main">
+          <span class="dx-item-name">ไตวายเรื้อรัง stage 3</span>
+          <span class="dx-item-code">ICD-10: N18.3</span>
+        </div>
+        <div style="display:flex; align-items:center; gap:8px;">
+          <span class="chip chip-alert">COMPLICATION</span>
+          <span class="dx-item-date">2 พ.ย. 2567</span>
+        </div>
+      </li>
+    </ul>
+  </section>
+
+  <section class="section-card">
+    <div class="section-head">
+      <h2 class="type-section-title">ผลตรวจ Lab ล่าสุด</h2>
+      <span class="type-caption">อ่านอย่างเดียว — ดูประวัติเต็มรูปแบบได้จากมุมมองแพทย์/พยาบาลเท่านั้น</span>
+    </div>
+    <div style="display:grid; grid-template-columns:1fr; gap:12px;" class="grid-2-tablet">
+      <div class="value-tile abnormal">
+        <span class="value-label">HbA1c (ล่าสุด)</span>
+        <span class="value-number">9.2 %</span>
+        <span class="value-status">ผิดปกติ — สูงกว่าเกณฑ์</span>
+      </div>
+      <div class="value-tile abnormal">
+        <span class="value-label">eGFR (ล่าสุด)</span>
+        <span class="value-number">41 mL/min/1.73m²</span>
+        <span class="value-status">ผิดปกติ — ต่ำกว่าเกณฑ์</span>
+      </div>
+      <div class="value-tile normal">
+        <span class="value-label">LDL (ล่าสุด)</span>
+        <span class="value-number">98 mg/dL</span>
+        <span class="value-status">ปกติ</span>
+      </div>
+      <div class="value-tile abnormal">
+        <span class="value-label">ความดันโลหิต (ล่าสุด)</span>
+        <span class="value-number">138/85 mmHg</span>
+        <span class="value-status">ผิดปกติ — สูงกว่าเกณฑ์</span>
+      </div>
+    </div>
+  </section>
+
+  <section class="section-card">
+    <div class="section-head">
+      <h2 class="type-section-title">ผลวิเคราะห์ความเสี่ยงโรคแทรกซ้อน</h2>
+      <span class="type-caption">ประเมินแบบ rule-based เทียบ threshold ค่า lab มาตรฐาน (ไม่ใช้ AI/ML — FR-03) · อ่านอย่างเดียว</span>
+    </div>
+    <div class="risk-bar-list">
+      <div class="risk-bar-item">
+        <div class="risk-bar-head">
+          <span class="risk-bar-name">ไตวายเรื้อรัง (CKD)</span>
+          <span class="risk-badge veryhigh">เสี่ยง สูงมาก</span>
+          <span class="risk-bar-pct">85%</span>
+        </div>
+        <div class="risk-bar-track"><div class="risk-bar-fill veryhigh" style="width:85%;"></div></div>
+      </div>
+      <div class="risk-bar-item">
+        <div class="risk-bar-head">
+          <span class="risk-bar-name">โรคหัวใจ</span>
+          <span class="risk-badge high">เสี่ยง สูง</span>
+          <span class="risk-bar-pct">65%</span>
+        </div>
+        <div class="risk-bar-track"><div class="risk-bar-fill high" style="width:65%;"></div></div>
+      </div>
+    </div>
+    <div class="callout note">
+      <span class="callout-title">สถานะการยืนยัน/แก้ไขล่าสุดโดยแพทย์/พยาบาลผู้ดูแล</span>
+      <p class="type-body" style="color:inherit; margin:0;">
+        ยืนยันผลเดิมโดย พญ. อรุณี ศรีสุข เมื่อ 3 พ.ย. 2567 (FR-16) — Admin เห็นสถานะนี้ได้แบบอ่านอย่างเดียว
+        เท่านั้น ไม่มีสิทธิ์เปลี่ยนแปลง
+      </p>
+    </div>
+  </section>
+
+  </div>
+
+</div>
+</div>
+
+<script>
+(function () {
+  var simulateFailBtn = document.getElementById("simulate-fail-btn");
+  var retryBtn = document.getElementById("retry-btn");
+  var accessCheck = document.getElementById("access-check");
+  var deniedPanel = document.getElementById("denied-panel");
+  var patientContent = document.getElementById("patient-content");
+
+  simulateFailBtn.addEventListener("click", function () {
+    accessCheck.hidden = true;
+    patientContent.hidden = true;
+    deniedPanel.hidden = false;
+  });
+
+  retryBtn.addEventListener("click", function () {
+    deniedPanel.hidden = true;
+    accessCheck.hidden = false;
+    patientContent.hidden = false;
+  });
+})();
+</script>
+
+</body>
+</html>

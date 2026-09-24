@@ -1,0 +1,184 @@
+<!DOCTYPE html>
+<html lang="th">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>NCDs History &amp; Risk — Prototype v1 — Admin: มอบหมายผู้ป่วย</title>
+<link rel="stylesheet" href="style.css">
+</head>
+<body>
+
+<nav class="proto-bar">
+  <div class="proto-bar-inner">
+    <div class="proto-bar-top">
+      <span class="proto-bar-title">NCDS CLINIC · PROTOTYPE v1 · Admin: มอบหมายผู้ป่วย</span>
+      <div class="proto-bar-nav">
+        <a href="index.html">หน้ารวม</a>
+        <a href="login.html">เข้าสู่ระบบ</a>
+        <a href="signup.html">สมัครบัญชี</a>
+        <a href="verify-email-notice.html">ยืนยันอีเมล/รออนุมัติ</a>
+        <a href="forgot-password.html">ลืมรหัสผ่าน</a>
+        <a href="reset-password.html">ตั้งรหัสผ่านใหม่</a>
+        <a href="patient-list.html">ค้นหา/รายชื่อผู้ป่วย</a>
+        <a href="patient-detail-risk-found.html">ประวัติ+ความเสี่ยง (พบ)</a>
+        <a href="patient-detail-no-risk.html">ประวัติ+ความเสี่ยง (ไม่พบ)</a>
+        <a href="access-denied.html">ปฏิเสธการเข้าถึง</a>
+        <a href="pdpa-data-subject-request.html">PDPA คำขอใช้สิทธิ</a>
+        <a href="pdpa-audit-trail.html">PDPA audit trail</a>
+        <a href="admin-dashboard.html">Admin: หน้าหลัก</a>
+        <a href="admin-account-approval.html">Admin: อนุมัติบัญชี</a>
+        <a href="admin-user-directory.html">Admin: จัดการผู้ใช้งาน</a>
+        <a href="admin-patient-assignment.html" class="current">Admin: มอบหมายผู้ป่วย</a>
+        <a href="admin-patient-directory.html">Admin: ผู้ป่วยทุกราย</a>
+        <a href="admin-patient-detail-readonly.html">Admin: ดูประวัติ (read-only)</a>
+      </div>
+    </div>
+    <div class="proto-bar-codes">
+      <span class="proto-code">FR-14</span>
+    </div>
+  </div>
+</nav>
+
+<div class="app-bg">
+<div class="container stack gap-section">
+
+  <a href="admin-dashboard.html" class="type-caption" style="display:inline-block;">← กลับไปแผงควบคุม Admin</a>
+
+  <header class="stack" style="gap:8px;">
+    <h1 class="type-page-title">จัดการการมอบหมายผู้ป่วย (Patient Assignment)</h1>
+    <p class="type-body" style="max-width:680px;">
+      มอบหมาย/ยกเลิกการมอบหมายผู้ป่วยรายบุคคลให้แพทย์/พยาบาล (จัดการ
+      <span class="type-code">patientAssignments</span>) ซึ่งเป็นเงื่อนไข "อยู่ในความดูแล" ที่ควบคุมการ
+      มองเห็นผู้ป่วยของแพทย์/พยาบาลตาม FR-05/NFR-02 (FR-14)
+    </p>
+  </header>
+
+  <section class="section-card">
+    <div class="section-head">
+      <h2 class="type-section-title">มอบหมายผู้ป่วยรายใหม่</h2>
+    </div>
+    <form id="assign-form" class="field-row cols-3" novalidate>
+      <div class="form-field">
+        <label for="assign-patient">ผู้ป่วย (HN)</label>
+        <select id="assign-patient" class="select-input">
+          <option value="6500123">HN-6500123 · นายสมชาย ใจกล้า</option>
+          <option value="6500089">HN-6500089 · นางสมหญิง พูนสุข</option>
+          <option value="6500777">HN-6500777 · นายประเสริฐ วงศ์สุข (ยังไม่มีผู้ดูแล)</option>
+        </select>
+      </div>
+      <div class="form-field">
+        <label for="assign-user">มอบหมายให้ (แพทย์/พยาบาล)</label>
+        <select id="assign-user" class="select-input">
+          <option value="พญ. อรุณี ศรีสุข">พญ. อรุณี ศรีสุข (แพทย์)</option>
+          <option value="นายวรรณะ ใจดี">นายวรรณะ ใจดี (พยาบาล)</option>
+          <option value="พญ. สุนีย์ แจ้งใส">พญ. สุนีย์ แจ้งใส (แพทย์)</option>
+        </select>
+      </div>
+      <div class="form-field" style="justify-content:flex-end;">
+        <button type="submit" class="btn btn-primary">มอบหมาย</button>
+      </div>
+    </form>
+    <div id="assign-result" hidden></div>
+  </section>
+
+  <section class="section-card">
+    <div class="section-head">
+      <h2 class="type-section-title">การมอบหมายปัจจุบัน</h2>
+      <span class="type-caption">รายการนี้ควบคุมว่าผู้ป่วยรายใดจะปรากฏใน "ผู้ป่วยในความดูแล" ของแพทย์/พยาบาลแต่ละคน (FR-05)</span>
+    </div>
+    <div class="trend-table-wrap">
+      <table class="trend-table" style="min-width:560px;">
+        <thead>
+          <tr>
+            <th>ผู้ป่วย (HN)</th>
+            <th>ผู้ดูแลปัจจุบัน</th>
+            <th>สถานะ</th>
+            <th>การดำเนินการ</th>
+          </tr>
+        </thead>
+        <tbody id="assignment-rows">
+          <tr>
+            <td class="param-name">HN-6500123 · นายสมชาย ใจกล้า</td>
+            <td style="font-family:var(--font-sans); font-size:13px;">พญ. อรุณี ศรีสุข</td>
+            <td><span class="status-pill success">มอบหมายอยู่</span></td>
+            <td><button type="button" class="btn btn-secondary btn-sm cancel-btn">ยกเลิกมอบหมาย</button></td>
+          </tr>
+          <tr>
+            <td class="param-name">HN-6500089 · นางสมหญิง พูนสุข</td>
+            <td style="font-family:var(--font-sans); font-size:13px;">พญ. อรุณี ศรีสุข</td>
+            <td><span class="status-pill success">มอบหมายอยู่</span></td>
+            <td><button type="button" class="btn btn-secondary btn-sm cancel-btn">ยกเลิกมอบหมาย</button></td>
+          </tr>
+          <tr>
+            <td class="param-name">HN-6500201 · นายวิชัย ถุงลมดี</td>
+            <td style="font-family:var(--font-sans); font-size:13px;">นายวรรณะ ใจดี</td>
+            <td><span class="status-pill success">มอบหมายอยู่</span></td>
+            <td><button type="button" class="btn btn-secondary btn-sm cancel-btn">ยกเลิกมอบหมาย</button></td>
+          </tr>
+        </tbody>
+      </table>
+    </div>
+  </section>
+
+</div>
+</div>
+
+<script>
+(function () {
+  function escapeHtml(str) {
+    return String(str).replace(/[&<>"']/g, function (c) {
+      return { "&": "&amp;", "<": "&lt;", ">": "&gt;", '"': "&quot;", "'": "&#39;" }[c];
+    });
+  }
+
+  var form = document.getElementById("assign-form");
+  var resultBox = document.getElementById("assign-result");
+  var rowsBody = document.getElementById("assignment-rows");
+
+  form.addEventListener("submit", function (e) {
+    e.preventDefault();
+    var patientSelect = document.getElementById("assign-patient");
+    var userSelect = document.getElementById("assign-user");
+    var patientLabel = patientSelect.options[patientSelect.selectedIndex].text.replace(" (ยังไม่มีผู้ดูแล)", "");
+    var userLabel = userSelect.value;
+
+    var row = document.createElement("tr");
+    row.innerHTML =
+      '<td class="param-name">' + escapeHtml(patientLabel) + "</td>" +
+      '<td style="font-family:var(--font-sans); font-size:13px;">' + escapeHtml(userLabel) + "</td>" +
+      '<td><span class="status-pill success">มอบหมายอยู่</span></td>' +
+      '<td><button type="button" class="btn btn-secondary btn-sm cancel-btn">ยกเลิกมอบหมาย</button></td>';
+    rowsBody.appendChild(row);
+    bindCancel(row);
+
+    resultBox.hidden = false;
+    resultBox.innerHTML =
+      '<div class="callout tip" role="status">' +
+        '<span class="callout-title">มอบหมายสำเร็จ</span>' +
+        '<p class="type-body" style="color:inherit;">มอบหมาย ' + escapeHtml(patientLabel) + ' ให้ ' + escapeHtml(userLabel) + ' เรียบร้อยแล้ว (FR-14) ผู้ป่วยรายนี้จะปรากฏในรายชื่อ "ผู้ป่วยในความดูแล" ของผู้ใช้งานคนดังกล่าวทันที</p>' +
+      "</div>";
+  });
+
+  function bindCancel(row) {
+    var btn = row.querySelector(".cancel-btn");
+    var pill = row.querySelector(".status-pill");
+    btn.addEventListener("click", function () {
+      pill.className = "status-pill rejected";
+      pill.textContent = "ยกเลิกแล้ว";
+      btn.disabled = true;
+      btn.textContent = "ยกเลิกแล้ว";
+      resultBox.hidden = false;
+      resultBox.innerHTML =
+        '<div class="callout warn" role="status">' +
+          '<span class="callout-title">ยกเลิกการมอบหมายแล้ว</span>' +
+          '<p class="type-body" style="color:inherit;">ผู้ป่วยรายนี้จะหายไปจากรายชื่อ "ผู้ป่วยในความดูแล" ของผู้ใช้งานคนเดิมทันที (FR-14)</p>' +
+        "</div>";
+    });
+  }
+
+  document.querySelectorAll("#assignment-rows > tr").forEach(bindCancel);
+})();
+</script>
+
+</body>
+</html>
