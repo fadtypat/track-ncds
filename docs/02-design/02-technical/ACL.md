@@ -1,6 +1,11 @@
 # ACL — บทบาทและสิทธิ์การเข้าถึง (Access Control List)
 
-อัปเดตล่าสุด: 2026-09-24
+อัปเดตล่าสุด: 2026-09-25
+
+> **เปลี่ยนสิทธิ์ 2026-09-25 (ผู้ใช้สั่ง):** เลิกใช้การมอบหมายผู้ป่วย (PatientAssignment) — แพทย์/พยาบาล/Admin
+> ที่ผ่านเงื่อนไขพื้นฐานเห็นผู้ป่วย**ทุกราย**หลังเข้าสู่ระบบ (Op.0–3) และยกเลิก Op.14 — ขัดกับ FR-05/FR-14
+> และ NFR-02 ฉบับปัจจุบันใน spec/backlog ซึ่งยังไม่ได้แก้ (ต้องรัน `/capture-requirement` แล้ว sync เอกสาร
+> ปลายทาง) ดู "ประเด็นรอตัดสินใจ" สำหรับ Op.4/Op.16 ที่เคยผูกกับ PatientAssignment
 
 **เอกสารนี้เป็นแหล่งความจริงหลักของบทบาทและสิทธิ์ในระบบ** — [[api-spec]] (หัวข้อ "ผู้เรียกได้/บทบาท"
 ของแต่ละ operation และ Operation ร่วม Access Control), [[db-spec]] (Security Rules), detailed design,
@@ -44,8 +49,8 @@ Custom Claims — [[technology-stack]] decision area 7/18)
 | 7 เข้าสู่ระบบ | ✅ | ✅ | ✅ | ไม่ผ่านเงื่อนไขพื้นฐาน (เป็นขั้นตอนก่อนมีบทบาท) | FR-07, NFR-18 |
 | 8 สมัครบัญชี | — | — | ✅ | ผ่าน Cloud Function เท่านั้น, ได้ `isActive=false` ไม่มี role | FR-08, NFR-17, NFR-18 |
 | 9 ขอรีเซ็ต/ตั้งรหัสผ่านใหม่ | ✅ | ✅ | ✅ | ข้อความ generic เสมอ | FR-10, NFR-17, NFR-18 |
-| 0 รายชื่อผู้ป่วยในความดูแล | 🔸 | ❌ (ใช้ Op.15 แทน) | ❌ | เห็นเฉพาะผู้ป่วยที่มี `patientAssignments/{uid}_{patientId}` | FR-05, FR-06, NFR-02 |
-| 1 ประวัติวินิจฉัย NCD | 🔸 | 🔸 | ❌ | แพทย์/พยาบาล: ต้องมี PatientAssignment · Admin: ทุกราย, อ่านอย่างเดียว | FR-01, FR-15, NFR-19 |
+| 0 รายชื่อ/ค้นหาผู้ป่วย | ✅ | ✅ | ❌ | เห็นผู้ป่วยทุกราย (เปลี่ยน 2026-09-25 — ไม่ใช้ PatientAssignment แล้ว) | FR-05, FR-06, NFR-02 |
+| 1 ประวัติวินิจฉัย NCD | ✅ | 🔸 | ❌ | ทุกราย (เปลี่ยน 2026-09-25) · Admin: อ่านอย่างเดียว | FR-01, FR-15, NFR-19 |
 | 2 ผลตรวจ lab | 🔸 | 🔸 | ❌ | เหมือน Op.1 | FR-02, FR-15, NFR-19 |
 | 3 ผลวิเคราะห์ความเสี่ยง | 🔸 | 🔸 | ❌ | เหมือน Op.1 | FR-03, FR-04, FR-15, NFR-19 |
 | 16 ยืนยัน/override ผลความเสี่ยง | 🔸 | ❌ | ❌ | ต้องมี PatientAssignment, บังคับเหตุผลเมื่อ override, ไม่แก้ข้อมูลจาก HOSxP | FR-16 |
@@ -56,8 +61,8 @@ Custom Claims — [[technology-stack]] decision area 7/18)
 | 11 อนุมัติบัญชีใหม่ | ❌ | ✅ | ❌ | กำหนด role (`แพทย์`/`พยาบาล`) + `isActive=true` | FR-11 |
 | 12 เปลี่ยน role | ❌ | 🔸 | ❌ | ค่า `แพทย์`/`พยาบาล`/`admin` · **ห้ามแก้บัญชีของตนเอง** | FR-12 |
 | 13 ระงับ/เปิดใช้งานบัญชี | ❌ | 🔸 | ❌ | **ห้ามแก้บัญชีของตนเอง** | FR-13 |
-| 14 จัดการ PatientAssignment | ❌ | ✅ | ❌ | มอบหมาย/ยกเลิกให้แพทย์/พยาบาลเท่านั้น | FR-14 |
-| 15 รายชื่อผู้ป่วยทั้งระบบ | ❌ | ✅ | ❌ | อ่านอย่างเดียว | FR-15, NFR-19 |
+| ~~14 จัดการ PatientAssignment~~ | — | — | — | **ยกเลิก 2026-09-25** — ไม่มีการมอบหมายผู้ป่วยแล้ว | FR-14 |
+| 15 รายชื่อผู้ป่วยทั้งระบบ | ❌ | ✅ | ❌ | อ่านอย่างเดียว — ซ้ำกับ Op.0 แล้วหลังเปลี่ยน 2026-09-25 | FR-15, NFR-19 |
 
 ## Audit log (NFR-06, NFR-20)
 
@@ -76,7 +81,8 @@ Client เข้าถึง Firestore ตรงได้เฉพาะตา�
 | Path | แพทย์ / พยาบาล | Admin | บัญชีรออนุมัติ |
 | --- | --- | --- | --- |
 | `users/{uid}` | get เฉพาะของตนเอง | get เฉพาะของตนเอง | get เฉพาะของตนเอง (ใช้แสดงสถานะรออนุมัติ) |
-| `patientAssignments/{id}` | list/get เฉพาะ `userId == uid` + ผ่านเงื่อนไขพื้นฐาน | ❌ (ใช้ Op.14/15 ผ่าน Cloud Functions) | ❌ |
+| `patients/{id}` (Op.0, เปลี่ยน 2026-09-25) | list/get ทุกราย + ผ่านเงื่อนไขพื้นฐาน | list/get ทุกราย + ผ่านเงื่อนไขพื้นฐาน | ❌ |
+| ~~`patientAssignments/{id}`~~ | ยกเลิก 2026-09-25 | ยกเลิก | ❌ |
 | collection อื่นทั้งหมด | ❌ | ❌ | ❌ |
 | การเขียนทุก path | ❌ | ❌ | ❌ |
 
@@ -96,6 +102,8 @@ Security Rules และ shared helper ต้องมี automated test คร�
 
 ## ประเด็นรอตัดสินใจ
 
+- (2026-09-25) Op.4 และ Op.16 ยังระบุว่า "ต้องมี PatientAssignment" — หลังเลิกใช้การมอบหมาย ควรเปิดให้ทุกรายเหมือน Op.0–3 หรือไม่
+
 - Admin ควรสืบค้น audit trail (Op.5) ได้หรือไม่ (จาก [[api-spec#ประเด็นรอตัดสินใจ|api-spec]])
 - ควรจำกัดสิทธิ์ Op.4/Op.5 ของแพทย์/พยาบาลเพิ่มเติมหรือไม่ (เช่น เฉพาะเจ้าหน้าที่ PDPA)
 - FR-16 override ซ้ำได้กี่ครั้ง และใครดูประวัติการ override ได้
@@ -104,6 +112,6 @@ Security Rules และ shared helper ต้องมี automated test คร�
 
 โค้ด Phase 1 ที่ merge แล้วยังไม่ตรงกับเอกสารนี้:
 
-- `web/src/auth/AuthProvider.tsx` — `ALLOWED_ROLES` รวม `admin` แล้ว (2026-09-25) และมีหน้า `/admin/approvals` (FR-11) แต่ Op.10/11 ยังเรียก Firestore จาก Client ตรงชั่วคราวใน `web/src/admin/accountApproval.ts` — สิทธิ์ Admin ตรวจเฉพาะฝั่ง Client และยังไม่มี audit log ของการอนุมัติ
+- `web/src/auth/AuthProvider.tsx` — `ALLOWED_ROLES` รวม `admin` แล้ว (2026-09-25) และมีหน้า `/admin/approvals` (FR-11) แต่ Op.10/11 ยังเรียก Firestore จาก Client ตรงชั่วคราวใน `web/src/admin/accountApproval.ts` — สิทธิ์ Admin ตรวจเฉพาะฝั่ง Client และยังไม่มี audit log ของการอนุมัติ; หน้ารายชื่อผู้ป่วย (Op.0) อ่าน `patients` ตรงสำหรับทุกบทบาท แต่แสดงเฉพาะ `dataSource = "ข้อมูลจำลอง"` (NFR-01)
 - `firestore.rules` — **ไม่ตรงกับหัวข้อ "Firestore Security Rules" ด้านบน** ตั้งแต่ 2026-09-25 ผู้ใช้สั่งให้ใช้กฎเดียว `allow read, write: if request.auth != null` ทั้งฐานข้อมูล (กฎเดิมตามเอกสารนี้อยู่ใน commit `a804d30`) และยังไม่มี automated test (กรณีทดสอบข้อ 1–9 ด้านบน)
 - Cloud Functions Op.10–16 และ shared helper ยังไม่ได้ implement
