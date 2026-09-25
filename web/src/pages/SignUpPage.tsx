@@ -1,20 +1,18 @@
-import {httpsCallable} from "firebase/functions";
 import {useState, type FormEvent} from "react";
 
-import {callableErrorMessage} from "../auth/errors";
+import {signUpFromClient} from "../auth/clientAuthFlows";
+import {SIGN_UP_ACCEPTED, signUpErrorMessage} from "../auth/errors";
 import {isPasswordValid, passwordRules} from "../auth/passwordPolicy";
 import {AuthCard, Callout, PasswordRules} from "../components/AuthCard";
-import {functions} from "../firebase";
 import {Link} from "../router";
 
-const signUpUser = httpsCallable<{email: string; password: string}, {message: string}>(functions, "signUpUser");
-
-// Operation 8 — สมัครบัญชีผ่าน Cloud Function เสมอ (FR-08, NFR-17, NFR-18)
+// Operation 8 — สมัครบัญชี (FR-08, NFR-17, NFR-18) ตอนนี้เรียก Firebase จาก Client ตรงชั่วคราว
+// ดูข้อจำกัดใน ../auth/clientAuthFlows.ts
 export function SignUpPage() {
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
   const [error, setError] = useState<string | null>(null);
-  const [accepted, setAccepted] = useState<string | null>(null);
+  const [accepted, setAccepted] = useState(false);
   const [busy, setBusy] = useState(false);
 
   async function onSubmit(event: FormEvent) {
@@ -22,10 +20,11 @@ export function SignUpPage() {
     setBusy(true);
     setError(null);
     try {
-      const result = await signUpUser({email: email.trim(), password});
-      setAccepted(result.data.message);
+      // สมัครสำเร็จ: ผู้ใช้เข้าสู่ระบบอัตโนมัติ App จะพาไปหน้ายืนยันอีเมลเอง
+      // อีเมลซ้ำ: แสดงข้อความเดียวกับกรณีสำเร็จ ไม่บอกว่ามีบัญชีอยู่แล้ว (NFR-18)
+      if ((await signUpFromClient(email.trim(), password)) === "email-exists") setAccepted(true);
     } catch (err) {
-      setError(callableErrorMessage(err));
+      setError(signUpErrorMessage(err));
     } finally {
       setBusy(false);
     }
@@ -34,7 +33,7 @@ export function SignUpPage() {
   if (accepted) {
     return (
       <AuthCard title="ส่งคำขอสมัครบัญชีแล้ว">
-        <Callout tone="info" title="ตรวจสอบอีเมลของคุณ">{accepted}</Callout>
+        <Callout tone="info" title="ตรวจสอบอีเมลของคุณ">{SIGN_UP_ACCEPTED}</Callout>
         <p className="type-body">
           หลังยืนยันอีเมลแล้ว บัญชีต้องรอผู้ดูแลระบบอนุมัติและกำหนดบทบาทก่อนจึงจะเข้าถึงข้อมูลผู้ป่วยได้
         </p>
