@@ -104,6 +104,6 @@ Security Rules และ shared helper ต้องมี automated test คร�
 
 โค้ด Phase 1 ที่ merge แล้วยังไม่ตรงกับเอกสารนี้:
 
-- `web/src/auth/AuthProvider.tsx` — `ALLOWED_ROLES` มีแค่ `แพทย์`/`พยาบาล` ทำให้บัญชี `admin` ติดหน้ารออนุมัติ
-- `firestore.rules` — ยังไม่มี automated test (กรณีทดสอบข้อ 1–9 ด้านบน)
+- `web/src/auth/AuthProvider.tsx` — `ALLOWED_ROLES` รวม `admin` แล้ว (2026-09-25) และมีหน้า `/admin/approvals` (FR-11) แต่ Op.10/11 ยังเรียก Firestore จาก Client ตรงชั่วคราวใน `web/src/admin/accountApproval.ts` — สิทธิ์ Admin ตรวจเฉพาะฝั่ง Client และยังไม่มี audit log ของการอนุมัติ
+- `firestore.rules` — **ไม่ตรงกับหัวข้อ "Firestore Security Rules" ด้านบน** ตั้งแต่ 2026-09-25 ผู้ใช้สั่งให้ใช้กฎเดียว `allow read, write: if request.auth != null` ทั้งฐานข้อมูล (กฎเดิมตามเอกสารนี้อยู่ใน commit `a804d30`) และยังไม่มี automated test (กรณีทดสอบข้อ 1–9 ด้านบน)
 - Cloud Functions Op.10–16 และ shared helper ยังไม่ได้ implement

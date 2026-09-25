@@ -1,7 +1,7 @@
 // router ขนาดเล็กพอสำหรับหน้าจอไม่กี่หน้า — technology-stack ยังไม่ได้เลือก routing library
 import {createContext, useContext, useEffect, useState, type AnchorHTMLAttributes, type ReactNode} from "react";
 
-export type Path = "/" | "/login" | "/signup" | "/verify-email" | "/forgot-password" | "/auth/action";
+export type Path = "/" | "/login" | "/signup" | "/verify-email" | "/forgot-password" | "/auth/action" | "/admin/approvals";
 
 const RouterContext = createContext<{path: string; navigate: (to: Path) => void}>({
   path: "/",

@@ -1,6 +1,7 @@
 import {AuthProvider, useAuth} from "./auth/AuthProvider";
 import {AuthCard} from "./components/AuthCard";
 import {HomePage, PendingApprovalPage, VerifyEmailPage} from "./pages/AccountStatusPages";
+import {AdminApprovalPage} from "./pages/AdminApprovalPage";
 import {AuthActionPage} from "./pages/AuthActionPage";
 import {ForgotPasswordPage} from "./pages/ForgotPasswordPage";
 import {LoginPage} from "./pages/LoginPage";
@@ -27,6 +28,8 @@ function Routes() {
   // เข้าสู่ระบบแล้ว — ทุก path ผ่านการตรวจสถานะบัญชีก่อนเสมอ
   if (state.status === "unverified") return <VerifyEmailPage user={state.user} />;
   if (state.status === "pending-approval") return <PendingApprovalPage />;
+  // หน้าของ Admin — บทบาทอื่นเปิด path นี้แล้วกลับไปหน้าหลัก
+  if (path === "/admin/approvals" && state.role === "admin") return <AdminApprovalPage callerUid={state.user.uid} />;
   return <HomePage displayName={state.displayName} role={state.role} />;
 }
 
