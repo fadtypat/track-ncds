@@ -12,7 +12,7 @@ Backlog รวม FR/NFR ทั้งหมดจากทุกเอกสา�
 | FR-02 | แสดงผลตรวจ lab ที่เกี่ยวข้องกับโรค NCD ย้อนหลัง | [[20260917-01-patient-ncd-history-lab-complication-risk#ความต้องการเชิงฟังก์ชัน (Functional Requirements)\|FR-02]] | Backlog |
 | FR-03 | วิเคราะห์ความเสี่ยงโรคแทรกซ้อนแบบ rule-based ตาม threshold ค่า lab | [[20260917-01-patient-ncd-history-lab-complication-risk#ความต้องการเชิงฟังก์ชัน (Functional Requirements)\|FR-03]] | Backlog |
 | FR-04 | แสดง/แจ้งผลการประเมินความเสี่ยงโรคแทรกซ้อนแก่ผู้ดูแล | [[20260917-01-patient-ncd-history-lab-complication-risk#ความต้องการเชิงฟังก์ชัน (Functional Requirements)\|FR-04]] | Backlog |
-| FR-05 | ค้นหา/แสดงรายชื่อผู้ป่วย NCD ที่อยู่ในความดูแล | [[20260917-01-patient-ncd-history-lab-complication-risk#ความต้องการเชิงฟังก์ชัน (Functional Requirements)\|FR-05]] | Backlog |
+| FR-05 | ค้นหา/แสดงรายชื่อผู้ป่วย NCD ทุกรายในระบบ (แก้ไข 2026-09-25 — ยกเลิก PatientAssignment) | [[20260917-01-patient-ncd-history-lab-complication-risk#ความต้องการเชิงฟังก์ชัน (Functional Requirements)\|FR-05]] | Backlog |
 | FR-06 | ค้นหาผู้ป่วยด้วยเลข HN แบบ 7 หลัก พร้อม validation | [[20260917-01-patient-ncd-history-lab-complication-risk#ความต้องการเชิงฟังก์ชัน (Functional Requirements)\|FR-06]] | Backlog |
 | FR-07 | เข้าสู่ระบบด้วยอีเมลและรหัสผ่าน | [[20260923-01-user-authentication-email-password#ความต้องการเชิงฟังก์ชัน (Functional Requirements)\|FR-07]] | Backlog |
 | FR-08 | สมัครบัญชีผู้ใช้งานด้วยตนเอง (Self Sign-up) | [[20260923-01-user-authentication-email-password#ความต้องการเชิงฟังก์ชัน (Functional Requirements)\|FR-08]] | Backlog |
@@ -21,13 +21,15 @@ Backlog รวม FR/NFR ทั้งหมดจากทุกเอกสา�
 | FR-11 | อนุมัติบัญชีผู้ใช้งานใหม่ผ่านหน้าจอในระบบ (Admin) | [[20260924-01-admin-role-account-management#ความต้องการเชิงฟังก์ชัน (Functional Requirements)\|FR-11]] | Backlog |
 | FR-12 | เปลี่ยนบทบาท (Role) ของผู้ใช้งานที่มีอยู่ (Admin) | [[20260924-01-admin-role-account-management#ความต้องการเชิงฟังก์ชัน (Functional Requirements)\|FR-12]] | Backlog |
 | FR-13 | ระงับ/เปิดใช้งานบัญชีผู้ใช้งาน (Admin) | [[20260924-01-admin-role-account-management#ความต้องการเชิงฟังก์ชัน (Functional Requirements)\|FR-13]] | Backlog |
-| FR-14 | จัดการการมอบหมายผู้ป่วย (Patient Assignment) (Admin) | [[20260924-01-admin-role-account-management#ความต้องการเชิงฟังก์ชัน (Functional Requirements)\|FR-14]] | Backlog |
-| FR-15 | ดูประวัติการรักษาของผู้ป่วยทุกรายในระบบ (Admin) | [[20260924-01-admin-role-account-management#ความต้องการเชิงฟังก์ชัน (Functional Requirements)\|FR-15]] | Backlog |
-| FR-16 | ยืนยัน/แก้ไขผลการประเมินความเสี่ยงโรคแทรกซ้อน (Override Risk Assessment) | [[20260917-01-patient-ncd-history-lab-complication-risk#ความต้องการเชิงฟังก์ชัน (Functional Requirements)\|FR-16]] | Backlog |
+| ~~FR-14~~ | ~~จัดการการมอบหมายผู้ป่วย (Patient Assignment) (Admin)~~ — ยกเลิก 2026-09-25 | [[20260924-01-admin-role-account-management#ความต้องการเชิงฟังก์ชัน (Functional Requirements)\|FR-14]] | ยกเลิก |
+| FR-15 | ดูประวัติการรักษาของผู้ป่วยทุกรายในระบบแบบอ่านอย่างเดียว (Admin) | [[20260924-01-admin-role-account-management#ความต้องการเชิงฟังก์ชัน (Functional Requirements)\|FR-15]] | Backlog |
+| FR-16 | ยืนยัน/แก้ไขผลการประเมินความเสี่ยงโรคแทรกซ้อนของผู้ป่วยทุกราย (Override Risk Assessment, แก้ไข 2026-09-25) | [[20260917-01-patient-ncd-history-lab-complication-risk#ความต้องการเชิงฟังก์ชัน (Functional Requirements)\|FR-16]] | Backlog |
 
 ## กลาง
 
-_(ยังไม่มีรายการ)_
+| รหัส | หัวข้อ | เอกสารอ้างอิง | สถานะ |
+| --- | --- | --- | --- |
+| FR-17 | AI ช่วยอธิบายผลการค้นหาผู้ป่วยด้วย HN เป็นภาษาคน (เพิ่ม 2026-09-26) | [[20260917-01-patient-ncd-history-lab-complication-risk#ความต้องการเชิงฟังก์ชัน (Functional Requirements)\|FR-17]] | Backlog |
 
 ## ต่ำ
 
@@ -38,12 +40,12 @@ _(ยังไม่มีรายการ)_
 | รหัส | ด้าน | เอกสารอ้างอิง | สถานะ |
 | --- | --- | --- | --- |
 | NFR-01 | แหล่งข้อมูล/Integration (HOSxP, mockup ระหว่างพัฒนา) — สูง | [[20260917-01-patient-ncd-history-lab-complication-risk#ความต้องการที่ไม่ใช่เชิงฟังก์ชัน (Non-Functional Requirements)\|NFR-01]] | Backlog |
-| NFR-02 | Security / Access Control (เฉพาะแพทย์/พยาบาลผู้ดูแลผู้ป่วย NCD และเฉพาะผู้ป่วยที่อยู่ในความดูแลของผู้ใช้งานคนนั้น) — สูง | [[20260917-01-patient-ncd-history-lab-complication-risk#ความต้องการที่ไม่ใช่เชิงฟังก์ชัน (Non-Functional Requirements)\|NFR-02]] | Backlog |
+| NFR-02 | Security / Access Control (แพทย์/พยาบาล/admin เห็นผู้ป่วยทุกราย — แก้ไข 2026-09-25 ยกเลิก PatientAssignment) — สูง | [[20260917-01-patient-ncd-history-lab-complication-risk#ความต้องการที่ไม่ใช่เชิงฟังก์ชัน (Non-Functional Requirements)\|NFR-02]] | Backlog |
 | NFR-03 | PDPA / หลักการประมวลผลข้อมูลส่วนบุคคล (Lawful Basis & Purpose Limitation) — สูง | [[20260921-01-pdpa-data-protection-compliance#ความต้องการที่ไม่ใช่เชิงฟังก์ชัน (Non-Functional Requirements)\|NFR-03]] | Backlog |
 | NFR-04 | PDPA / การเข้ารหัสข้อมูล (Encryption) — สูง | [[20260921-01-pdpa-data-protection-compliance#ความต้องการที่ไม่ใช่เชิงฟังก์ชัน (Non-Functional Requirements)\|NFR-04]] | Backlog |
 | NFR-05 | PDPA / การจำกัดระยะเวลาเก็บรักษาและการลบข้อมูล (Retention & Deletion) — กลาง | [[20260921-01-pdpa-data-protection-compliance#ความต้องการที่ไม่ใช่เชิงฟังก์ชัน (Non-Functional Requirements)\|NFR-05]] | Backlog |
 | NFR-06 | PDPA / บันทึกการเข้าถึงข้อมูล (Audit Log & Accountability) — สูง | [[20260921-01-pdpa-data-protection-compliance#ความต้องการที่ไม่ใช่เชิงฟังก์ชัน (Non-Functional Requirements)\|NFR-06]] | Backlog |
-| NFR-07 | PDPA / สิทธิของเจ้าของข้อมูลส่วนบุคคล (Data Subject Rights) — กลาง | [[20260921-01-pdpa-data-protection-compliance#ความต้องการที่ไม่ใช่เชิงฟังก์ชัน (Non-Functional Requirements)\|NFR-07]] | Backlog |
+| NFR-07 | PDPA / สิทธิของเจ้าของข้อมูลส่วนบุคคล (Data Subject Rights, ทุกราย — แก้ไข 2026-09-25) — กลาง | [[20260921-01-pdpa-data-protection-compliance#ความต้องการที่ไม่ใช่เชิงฟังก์ชัน (Non-Functional Requirements)\|NFR-07]] | Backlog |
 | NFR-08 | PDPA / การสนับสนุนการแจ้งเหตุละเมิดข้อมูลส่วนบุคคล (Breach Notification Support) — กลาง | [[20260921-01-pdpa-data-protection-compliance#ความต้องการที่ไม่ใช่เชิงฟังก์ชัน (Non-Functional Requirements)\|NFR-08]] | Backlog |
 | NFR-09 | Performance (หน้าจอค้นหา/ประวัติวินิจฉัย/lab/ผลวิเคราะห์ความเสี่ยง ตอบสนอง < 2 วินาที) — สูง | [[20260922-01-operational-quality-nfr#ความต้องการที่ไม่ใช่เชิงฟังก์ชัน (Non-Functional Requirements)\|NFR-09]] | Backlog |
 | NFR-10 | Availability (อ้างอิง SLA มาตรฐานของ Firebase/Google Cloud) — กลาง | [[20260922-01-operational-quality-nfr#ความต้องการที่ไม่ใช่เชิงฟังก์ชัน (Non-Functional Requirements)\|NFR-10]] | Backlog |
@@ -55,5 +57,6 @@ _(ยังไม่มีรายการ)_
 | NFR-16 | Interoperability (future — พิจารณา HL7/FHIR เมื่อเชื่อมต่อ HOSxP จริง) — ต่ำ | [[20260922-01-operational-quality-nfr#ความต้องการที่ไม่ใช่เชิงฟังก์ชัน (Non-Functional Requirements)\|NFR-16]] | Backlog |
 | NFR-17 | Security / Password Policy (รหัสผ่านขั้นต่ำ 8 ตัวอักษร มีทั้งตัวอักษรและตัวเลข) — สูง | [[20260923-01-user-authentication-email-password#ความต้องการที่ไม่ใช่เชิงฟังก์ชัน (Non-Functional Requirements)\|NFR-17]] | Backlog |
 | NFR-18 | Security / Account Enumeration Prevention (ไม่เปิดเผยว่าอีเมลมีบัญชีในระบบหรือไม่) — สูง | [[20260923-01-user-authentication-email-password#ความต้องการที่ไม่ใช่เชิงฟังก์ชัน (Non-Functional Requirements)\|NFR-18]] | Backlog |
-| NFR-19 | Security / Access Control ข้อยกเว้นสำหรับบทบาท Admin (เข้าถึงผู้ป่วยทุกรายโดยไม่ต้องมี PatientAssignment) — สูง | [[20260924-01-admin-role-account-management#ความต้องการที่ไม่ใช่เชิงฟังก์ชัน (Non-Functional Requirements)\|NFR-19]] | Backlog |
+| NFR-19 | Security / Access Control (เดิมข้อยกเว้นสำหรับ Admin — ไม่ใช่ข้อยกเว้นอีกต่อไปตั้งแต่ 2026-09-25, คงไว้คือสิทธิ์อ่านอย่างเดียว) — สูง | [[20260924-01-admin-role-account-management#ความต้องการที่ไม่ใช่เชิงฟังก์ชัน (Non-Functional Requirements)\|NFR-19]] | Backlog |
 | NFR-20 | PDPA / บันทึกการเข้าถึงข้อมูล (Audit Log แบบ fail-safe สำหรับการเข้าถึงข้อมูลผู้ป่วยของ Admin) — สูง | [[20260924-01-admin-role-account-management#ความต้องการที่ไม่ใช่เชิงฟังก์ชัน (Non-Functional Requirements)\|NFR-20]] | Backlog |
+| NFR-21 | PDPA / จำกัดข้อมูลที่ส่งให้บริการ AI ภายนอก (Data Minimization for External AI Service, เพิ่ม 2026-09-26) — สูง | [[20260921-01-pdpa-data-protection-compliance#ความต้องการที่ไม่ใช่เชิงฟังก์ชัน (Non-Functional Requirements)\|NFR-21]] | Backlog |

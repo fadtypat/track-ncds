@@ -7,12 +7,13 @@ operation เชิง logical ใน [[api-spec]], entity เชิง logical 
 เก็บจากผู้ใช้โดยตรงผ่านกระบวนการ intake (สรุปไว้ด้านล่าง) — **ไม่มีการเลือกเพราะความนิยม/ความชอบส่วนตัว
 โดยไม่มีเหตุผลรองรับ**
 
-อัปเดตล่าสุด: 2026-09-24 (ปรับปรุงรอบสาม — เพิ่มกลไกจริงสำหรับฟีเจอร์ที่ 6 (Authentication: FR-07–FR-10,
-NFR-17, NFR-18) ตาม [[20260923-01-user-authentication-email-password]]/
-[[detailed-design/user-authentication-email-password|detailed-design ของฟีเจอร์นี้]] ที่ระบุไว้ว่ายังไม่มี
-การตัดสินใจ — ดู decision area 13-19 ด้านล่าง ไม่มีคำถาม intake ใหม่ในรอบนี้เพราะบริบททีม/องค์กร/hosting
-ที่เก็บไว้ในรอบแรกยังคงใช้ได้ครอบคลุมเพียงพอ — รอบก่อนหน้า 2026-09-22 เพิ่มกลไกสำหรับ NFR-09/NFR-12/
-NFR-13/NFR-15 ไว้ที่ decision area 9-12)
+อัปเดตล่าสุด: 2026-09-26 (ปรับปรุงรอบสี่ — **เพิ่มเติมเฉพาะ decision area ใหม่** สำหรับ FR-17 (AI
+ช่วยอธิบายผลการค้นหาผู้ป่วยด้วย HN เป็นภาษาคน, ระดับกลาง) และ NFR-21 (PDPA — ห้ามส่งชื่อ/ข้อมูลระบุ
+ตัวตนให้บริการ AI ภายนอก, ระดับสูง) ที่เพิ่งบันทึกใน [[20260917-01-patient-ncd-history-lab-complication-risk]]/
+[[20260921-01-pdpa-data-protection-compliance]]/[[backlog]] เมื่อ 2026-09-26 — ไม่แตะ/ไม่ทบทวน decision
+area 1-19 เดิม ตามที่ผู้ใช้ยืนยันโหมด "เพิ่มเติมเฉพาะ component/decision area ใหม่" ดู decision area
+20-22 ด้านล่าง — รอบก่อนหน้า 2026-09-24 เพิ่มกลไกสำหรับฟีเจอร์ที่ 6 (Authentication) ไว้ที่ decision area
+13-19, รอบ 2026-09-22 เพิ่มกลไกสำหรับ NFR-09/NFR-12/NFR-13/NFR-15 ไว้ที่ decision area 9-12)
 
 ## ภาพรวมบริบทที่ได้จาก Intake
 
@@ -21,8 +22,23 @@ NFR-13/NFR-15 ไว้ที่ decision area 9-12)
 2026-09-24: decision area เพิ่มเติมอีก 7 ข้อสำหรับฟีเจอร์ที่ 6 — Authentication (NFR-17 Password
 Policy, NFR-18 Account Enumeration Prevention, เทมเพลตอีเมล, Auth Blocking Functions, กลไกสร้าง
 `users/{uid}`, การ sync role/isActive กับ custom claims, การตรวจ `emailVerified` ซ้ำฝั่งเซิร์ฟเวอร์ —
-ดู decision area 13-19) — ทุกรอบไม่มีคำถาม intake ใหม่เพราะบริบททีม/องค์กร/hosting ที่เก็บไว้ในรอบแรก
-ยังคงใช้ได้และครอบคลุมเพียงพอ)
+ดู decision area 13-19; รอบสี่ 2026-09-26: decision area เพิ่มเติมอีก 3 ข้อสำหรับ FR-17/NFR-21 — AI
+ช่วยอธิบายผลการค้นหาผู้ป่วยด้วย HN และการจำกัดข้อมูลที่ส่งให้บริการ AI ภายนอก (App Check provider,
+กลไกเรียก AI ตอนกดค้นหา, จุดกำหนดชื่อโมเดล AI — ดู decision area 20-22) — ทุกรอบไม่มีคำถาม intake ใหม่
+เพราะบริบททีม/องค์กร/hosting ที่เก็บไว้ในรอบแรกยังคงใช้ได้และครอบคลุมเพียงพอ)
+
+**สรุปการตัดสินใจย่อยของรอบสี่ (2026-09-26 — ยืนยันแล้วผ่าน `NEEDS_USER_INPUT`/`AskUserQuestion` โดย
+orchestrator):** (1) ใช้ **Firebase AI Logic (Gemini Developer API backend)** เรียกจาก Client ตรงผ่าน
+`firebase/ai` SDK แทน OpenRouter ผ่าน Cloud Function เพราะโปรเจกต์ยังไม่อยู่แพ็กเกจ Blaze, (2) โมเดล
+**`gemini-3.5-flash-lite`** (แก้ไขในวันเดียวกัน 2026-09-26 จาก `gemini-2.5-flash-lite` เดิม — ยืนยันจาก
+การเรียกจริงจากเว็บแอปที่ Firebase AI Logic ตอบ HTTP 404 "model models/gemini-2.5-flash-lite is no
+longer available to new users" ก่อนถึงกำหนดการปิดให้บริการที่เคยประเมินไว้ที่ 2026-10-16 เสียอีก — ดู
+decision area 22 สำหรับรายละเอียดเต็ม) กำหนดชื่อโมเดลไว้จุดเดียวในโค้ด, (3) เปิด **App Check** บังคับด้วย
+**reCAPTCHA v3 + debug provider สำหรับ local dev**, (4) เรียก AI **เฉพาะตอนกดค้นหาเท่านั้น** (ไม่เรียก
+ตอน debounce หยุดพิมพ์ — ตอนตัดสินใจครั้งแรกขัดกับข้อความ FR-17 ในตอนนั้น แต่ **ผู้ใช้แก้ไข FR-17 ผ่าน
+`/capture-requirement` ให้ตรงกับกลไกนี้แล้วในภายหลัง** ความเสี่ยงนี้จึงคลี่คลายแล้ว — ดู decision area
+20), (5) ใช้บนเว็บจริง (production), (6) หน้าทดสอบ `/dev/ai-test` ที่เรียก OpenRouter ตรงเป็น dev-only
+ไม่ใช่ส่วนหนึ่งของ stack จริง
 สรุปสาระสำคัญที่ใช้เป็นฐานการตัดสินใจทุกข้อด้านล่าง:
 
 | หัวข้อ | คำตอบของผู้ใช้ | ผลต่อการตัดสินใจ |
@@ -75,6 +91,10 @@ self-hosted) แทน Firebase ทั้งระบบ
 | Client — Accessibility (NFR-13) | **WCAG 2.1 Level AA** + **Heroicons** (open-source) + **Lighthouse Accessibility Audit** | รองรับ NFR-13 (ห้ามใช้สีเป็นสัญญาณเดียว) ต่อยอดจาก [[DESIGN]] (ดู decision area 11) |
 | Client — Browser Compatibility (NFR-15) | browserslist: `">0.5%, last 2 versions, Firefox ESR, not dead"` | รองรับ NFR-15 (Chrome/Edge/Firefox เวอร์ชันล่าสุดบน desktop/tablet) (ดู decision area 12) |
 | Backend Service — Access Control (ตรวจ `emailVerified` ซ้ำ, ฟีเจอร์ที่ 6) | เพิ่มการตรวจ **`decodedToken.email_verified`** ใน shared helper module ของ Cloud Functions (Op.1-6) และ **`request.auth.token.email_verified`** ใน Firestore Security Rules (Op.0) | ปิดช่องว่างที่ [[user-authentication-email-password#Edge Case และวิธีจัดการ|detailed-design ระบุไว้ว่าเป็นความเสี่ยงจริง]] (client ที่ถูกดัดแปลง/บั๊กข้าม logic ตรวจ emailVerified) โดยไม่ต้องเพิ่ม Firestore read เพิ่ม (ค่ามาจาก token ที่ verify อยู่แล้วทุกครั้ง) (ดู decision area 19) |
+| Client — AI-Powered Search Result Explanation (FR-17) | **Firebase AI Logic (Gemini Developer API backend)** เรียกตรงจาก Client ผ่าน `firebase/ai` SDK (`getAI`, `getGenerativeModel`, `GoogleAIBackend`) — โมเดล **`gemini-3.5-flash-lite`** (แก้ไข 2026-09-26 จาก `gemini-2.5-flash-lite` — ยืนยันจากการเรียกจริง Firebase AI Logic ตอบ 404 ว่ารุ่นเดิมไม่รองรับผู้ใช้ใหม่แล้ว) | รองรับ FR-17 โดยไม่ต้องอัปเกรดเป็นแพ็กเกจ Blaze (Gemini Developer API backend ใช้บนแพ็กเกจ Spark ได้) — ไม่มี Cloud Function ตัวกลางในรอบนี้จึงบังคับ NFR-21 ได้เฉพาะฝั่ง Client (ดู decision area 20) |
+| Client — App Check สำหรับ AI Logic | **reCAPTCHA v3** (production) + **Debug Provider** (local dev) | Firebase บังคับเปิด App Check ให้ AI Logic อัตโนมัติตั้งแต่ ก.ค. 2026 — reCAPTCHA v3 ใช้งานได้บนแพ็กเกจ Spark โดยไม่ต้องเปิด billing ของ Google Cloud (ต่าง reCAPTCHA Enterprise) — ทดสอบสำเร็จจริงกับ Debug Provider ในการเรียก AI Logic (ดู decision area 21) |
+| Client — จุดกำหนดชื่อโมเดล AI | Constant เดียวใน `web/src/ai/config.ts` (`GEMINI_MODEL_NAME = "gemini-3.5-flash-lite"`) | เปลี่ยนชื่อโมเดลได้ที่จุดเดียวในโค้ดตามที่ผู้ใช้ระบุ — พิสูจน์คุณค่าของแนวทางนี้แล้วจริงเมื่อ Google ปิดให้บริการ `gemini-2.5-flash-lite` เร็วกว่าที่ประเมินไว้ (แก้ไขค่าที่จุดเดียวสำเร็จ ไม่ต้องไล่หาทั่วโค้ด) (ดู decision area 22) |
+| External AI Service | **Google Gemini Developer API** (ผ่าน Firebase AI Logic, ไม่ใช้ OpenRouter) | ผู้ใช้เลือกเพราะไม่ต้องมี API key ของผู้ให้บริการ AI ฝังใน bundle และใช้ได้บนแพ็กเกจ Spark — ข้อจำกัดของ NFR-21 (ห้ามส่งข้อมูลระบุตัวตน) บังคับใช้ที่ชั้น prompt construction ฝั่ง Client เท่านั้น (ดู decision area 20) |
 
 ## รายละเอียดต่อ Decision Area
 
@@ -520,6 +540,119 @@ Security Rules Verification (NFR-14) สำหรับกรณี "ผู้�
   บางส่วน แต่ Operation 0 (แสดงรายชื่อผู้ป่วยในความดูแล) ยังคง expose ข้อมูลได้แม้ยังไม่ยืนยันอีเมล
   ผู้ใช้เลือกปิดให้ครบทั้งสอง path แทน
 
+### 20. AI ช่วยอธิบายผลการค้นหาผู้ป่วยด้วย HN (FR-17, NFR-21) — Firebase AI Logic (Gemini Developer API) เรียกตรงจาก Client
+
+**เลือก:** ใช้ **Firebase AI Logic** เป็นชั้นเชื่อมต่อ ตั้งค่า backend เป็น **Gemini Developer API**
+(`GoogleAIBackend`) และเรียกจาก **Client โดยตรง** ผ่าน `firebase` JS SDK
+(`import { getAI, getGenerativeModel, GoogleAIBackend } from "firebase/ai"`) — **ไม่มี Cloud Function
+ตัวกลาง** สำหรับ path นี้ (ต่างจาก Operation 1-6 ที่ decision area 3 กำหนดให้ต้องผ่าน Cloud Functions
+เสมอ) โมเดลที่ใช้คือ **`gemini-3.5-flash-lite`** (แก้ไข 2026-09-26 จาก `gemini-2.5-flash-lite` เดิม —
+ดู decision area 22 สำหรับรายละเอียดเต็มและกลไกกำหนดชื่อโมเดล)
+
+**อัปเดตสถานะ FR-17 (2026-09-26 — ความเสี่ยงที่เคยบันทึกไว้คลี่คลายแล้ว):** เดิม decision area นี้
+ตัดสินใจให้เรียก AI **เฉพาะตอนกดปุ่มค้นหาเท่านั้น** ซึ่งขัดกับข้อความ FR-17 ในตอนนั้นที่ยืนยันให้ทำงาน
+ทั้งตอนหยุดพิมพ์และกดค้นหา — **ผู้ใช้ได้สั่งแก้ไข FR-17 ผ่าน `/capture-requirement` ให้ตรงกับกลไกจริงนี้
+แล้ว** (เปลี่ยนเป็น "AI ทำงานเฉพาะตอนกดค้นหา") ดังนั้น**ไม่มีความขัดแย้งระหว่าง spec กับ technology-stack
+อีกต่อไป** — หัวข้อความเสี่ยง "กลไก AI เรียกเฉพาะตอนกดค้นหา ขัดกับข้อความปัจจุบันของ FR-17" ด้านล่างจึง
+ถือว่า**แก้ไขเสร็จสมบูรณ์แล้ว** (คงข้อความเดิมไว้เพื่อ traceability พร้อมหมายเหตุสถานะล่าสุด)
+
+**เหตุผล:** ผู้ใช้พิจารณาทางเลือก "OpenRouter ผ่าน Cloud Function" (สถาปัตยกรรมที่สอดคล้องกับหลักการเดิม
+ของ decision area 3 มากกว่า เพราะมี Cloud Function คั่นกลางให้ตรวจสิทธิ์/บันทึก audit log ได้เหมือน
+Operation อื่น) แล้ว**ไม่เลือก** เพราะ**โปรเจกต์นี้ยังไม่อยู่แพ็กเกจ Blaze** — Cloud Functions ที่เรียก
+ออกไปยัง OpenRouter (บริการภายนอกที่ไม่ใช่ Google) ต้องใช้ egress network ซึ่งต้องอยู่แพ็กเกจ Blaze จึงจะ
+ใช้ได้ ในขณะที่ **Gemini Developer API ผ่าน Firebase AI Logic ใช้งานได้บนแพ็กเกจ Spark (ฟรี)** และไม่มี
+API key ของผู้ให้บริการ AI ฝังอยู่ใน client bundle เลย (Firebase AI Logic จัดการ credential ผ่าน Firebase
+project เอง) — สอดคล้องกับสถานะจริงของโปรเจกต์ที่ระบุไว้ใน `CLAUDE.md` ว่า "ยัง deploy Cloud Functions
+ไม่ได้เพราะโปรเจกต์ยังไม่อยู่แพ็กเกจ Blaze"
+
+**ข้อจำกัดสำคัญที่ต้องบันทึกไว้อย่างเด่นชัด (ผลกระทบต่อ NFR-06/NFR-21):**
+
+1. **ไม่มี Cloud Function ตัวกลาง จึงบังคับ NFR-21 ได้แค่ฝั่ง Client เท่านั้น** — โค้ด Client ต้องสร้าง
+   prompt จาก**ข้อมูลไม่ระบุตัวตนเท่านั้น**: เลข HN ที่ผู้ใช้พิมพ์ + สถานะ/จำนวนผลลัพธ์ที่พบ (พบ/ไม่พบ/
+   HN ไม่ครบ 7 หลัก) — **ห้ามส่งชื่อผู้ป่วยหรือ field ระบุตัวตนอื่นใดเข้าไปใน prompt เด็ดขาด** ไม่มีชั้น
+   ตรวจสอบฝั่งเซิร์ฟเวอร์คอยกรองซ้ำ (ต่างจาก Operation 1-6 ที่ Cloud Functions เป็นจุดเดียวที่บังคับ
+   fail-safe audit logging ได้) — เป็น**ความเสี่ยงเชิงสถาปัตยกรรมที่ยอมรับแล้วสำหรับรอบนี้** เพราะ
+   ถ้า Client ถูกดัดแปลง/บั๊ก อาจส่งข้อมูลเกินขอบเขตที่กำหนดได้โดยไม่มีอะไรสกัดกั้น
+2. **บันทึก audit log ของการเรียก AI ฝั่งเซิร์ฟเวอร์ไม่ได้จนกว่าจะอยู่ Blaze** — ต่างจาก Operation 1-6
+   ที่มี audit log แบบ fail-safe ตาม NFR-06 การเรียก AI ของ FR-17 **ไม่มี audit trail ฝั่งเซิร์ฟเวอร์เลย
+   ในรอบนี้** (ไม่ใช่ข้อมูลผู้ป่วยรายบุคคลโดยตรงตามที่ NFR-21 บังคับให้จำกัดไว้แล้ว จึงยังไม่ถือเป็นการ
+   เข้าถึงข้อมูลผู้ป่วยที่ NFR-06 ครอบคลุมโดยตรง แต่ควรทบทวนเมื่ออยู่ Blaze)
+3. **ถ้า AI ล้มเหลว การค้นหาปกติ (FR-05/FR-06) ต้องยังทำงานได้** — เรียก AI แบบ non-blocking/fire-and-
+   forget ต่อจากผลค้นหาที่แสดงอยู่แล้ว (ผลค้นหาจริงมาจาก Firestore/Cloud Functions ตามที่ decision area
+   3 กำหนดไว้เดิม ไม่เกี่ยวกับเส้นทาง AI นี้) ต้อง handle exception/timeout ของการเรียก AI แยกจาก error
+   handling ของการค้นหาโดยสิ้นเชิง
+
+**ทางเลือกอื่นที่พิจารณาแล้วไม่เลือก:**
+- **OpenRouter ผ่าน Cloud Function** — ให้ Cloud Function เป็นตัวกลางเหมือน Operation อื่น (ตรวจสิทธิ์/
+  บันทึก audit log ได้ในจุดเดียว, เลือกโมเดล AI ได้หลากหลายผู้ให้บริการผ่าน API เดียว) แต่ต้องใช้แพ็กเกจ
+  Blaze สำหรับ Cloud Functions egress ซึ่งโปรเจกต์นี้ยังไม่มี — ผู้ใช้ไม่เลือกเพราะข้อจำกัดนี้โดยตรง
+- **Vertex AI Gemini API backend** (อีกทางเลือกของ Firebase AI Logic) — เหมาะกับ workload ระดับ
+  enterprise/ต้องการ SLA สูงกว่า แต่ต้องใช้แพ็กเกจ Blaze เช่นกัน (ผูกกับ Google Cloud billing โดยตรง)
+  จึงไม่เลือกด้วยเหตุผลเดียวกับ OpenRouter
+
+### 21. App Check สำหรับ Firebase AI Logic — reCAPTCHA v3 (production) + Debug Provider (local dev)
+
+**เลือก:** เปิดใช้ **Firebase App Check** (บังคับโดย Firebase สำหรับ AI Logic ตั้งแต่ ก.ค. 2026 เมื่อ
+ตั้งค่าผ่าน Console > AI Services > AI Logic) โดยใช้ **reCAPTCHA v3** เป็น provider สำหรับเว็บจริง
+(production) และ **Debug Provider** (debug token) สำหรับ local dev/`npm run dev`
+
+**เหตุผล:** ผู้ใช้ยืนยันเลือก reCAPTCHA v3 — เป็น provider เริ่มต้นที่ Firebase แนะนำสำหรับเว็บ ทำงานแบบ
+invisible (ไม่ต้องให้ผู้ใช้ทำ challenge เอง) และ**ใช้งานได้บนแพ็กเกจ Spark โดยไม่ต้องเปิด billing ของ
+Google Cloud project** สอดคล้องกับข้อจำกัด "ยังไม่อยู่ Blaze" ที่เป็นเหตุผลหลักของการเลือก Gemini
+Developer API ทั้งระบบใน decision area 20 อยู่แล้ว — reCAPTCHA Enterprise แม้แม่นยำกว่าแต่โดยทั่วไปต้อง
+เปิด billing ของ Google Cloud project (มี free quota รายเดือนแต่ยังผูกกับการเปิด billing) จึงขัดกับ
+เจตนาเดียวกัน
+
+**ทางเลือกอื่นที่พิจารณาแล้วไม่เลือก:**
+- **reCAPTCHA Enterprise** — แยกแยะ bot/traffic ผิดปกติแม่นยำกว่า มี dashboard วิเคราะห์ละเอียดกว่า แต่
+  ต้องเปิด billing ของ Google Cloud project ขัดกับเจตนา "ยังไม่อยู่ Blaze" และเพิ่มความซับซ้อนของ setup
+  ที่ทีม IT ต้องดูแลต่อ (Q6 ของ intake รอบแรก)
+- **Custom App Check provider** (self-managed token/proof-of-work) — ควบคุมเต็มที่ไม่พึ่ง reCAPTCHA เลย
+  แต่ต้องเขียน/ดูแล verification logic เอง ซับซ้อนเกินความจำเป็นสำหรับ MVP ขนาดเล็ก ขัดเป้าหมาย "ดูแล
+  ง่าย" ของทีม IT
+
+### 22. จุดกำหนดชื่อโมเดล AI — Constant เดียวใน `web/src/ai/config.ts`
+
+**เลือก:** กำหนดชื่อโมเดล AI ไว้เป็น **constant เดียวใน shared module** ของฝั่ง Client เช่น
+`web/src/ai/config.ts` (`export const GEMINI_MODEL_NAME = "gemini-3.5-flash-lite";` — แก้ไขค่าแล้วเมื่อ
+2026-09-26 จาก `"gemini-2.5-flash-lite"` เดิม) ให้โค้ดทุกจุดที่เรียก `getGenerativeModel()` import ค่านี้
+จากที่เดียว — **ไม่ใช้ environment variable หรือ Firebase Remote Config** ในรอบนี้
+
+**เหตุผล:** ผู้ใช้ยืนยันเลือกทางที่ง่ายที่สุด — เป็นจุดเดียวจริงในซอร์สโค้ดตามที่ต้องการ (ไม่ต้องตั้งค่า
+เพิ่มใน `.env`/Firebase Console) ตรงไปตรงมาที่สุดสำหรับทีม IT ที่จะรับช่วงดูแลต่อ (Q6 ของ intake รอบแรก)
+
+**เหตุการณ์ที่ทำให้ต้องแก้ไขค่าคอนสแตนต์ (2026-09-26 — ยืนยันโดยผู้ใช้จากการทดสอบจริง):** ตอนตัดสินใจ
+ครั้งแรกใช้ `gemini-2.5-flash-lite` และประเมินความเสี่ยงไว้ว่าเอกสาร Firebase
+(`firebase.google.com/docs/ai-logic/models`) ระบุว่า Gemini 2.5 จะปิดให้บริการเร็วสุด 2026-10-16 — แต่
+เมื่อเรียกจริงจากเว็บแอป (`web/`) **Firebase AI Logic ตอบกลับ HTTP 404** พร้อมข้อความ `"This model
+models/gemini-2.5-flash-lite is no longer available to new users. Please update your code to use
+models/gemini-3.5-flash-lite"` — แสดงว่ารุ่นนี้หยุดรองรับผู้ใช้ใหม่**เร็วกว่าที่ประเมินไว้จริง** (ก่อน
+2026-10-16) จึงต้องแก้ไขทันที ผู้ใช้ยืนยันเปลี่ยนเป็น **`gemini-3.5-flash-lite`** ตามที่ error message
+แนะนำ และทดสอบเรียกจริงสำเร็จแล้วบน Gemini Developer API (ไม่ต้องอัปเกรดเป็น Blaze) พร้อม App Check
+Debug Provider — โค้ดถูกแก้ไขแล้วที่ `web/src/ai/config.ts` (`GEMINI_MODEL_NAME = "gemini-3.5-flash-lite"`)
+
+**คุณค่าของการเลือก constant เดียวที่พิสูจน์แล้วจริงจากเหตุการณ์นี้:** เพราะกำหนดชื่อโมเดลไว้จุดเดียวใน
+โค้ดตั้งแต่ต้น การแก้ไขครั้งนี้จึงทำได้ง่าย (แก้ค่าเดียว ไม่ต้องไล่หาทุกจุดที่เรียก
+`getGenerativeModel()`) — ยืนยันเหตุผลเดิมของ decision area นี้ว่าถูกต้อง แม้จะยังต้อง **build + deploy
+ใหม่ทุกครั้งที่เปลี่ยนโมเดล** (ไม่สามารถเปลี่ยนแบบ runtime ได้ทันที) **ความเสี่ยงเรื่องกำหนดการปิด
+บริการ 2026-10-16 ของ `gemini-2.5-flash-lite` ไม่มีผลอีกต่อไปแล้ว** เพราะเปลี่ยนไปใช้
+`gemini-3.5-flash-lite` แล้วจริง — ยังคงมีความเสี่ยงทั่วไปเดิมอยู่ว่า **โมเดลรุ่นถัดไปอาจถูกปิดให้บริการ
+แบบไม่มีสัญญาณเตือนล่วงหน้าที่แน่นอนอีกในอนาคต** (บทเรียนจากเหตุการณ์นี้คือกำหนดการที่ Google ประกาศไว้
+อาจไม่ตรงกับพฤติกรรมจริง) ควรติดตาม error monitoring ของหน้าค้นหา (FR-17) เพื่อจับ HTTP 404/model
+deprecation ในอนาคตแทนการอิงกำหนดการที่ประกาศไว้อย่างเดียว
+
+**ทางเลือกอื่นที่พิจารณาแล้วไม่เลือก:**
+- **Environment variable ผ่าน Vite** (`import.meta.env.VITE_GEMINI_MODEL_NAME` พร้อมค่า default ในโค้ด)
+  — เปลี่ยนค่าได้ต่อ environment (dev/emulator/prod) โดยไม่ต้องแก้โค้ด แต่ยังต้อง rebuild เมื่อเปลี่ยนค่า
+  ใน production เพราะ env ของ Vite ถูกฝังตอน build ไม่ใช่ runtime จริง — ไม่ได้ประโยชน์เพิ่มมากพอเมื่อ
+  เทียบกับความซับซ้อนที่เพิ่มขึ้น (ต้องจัดการ `.env.local`/`.env.production` แยกกัน)
+- **Firebase Remote Config parameter** — เปลี่ยนชื่อโมเดลได้แบบ runtime จริงโดยไม่ต้อง rebuild/redeploy
+  (มีประโยชน์มากเมื่อ Google ปิดให้บริการกะทันหัน — ตามที่เหตุการณ์ 2026-09-26 พิสูจน์แล้วว่าเกิดขึ้นได้
+  จริงเร็วกว่าที่ประกาศไว้) แต่เพิ่ม Firebase product ใหม่ที่ต้องตั้งค่า/ดูแลเพิ่ม (Remote Config console,
+  SDK, fetch/activate logic, cache TTL) เกินความจำเป็นสำหรับ MVP ขนาดเล็ก ผู้ใช้ยังคงเลือกไม่ใช้ในรอบนี้
+  เพื่อความง่ายสูงสุด แม้จะเพิ่งประสบเหตุการณ์โมเดลถูกปิดกะทันหันมาแล้วครั้งหนึ่ง — **ควรพิจารณาใหม่จริงจัง
+  ขึ้นถ้าเหตุการณ์ลักษณะนี้เกิดซ้ำอีก** (ดู "ประเด็นรอตัดสินใจ")
+
 ## ความเสี่ยงที่ต้องพิจารณาเพิ่มเติม (สำคัญ — ผู้ใช้รับทราบและยืนยันให้ดำเนินการต่อแล้ว)
 
 สถาปัตยกรรม Firebase-native ที่เลือก (decision area 3) — โดยเฉพาะการใช้ **Firestore Security Rules**
@@ -609,6 +742,24 @@ decision area 14 ด้านบนเลือกเปิด **Firebase "Email
   จริง** เช่นเดียวกับความเสี่ยงอื่นในหัวข้อนี้ — ผู้ใช้รับทราบและยืนยันให้ดำเนินการต่อด้วย Email
   Enumeration Protection เพียงอย่างเดียวในรอบ MVP นี้แล้ว
 
+### ความเสี่ยงเพิ่มเติม: กลไก AI เรียกเฉพาะตอนกดค้นหา ขัดกับข้อความปัจจุบันของ FR-17 (**แก้ไขแล้ว 2026-09-26 — FR-17 ถูกแก้ผ่าน `/capture-requirement` ให้ตรงกับกลไกนี้แล้ว**)
+
+decision area 20 ด้านบนตัดสินใจให้เรียก AI **เฉพาะตอนผู้ใช้กดปุ่มค้นหาเท่านั้น** (ไม่เรียกตอนหยุดพิมพ์/
+debounce) — แต่ [[20260917-01-patient-ncd-history-lab-complication-risk#ความต้องการเชิงฟังก์ชัน (Functional Requirements)|
+FR-17 ตามที่ระบุไว้ในปัจจุบัน]] ยืนยันชัดเจนว่า "AI ทำงานทั้งตอนหยุดพิมพ์และตอนกดค้นหา" ตามที่แก้ไข
+FR-06 ไว้เพื่อรองรับ FR-17 โดยเฉพาะ — การตัดสินใจทางเทคโนโลยีในรอบนี้จึง**ขัดกับข้อความ spec ปัจจุบัน
+โดยตรง**
+
+**เหตุผลที่ผู้ใช้เลือกทางนี้:** ลดจำนวนครั้งที่เรียก Gemini Developer API ต่อ session ของผู้ใช้แต่ละคน
+(ประหยัด free tier quota ของ Firebase AI Logic) และลดความซับซ้อนของโค้ด (ไม่ต้องมี timer แยกสำหรับ AI
+นอกเหนือจาก debounce ปกติของ FR-06 ที่ใช้ตรวจสอบรูปแบบ HN)
+
+**สถานะการติดตาม (อัปเดต 2026-09-26):** ผู้ใช้ได้สั่งแก้ไข **FR-17** ผ่าน `/capture-requirement` ให้ตรง
+กับกลไกจริงนี้แล้ว (เปลี่ยนข้อความจาก "ทำงานทั้งตอนหยุดพิมพ์และกดค้นหา" เป็น "ทำงานเฉพาะตอนกดค้นหา") —
+**spec และ technology-stack.md สอดคล้องกันแล้ว ไม่มีความขัดแย้งค้างอยู่อีกต่อไป** ส่วน FR-06 (debounce
+สำหรับตรวจสอบรูปแบบ HN/ค้นหาปกติ) ไม่ได้รับผลกระทบตั้งแต่แรก ยังคงทำงานทั้ง 2 จังหวะ (หยุดพิมพ์/กดค้นหา)
+ตามเดิม — รายการนี้ถูกนำออกจาก "ประเด็นรอตัดสินใจ" แล้วเพราะแก้ไขเสร็จสมบูรณ์
+
 ## Deployment Diagram
 
 ```mermaid
@@ -620,7 +771,11 @@ flowchart LR
         Auth["Firebase Authentication\n(อัปเกรดเป็น Google Cloud Identity Platform บางส่วน\nสำหรับ password policy — Op.9 backstop, decision area 13)\nEmail Enumeration Protection เปิดใช้ (decision area 14)\nไม่เก็บ role/isActive ใน Custom Claims (decision area 18)"]
         Functions["Cloud Functions (2nd gen)\nNode.js + TypeScript\n- Op.1,2: Data Aggregation (ผู้ป่วยรายบุคคล)\n- Op.3: Risk Rule Engine\n- Op.4: Data Subject Rights\n- Op.5: Audit Trail Retrieval\n- Op.6: Retention Enforcement (scheduled)\n- Op.8: signUpUser (สร้าง Auth user + users/{uid} ในฟังก์ชันเดียว, rollback ถ้าล้มเหลว — decision area 17)\n- Op.9: requestPasswordReset\n- shared helper: ตรวจ role/isActive จาก Firestore + email_verified จาก token (decision area 19)\n- เขียน Audit Log ก่อน อ่าน/แก้ไขข้อมูลจริงเสมอ (fail-safe)"]
         Firestore[("Cloud Firestore (Native mode)\nPrimary Data Store: users, patients, patientAssignments,\nncdDiagnoses, labResults, complicationRiskThresholds,\ncomplicationRiskAssessments, riskFindings,\ndataSubjectRequests, retentionPolicies\n(users/{uid} = source of truth เดียวของ role/isActive — decision area 18)\n\nAudit Log Store: auditLogRecords\n(client เขียนไม่ได้เลย — เฉพาะ Cloud Functions ผ่าน Admin SDK)")]
+        AppCheck["Firebase App Check\nreCAPTCHA v3 (production) +\nDebug Provider (local dev)\nบังคับใช้กับ AI Logic — decision area 21"]
+        AILogic["Firebase AI Logic\nbackend: Gemini Developer API\nโมเดล: gemini-3.5-flash-lite\n(แก้ไข 2026-09-26 จาก gemini-2.5-flash-lite\nชื่อโมเดลกำหนดที่จุดเดียว\nweb/src/ai/config.ts — decision area 22)"]
     end
+
+    GeminiAPI[("Google Gemini Developer API\nFR-17: อธิบายผลการค้นหาผู้ป่วยด้วย HN เป็นภาษาคน\nรับเฉพาะ HN ที่พิมพ์ + สถานะ/จำนวนผลลัพธ์แบบไม่ระบุตัวตน (NFR-21)\nไม่มี Cloud Function ตัวกลาง — decision area 20")]
 
     ExternalSrc[("External Clinical Data Source\nHOSxP — MySQL/MariaDB\nนอกขอบเขตการเชื่อมต่อจริงของ MVP")]
 
@@ -631,6 +786,9 @@ flowchart LR
     Functions -->|"Admin SDK (bypass Security Rules)\nตรวจสิทธิ์ (role/isActive/email_verified) → บันทึก Audit Log →\nอ่าน/แก้ไขข้อมูลจริง / สร้าง users/{uid}"| Firestore
     Functions -->|"Admin SDK — Op.8 createUser/deleteUser (rollback),\nOp.9 ตรวจสอบบัญชี+สั่งส่งอีเมลรีเซ็ต"| Auth
     Functions -.->|"อนาคต: ดึงข้อมูลจริง\n(นอกขอบเขต MVP นี้ — ดู 'ประเด็นรอตัดสินใจ')"| ExternalSrc
+    Hosting -->|"firebase/ai SDK — เฉพาะตอนกดปุ่มค้นหา (FR-17)\nไม่เรียกตอน debounce หยุดพิมพ์ — ดูความเสี่ยงด้านล่าง"| AILogic
+    Hosting -.->|"App Check token แนบทุกครั้งก่อนเรียก AI Logic"| AppCheck
+    AILogic -->|"HTTPS (Google-managed)"| GeminiAPI
 ```
 
 **หมายเหตุเทคโนโลยีจริงเพิ่มเติม (NFR-09, NFR-12, NFR-13, NFR-15 — ไม่มี node ใหม่ในไดอะแกรม เพราะไม่มี
@@ -643,6 +801,9 @@ infrastructure ใหม่เพิ่มเข้ามา):**
 - **Accessibility (NFR-13) / Browser Compatibility (NFR-15):** เป็นคุณสมบัติของโค้ด/build config ใน
   "Hosting" node เท่านั้น (Heroicons, WCAG token, browserslist) ไม่มี infrastructure เพิ่มเติม (ดู
   decision area 11-12)
+- **FR-17/NFR-21 (AI):** เพิ่ม node ใหม่ 2 จุด — "AppCheck" (reCAPTCHA v3 + Debug Provider, decision
+  area 21) และ "AILogic" (Firebase AI Logic ต่อ Gemini Developer API ภายนอก, decision area 20) — ไม่มี
+  Cloud Function ตัวกลาง (ต่างจาก Op.1-6 ทั้งหมด) จึงไม่มี audit log ฝั่งเซิร์ฟเวอร์สำหรับ path นี้
 
 ## ประเด็นรอตัดสินใจ
 
@@ -701,6 +862,21 @@ infrastructure ใหม่เพิ่มเข้ามา):**
   ฟีเจอร์ที่ 6)** — decision area 15 เลือก template เริ่มต้นของ Firebase สำหรับ MVP ควรทบทวนเปลี่ยนเป็น
   custom domain/บริการอีเมลภายนอกเมื่อเข้าสู่ production จริง เพื่อความน่าเชื่อถือของอีเมลที่ส่งถึง
   แพทย์/พยาบาล
+- ~~แก้ไข FR-17 ให้ตรงกับกลไกจริงที่เลือก~~ — **แก้ไขเสร็จแล้ว 2026-09-26** ผู้ใช้สั่งแก้ไข FR-17 ผ่าน
+  `/capture-requirement` ให้ตรงกับกลไก "เรียก AI เฉพาะตอนกดค้นหา" แล้ว ไม่มีความขัดแย้งกับ
+  technology-stack.md อีกต่อไป (คงรายการนี้ไว้เพื่อ traceability เท่านั้น)
+- **Cloud Function ตัวกลางสำหรับ FR-17 เมื่อโปรเจกต์อยู่แพ็กเกจ Blaze (ใหม่จาก FR-17/NFR-21)** —
+  decision area 20 เลือกเรียก Gemini Developer API ตรงจาก Client เพราะยังไม่อยู่ Blaze ทำให้บังคับ
+  NFR-21 ได้แค่ฝั่ง Client และไม่มี audit log ฝั่งเซิร์ฟเวอร์สำหรับการเรียก AI — ควรทบทวนย้ายมาผ่าน Cloud
+  Function ตัวกลาง (ตรวจ/กรอง prompt + บันทึก audit log) เมื่อโปรเจกต์อัปเกรดเป็น Blaze แล้ว
+- **Firebase Remote Config สำหรับชื่อโมเดล AI (ใหม่จาก FR-17, อัปเดตความสำคัญ 2026-09-26)** — decision
+  area 22 เลือก constant เดียวในโค้ดสำหรับ MVP นี้ และเพิ่งพิสูจน์แล้วว่าใช้งานได้จริงเมื่อ Google ปิดให้
+  บริการ `gemini-2.5-flash-lite` กะทันหันเร็วกว่ากำหนดการที่ประกาศไว้ (2026-09-26) — ควรพิจารณาย้ายไปใช้
+  Remote Config อย่างจริงจังมากขึ้นถ้าเหตุการณ์โมเดลถูกปิดกะทันหันแบบนี้เกิดซ้ำอีก เพื่อให้เปลี่ยนโมเดล
+  ได้แบบ runtime โดยไม่ต้องรอ build/deploy ใหม่ทุกครั้ง
+- **reCAPTCHA Enterprise สำหรับ App Check (ใหม่จาก FR-17)** — decision area 21 เลือก reCAPTCHA v3
+  สำหรับ MVP นี้เพราะไม่ต้องเปิด billing ของ Google Cloud ควรพิจารณา reCAPTCHA Enterprise เมื่อโปรเจกต์
+  อัปเกรดเป็น Blaze แล้วและต้องการความแม่นยำในการป้องกัน bot/abuse สูงขึ้น
 
 ## เอกสารที่เกี่ยวข้อง
 
