@@ -1,5 +1,6 @@
-import {useCallback, useEffect, useState, type FormEvent} from "react";
+import {useCallback, useEffect, useRef, useState, type FormEvent} from "react";
 
+import {explainHnSearch} from "../ai/searchExplanation";
 import {useAuth} from "../auth/AuthProvider";
 import {GENERIC_ERROR} from "../auth/errors";
 import {Callout} from "../components/AuthCard";
@@ -111,21 +112,68 @@ function SeedMockPatients({onDone}: {onDone: () => void}) {
   );
 }
 
+// FR-06 ตรวจ/ค้นหา HN ได้ทั้งตอนหยุดพิมพ์และตอนกดค้นหา — FR-17 เรียก AI อธิบายผลเฉพาะตอนกดค้นหา
+const SEARCH_DEBOUNCE_MS = 500;
+
 function HnSearch() {
   const [hn, setHn] = useState("");
   const [busy, setBusy] = useState(false);
   const [result, setResult] = useState<HnSearchResult | "error" | null>(null);
+  const [ai, setAi] = useState<{status: "loading"} | {status: "done"; text: string} | {status: "error"} | null>(null);
+  // ทิ้งผลของคำขอที่เก่ากว่าคำขอล่าสุด (พิมพ์ต่อระหว่างรอผล)
+  const latest = useRef(0);
+  const debounce = useRef<ReturnType<typeof setTimeout>>(undefined);
 
-  async function onSubmit(event: FormEvent) {
-    event.preventDefault();
+  const search = useCallback(async (input: string, withAi: boolean) => {
+    const id = ++latest.current;
     setBusy(true);
+    setAi(withAi ? {status: "loading"} : null);
+    let found: HnSearchResult;
     try {
-      setResult(await searchPatientByHn(hn));
+      found = await searchPatientByHn(input);
     } catch {
-      setResult("error");
-    } finally {
-      setBusy(false);
+      if (id === latest.current) {
+        setResult("error");
+        setAi(null);
+        setBusy(false);
+      }
+      return;
     }
+    if (id !== latest.current) return;
+    setResult(found);
+    setBusy(false);
+    if (!withAi) return;
+    // ส่งเฉพาะ HN + สถานะ/จำนวน (NFR-21) — AI ล้มเหลวไม่กระทบผลค้นหา (FR-17)
+    const count = found.status === "found" ? found.patients.length : 0;
+    try {
+      const text = await explainHnSearch({hn: input.trim(), status: found.status, count});
+      if (id === latest.current) setAi({status: "done", text});
+    } catch {
+      if (id === latest.current) setAi({status: "error"});
+    }
+  }, []);
+
+  useEffect(() => {
+    if (!hn.trim()) return;
+    debounce.current = setTimeout(() => void search(hn, false), SEARCH_DEBOUNCE_MS);
+    return () => clearTimeout(debounce.current);
+  }, [hn, search]);
+
+  function onChange(value: string) {
+    setHn(value);
+    if (!value.trim()) {
+      // ล้างช่องแล้ว ทิ้งผลค้างทั้งหมด
+      latest.current++;
+      setResult(null);
+      setAi(null);
+    }
+  }
+
+  function onSubmit(event: FormEvent) {
+    event.preventDefault();
+    // กดค้นหาก่อนครบเวลา debounce — ยกเลิกการค้นหาตอนหยุดพิมพ์ ไม่ให้มาทับผล AI
+    clearTimeout(debounce.current);
+    void search(hn, true);
   }
 
   return (
@@ -133,7 +181,8 @@ function HnSearch() {
       <div className="section-head">
         <h2 className="type-section-title">ค้นหาด้วยเลข HN</h2>
         <span className="type-caption">
-          กรอกเลข HN ตัวเลขล้วน 7 หลักแล้วกด "ค้นหา" — ไม่บังคับต้องค้นหาก่อน เลื่อนดูรายชื่อทั้งหมดด้านล่างได้ทันที
+          พิมพ์เลข HN ตัวเลขล้วน 7 หลัก ระบบค้นหาให้เมื่อหยุดพิมพ์ กด "ค้นหา" เพื่อให้ AI อธิบายผล — ไม่บังคับต้องค้นหาก่อน
+          เลื่อนดูรายชื่อทั้งหมดด้านล่างได้ทันที
         </span>
       </div>
       <form className="search-field" style={{maxWidth: "none"}} onSubmit={onSubmit} noValidate>
@@ -141,7 +190,7 @@ function HnSearch() {
         <div style={{display: "flex", gap: "var(--space-2)", flexWrap: "wrap", alignItems: "center"}}>
           <input id="patient-search" className="search-input" style={{maxWidth: 220}} type="text"
             inputMode="numeric" placeholder="เช่น 6500123" autoComplete="off"
-            value={hn} onChange={(e) => setHn(e.target.value)} />
+            value={hn} onChange={(e) => onChange(e.target.value)} />
           <button type="submit" className="btn btn-primary" disabled={busy}>{busy ? "กำลังค้นหา…" : "ค้นหา"}</button>
         </div>
         <span className="type-caption">รองรับเฉพาะตัวเลขล้วน 7 หลักเท่านั้น (ไม่รองรับการค้นหาด้วยชื่อ)</span>
@@ -153,6 +202,15 @@ function HnSearch() {
       {result !== null && result !== "error" && result.status === "not-found" && (
         <Callout tone="note" title="ไม่พบผู้ป่วย">ไม่พบผู้ป่วยที่มี HN นี้ กรุณาตรวจสอบแล้วค้นหาใหม่</Callout>
       )}
+      {ai?.status === "loading" && <p className="type-caption">AI กำลังอธิบายผลการค้นหา…</p>}
+      {ai?.status === "done" && (
+        <Callout tone="info" title="คำอธิบายจาก AI">
+          {ai.text}
+          <br />
+          <span className="type-caption">ข้อความจาก AI ใช้ประกอบเท่านั้น ไม่ใช่คำแนะนำทางการแพทย์</span>
+        </Callout>
+      )}
+      {ai?.status === "error" && <p className="type-caption">AI ไม่พร้อมใช้งานในขณะนี้ — ผลการค้นหาด้านบนยังใช้ได้ตามปกติ</p>}
       {result !== null && result !== "error" && result.status === "found" && <PatientGrid patients={result.patients} />}
     </section>
   );

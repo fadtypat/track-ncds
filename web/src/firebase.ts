@@ -1,4 +1,5 @@
 import {initializeApp} from "firebase/app";
+import {initializeAppCheck, ReCaptchaV3Provider} from "firebase/app-check";
 import {connectAuthEmulator, getAuth, browserSessionPersistence, setPersistence} from "firebase/auth";
 import {connectFirestoreEmulator, getFirestore} from "firebase/firestore";
 import {connectFunctionsEmulator, getFunctions} from "firebase/functions";
@@ -6,12 +7,23 @@ import {connectFunctionsEmulator, getFunctions} from "firebase/functions";
 // ต้องตรงกับ setGlobalOptions({region}) ใน functions/src/index.ts
 const FUNCTIONS_REGION = "asia-southeast1";
 
-const app = initializeApp({
+export const app = initializeApp({
   apiKey: import.meta.env.VITE_FIREBASE_API_KEY,
   authDomain: import.meta.env.VITE_FIREBASE_AUTH_DOMAIN,
   projectId: import.meta.env.VITE_FIREBASE_PROJECT_ID,
   appId: import.meta.env.VITE_FIREBASE_APP_ID,
 });
+
+// App Check (technology-stack.md decision area 21) — Firebase AI Logic บังคับใช้ ถ้ายังไม่ตั้ง site key
+// AI จะเรียกไม่สำเร็จแต่ส่วนอื่นของแอปใช้งานได้ตามปกติ — ตอน npm run dev ใช้ debug provider
+// (token จะแสดงใน Console ของเบราว์เซอร์ ให้นำไปลงทะเบียนที่ Firebase Console > App Check)
+const recaptchaSiteKey = import.meta.env.VITE_RECAPTCHA_SITE_KEY;
+if (recaptchaSiteKey && import.meta.env.VITE_USE_EMULATORS !== "true") {
+  if (import.meta.env.DEV) {
+    (self as unknown as {FIREBASE_APPCHECK_DEBUG_TOKEN?: boolean}).FIREBASE_APPCHECK_DEBUG_TOKEN = true;
+  }
+  initializeAppCheck(app, {provider: new ReCaptchaV3Provider(recaptchaSiteKey), isTokenAutoRefreshEnabled: true});
+}
 
 export const auth = getAuth(app);
 auth.languageCode = "th";
