@@ -10,8 +10,9 @@
 ### ในขอบเขต
 
 ทดสอบทั้ง 7 ฟีเจอร์ Must have ใน [[feature-list]] ครบทุกรหัส FR/NFR ที่อยู่ในขอบเขต (FR-01–FR-13,
-FR-15, FR-16 — **ไม่รวม FR-14 ที่ยกเลิกแล้ว 2026-09-25**, NFR-01–NFR-15, NFR-17–NFR-20 — **ไม่รวม
-NFR-16** ซึ่งถูกกำหนดเป็น Won't have ยืนยันโดยผู้ใช้แล้ว ดูหัวข้อ "นอกขอบเขต" ด้านล่าง — **อัปเดต
+FR-15, FR-16, FR-17 (เพิ่ม 2026-09-26) — **ไม่รวม FR-14 ที่ยกเลิกแล้ว 2026-09-25**, NFR-01–NFR-15,
+NFR-17–NFR-21 (NFR-21 เพิ่ม 2026-09-26) — **ไม่รวม NFR-16** ซึ่งถูกกำหนดเป็น Won't have ยืนยันโดยผู้ใช้
+แล้ว ดูหัวข้อ "นอกขอบเขต" ด้านล่าง — **อัปเดต
 2026-09-23:** เพิ่มฟีเจอร์ที่ 6 (Authentication) ที่ `feature-list.md`/`user-journey.md` เพิ่งเพิ่มใหม่
 — **อัปเดต 2026-09-24 (sync-test-plan รอบสี่):** เพิ่มฟีเจอร์ที่ 7 (Admin) ที่ `feature-list.md`/
 `user-journey.md` เพิ่งเพิ่มใหม่ (FR-11–FR-15, NFR-19, NFR-20) และเพิ่ม FR-16 เข้าฟีเจอร์ที่ 2 (แพทย์/
@@ -20,14 +21,18 @@ requirement เปลี่ยน — ยกเลิก PatientAssignment ท�
 หลังเข้าสู่ระบบ (FR-05, NFR-02 แก้ไข), **FR-14 (Admin จัดการ PatientAssignment) ยกเลิกทั้งหมด — ออกจาก
 ขอบเขตการทดสอบ**, FR-15/NFR-19/NFR-20 ไม่ใช่ "ข้อยกเว้น" ของ admin อีกต่อไป, FR-16/NFR-07 เปิดให้
 แพทย์/พยาบาลดำเนินการกับผู้ป่วยทุกรายในระบบ เปลี่ยนชื่อฟีเจอร์ที่ 3 และ 7 ให้ตรงกับ [[feature-list]]
-ที่แก้ไขแล้ว):
+ที่แก้ไขแล้ว — **อัปเดต 2026-09-26 (sync-test-plan หลัง audit-pipeline, เพิ่มรหัสใหม่จาก requirement
+ดิบเรื่อง AI ช่วยอธิบายผลการค้นหาผู้ป่วยด้วย HN):** เพิ่ม FR-17 (กลาง) เข้าฟีเจอร์ที่ 3 และ NFR-21 (สูง)
+เข้าฟีเจอร์ที่ 4 ที่ขาดหายไปทั้งหมด และแก้ไข FR-06 ให้ตรวจสอบรูปแบบ HN ทั้งตอนหยุดพิมพ์และตอนกดค้นหา
+(เดิมทำงานเฉพาะหลังกดค้นหาเท่านั้น) — ดู [[technology-stack]] decision area 20–22 สำหรับกลไกจริง
+(Firebase AI Logic เรียกตรงจาก Client, App Check reCAPTCHA v3, โมเดล `gemini-3.5-flash-lite`)):
 
 | # | ฟีเจอร์ | รหัส FR/NFR | MoSCoW |
 | --- | --- | --- | --- |
 | 1 | [[feature-list#1. ดูประวัติการวินิจฉัยและผลตรวจ lab ของผู้ป่วย NCD\|ดูประวัติการวินิจฉัยและผลตรวจ lab ของผู้ป่วย NCD]] | FR-01, FR-02, NFR-01, NFR-02 | Must have |
 | 2 | [[feature-list#2. วิเคราะห์ แจ้งเตือน และยืนยัน/แก้ไขผลประเมินความเสี่ยงโรคแทรกซ้อน\|วิเคราะห์ แจ้งเตือน และยืนยัน/แก้ไขผลประเมินความเสี่ยงโรคแทรกซ้อน]] | FR-03, FR-04, FR-16, NFR-01, NFR-02 | Must have |
-| 3 | [[feature-list#3. ค้นหา/เลือกผู้ป่วย\|ค้นหา/เลือกผู้ป่วย]] (เปลี่ยนชื่อ 2026-09-25 จาก "ค้นหา/เลือกผู้ป่วยในความดูแล") | FR-05, FR-06, NFR-02 | Must have |
-| 4 | [[feature-list#4. คุ้มครองข้อมูลส่วนบุคคลของผู้ป่วยตาม PDPA\|คุ้มครองข้อมูลส่วนบุคคลของผู้ป่วยตาม PDPA]] | NFR-03, NFR-04, NFR-05, NFR-06, NFR-07, NFR-08 | Must have |
+| 3 | [[feature-list#3. ค้นหา/เลือกผู้ป่วย\|ค้นหา/เลือกผู้ป่วย]] (เปลี่ยนชื่อ 2026-09-25 จาก "ค้นหา/เลือกผู้ป่วยในความดูแล"; เพิ่ม FR-17 2026-09-26) | FR-05, FR-06, FR-17, NFR-02 | Must have |
+| 4 | [[feature-list#4. คุ้มครองข้อมูลส่วนบุคคลของผู้ป่วยตาม PDPA\|คุ้มครองข้อมูลส่วนบุคคลของผู้ป่วยตาม PDPA]] (เพิ่ม NFR-21 2026-09-26) | NFR-03, NFR-04, NFR-05, NFR-06, NFR-07, NFR-08, NFR-21 | Must have |
 | 5 | [[feature-list#5. รับประกันคุณภาพเชิงปฏิบัติการของระบบ (Performance, Availability, Clinical Safety, Session Security, Accessibility, Compatibility, Interoperability)\|รับประกันคุณภาพเชิงปฏิบัติการของระบบ]] | NFR-09, NFR-10, NFR-11, NFR-12, NFR-13, NFR-14, NFR-15 (NFR-16 นอกขอบเขต — Won't have) | Must have |
 | 6 | [[feature-list#6. สมัครบัญชี เข้าสู่ระบบ และจัดการรหัสผ่านด้วยอีเมล (Authentication)\|สมัครบัญชี เข้าสู่ระบบ และจัดการรหัสผ่านด้วยอีเมล (Authentication)]] | FR-07, FR-08, FR-09, FR-10, NFR-17, NFR-18 | Must have |
 | 7 | [[feature-list#7. จัดการบัญชีผู้ใช้งานและสิทธิ์ (Admin)\|จัดการบัญชีผู้ใช้งานและสิทธิ์ (Admin)]] (เปลี่ยนชื่อ 2026-09-25 จาก "จัดการบัญชีผู้ใช้งาน สิทธิ์ และการมอบหมายผู้ป่วย (Admin)") | FR-11, FR-12, FR-13, FR-15, NFR-19, NFR-20 (FR-14 ยกเลิกแล้ว — ไม่อยู่ในขอบเขต) | Must have |
@@ -103,7 +108,7 @@ role ที่ 3 ในระบบ (มี UI ของตัวเองสำ
 | --- | --- | --- |
 | FR-01, FR-02 | Functional Testing (การแสดงผลข้อมูล, boundary ของ ICD-10/ช่วงเวลา) | [[test-cases/patient-ncd-diagnosis-lab-history]] |
 | FR-03, FR-04, FR-16 | Functional Testing (rule-based logic, การจัดประเภทผลลัพธ์ 3 แบบ, การยืนยัน/แก้ไข override ผลประเมินความเสี่ยงโดยแพทย์/พยาบาล) + Security Testing (audit log ของการยืนยัน/แก้ไข, ปฏิเสธสิทธิ์ของ admin) | [[test-cases/complication-risk-analysis-alert]] |
-| FR-05, FR-06 | Functional Testing (ค้นหา/แสดงรายชื่อ, input validation ของ HN) | [[test-cases/patient-search-selection]] |
+| FR-05, FR-06, FR-17 | Functional Testing (ค้นหา/แสดงรายชื่อ, input validation ของ HN ทั้ง 2 จังหวะ — debounce/กดค้นหา, AI อธิบายผลการค้นหา 3 กรณี, ความทนทานเมื่อ AI ล้มเหลว) + Compliance Testing (จำกัดข้อมูลที่ส่งให้ AI ตาม NFR-21) | [[test-cases/patient-search-selection]] |
 | FR-07, FR-08, FR-09, FR-10 | Functional Testing (เข้าสู่ระบบ, สมัครบัญชี, ยืนยันอีเมล, รีเซ็ตรหัสผ่าน) + Security Testing (account enumeration prevention, password policy) | [[test-cases/user-authentication-email-password]] |
 | FR-11, FR-12, FR-13, FR-15 | Functional Testing (อนุมัติบัญชี, เปลี่ยน role, ระงับ/เปิดใช้งานบัญชี, ดูประวัติผู้ป่วยทุกรายแบบ read-only — **FR-14 ยกเลิกแล้ว 2026-09-25 ไม่ต้องทดสอบ**) + Security Testing (ปฏิเสธสิทธิ์ผู้ใช้ที่ไม่ใช่ admin) | [[test-cases/admin-role-account-management]] |
 
@@ -119,6 +124,7 @@ role ที่ 3 ในระบบ (มี UI ของตัวเองสำ
 | NFR-06 | PDPA / Audit Log & Accountability | Security Testing (audit logging, fail-safe) | [[test-cases/pdpa-data-protection-compliance]] |
 | NFR-07 | PDPA / Data Subject Rights | Functional Testing + Compliance Testing | [[test-cases/pdpa-data-protection-compliance]] |
 | NFR-08 | PDPA / Breach Notification Support | Compliance Testing | [[test-cases/pdpa-data-protection-compliance]] |
+| NFR-21 | PDPA / จำกัดข้อมูลที่ส่งให้บริการ AI ภายนอก (Data Minimization for External AI Service) | Compliance Testing + Configuration/Code Review (ไม่มี Cloud Function ตัวกลางกรองซ้ำ ตรวจสอบเฉพาะโค้ด Client ว่าจำกัด payload ตาม [[technology-stack#20. AI ช่วยอธิบายผลการค้นหาผู้ป่วยด้วย HN (FR-17, NFR-21) — Firebase AI Logic (Gemini Developer API) เรียกตรงจาก Client\|technology-stack decision area 20]]) | [[test-cases/pdpa-data-protection-compliance]] |
 | NFR-09 | Performance | Performance Testing (single-request response time เท่านั้น ไม่รวม load/stress) **+ Configuration Review (composite index ใน `firestore.indexes.json` ต้องครบตาม [[db-spec]] ไม่มี unindexed query warning — กลไกจริงคือ Firestore composite index เท่านั้น ไม่มี caching layer ตาม [[technology-stack#9. กลไกรองรับ Performance < 2 วินาที (NFR-09) — Firestore Composite Index เท่านั้น (ไม่มี caching layer เพิ่มเติม)\|technology-stack]])** | [[test-cases/operational-quality-nfr]] |
 | NFR-10 | Availability | Design/Configuration Review (ทวนสอบว่าไม่ตั้ง SLA เกินมาตรฐาน Firebase/Google Cloud) | [[test-cases/operational-quality-nfr]] |
 | NFR-11 | Clinical Safety Validation | Process/Compliance Review (ตรวจสอบหลักฐานการยืนยันจากแพทย์ผู้เชี่ยวชาญก่อน deploy — ไม่ใช่ runtime behavior) | [[test-cases/operational-quality-nfr]] |
@@ -180,6 +186,19 @@ role ที่ 3 ในระบบ (มี UI ของตัวเองสำ
   เชิงเทคนิคใหม่เพิ่มเติมสำหรับฟีเจอร์นี้โดยเฉพาะ เพราะยังไม่มี detailed-design/prototype ของฟีเจอร์
   Admin ณ ปัจจุบัน (รอสาย technical spec/prototype sync ตาม feature-list/user-journey ที่เพิ่งอัปเดต)
 
+- **เพิ่มใหม่ 2026-09-26 (ฟีเจอร์ที่ 3 — FR-17/NFR-21, ฟีเจอร์ที่ 4 — NFR-21):** ทดสอบ FR-17/NFR-21 ด้วย
+  **Firebase AI Logic** (Gemini Developer API, โมเดล `gemini-3.5-flash-lite` กำหนดที่ `web/src/ai/config.ts`
+  จุดเดียว) เรียก**ตรงจาก Client ไม่มี Cloud Function ตัวกลาง** ตาม
+  [[technology-stack#20. AI ช่วยอธิบายผลการค้นหาผู้ป่วยด้วย HN (FR-17, NFR-21) — Firebase AI Logic (Gemini Developer API) เรียกตรงจาก Client|decision area 20]]
+  พร้อม **Firebase App Check** บังคับด้วย **reCAPTCHA v3** (production) หรือ **Debug Provider**
+  (local dev/environment ทดสอบอัตโนมัติ — ไม่ต้องผ่าน reCAPTCHA จริงระหว่างทดสอบ) ตาม
+  [[technology-stack#21. App Check สำหรับ Firebase AI Logic — reCAPTCHA v3 (production) + Debug Provider (local dev)|decision area 21]]
+  เพราะไม่มี Cloud Function/Security Rules คั่นกลาง การทดสอบ NFR-21 จึงเป็นระดับ **configuration/code
+  review ของ payload ที่ Client สร้างก่อนเรียก AI** เท่านั้น (ไม่ใช่ automated test ผ่าน Firebase Emulator
+  Suite เหมือน NFR-14) และการทดสอบความทนทานเมื่อ AI ล้มเหลว (TC-03-14) ต้องจำลอง network
+  failure/timeout ของการเรียก Firebase AI Logic โดยไม่กระทบผลการค้นหาปกติ (FR-05/FR-06) — Test Data
+  ทั้งหมดต้องเป็นข้อมูลจำลองเท่านั้นตาม NFR-01 (เช่น HN `9900001`–`9900005`)
+
 รายละเอียด environment ส่วนที่เหลือ (runtime/CI pipeline เต็มรูปแบบ) ยังต้องรอการตัดสินใจเพิ่มเติมก่อน
 เริ่มพัฒนาจริง
 
@@ -202,7 +221,8 @@ requirement/จำนวน edge case ที่ spec หรือ [[../../02-des
 | FR-03 (สูง) — ฟีเจอร์ 2 | Risk Rule Engine ประเมินผิดพลาด (พบ/ไม่พบความเสี่ยงผิดจากความเป็นจริง) อาจพลาดแจ้งเตือนโรคแทรกซ้อนร้ายแรง กระทบความปลอดภัยผู้ป่วยโดยตรง | สูง (logic ซับซ้อนที่สุดในระบบ มี 5 AC รวมกฎ "ใช้ค่า lab ล่าสุด" และแยกกรณี "ไม่พบความเสี่ยง" กับ "ข้อมูลไม่เพียงพอ" ที่ต้องไม่ปนกัน) | สูง (ผลกระทบต่อความปลอดภัยผู้ป่วยโดยตรง เป็น Must have/MVP) | วิกฤต | ทดสอบครบทั้ง 5 AC ([[test-cases/complication-risk-analysis-alert]]) เน้น regression กรณีค่า lab ซ้ำชนิด/คนละวันที่ และตรวจสอบ logic แยก 3 ผลลัพธ์ให้ชัดเจนก่อนขึ้นระบบจริง |
 | FR-04 (สูง) — ฟีเจอร์ 2 | แสดงผล flag/ข้อความผลประเมินผิดพลาดหรือไม่ชัดเจน ทำให้แพทย์พลาดสังเกตความเสี่ยงที่ระบบตรวจพบแล้ว | กลาง (3 AC แยกตามผลลัพธ์ 3 แบบชัดเจน) | สูง (เป็นจุดที่ผู้ใช้เห็นผลจริง กระทบการตัดสินใจทางคลินิกโดยตรง) | สูง | ทดสอบครบทั้ง 3 AC ([[test-cases/complication-risk-analysis-alert]]) ตรวจสอบว่ามีข้อความกำกับคู่กับสีเสมอ ไม่ใช้สีเป็นสัญญาณเดียว |
 | FR-05 (สูง) — ฟีเจอร์ 3 | แสดงรายชื่อผู้ป่วยผิดพลาด (ไม่ครบ/ไม่ตรง) หรือแสดงข้อผิดพลาดในกรณีฐานข้อมูลว่าง ทำให้แพทย์/พยาบาลเข้าใจผิดว่าไม่มีผู้ป่วยในระบบ | กลาง (3 AC ครอบคลุม happy path — เห็นผู้ป่วยทุกรายเหมือนกัน (แก้ไข 2026-09-25 ยกเลิก PatientAssignment), edge case ฐานข้อมูลว่าง, การตรวจสอบเงื่อนไขพื้นฐานซ้ำตอนเลือกผู้ป่วย) | สูง (กระทบทั้งความปลอดภัยข้อมูลและ PDPA เป็น Must have/MVP) | สูง | ทดสอบครบทั้ง 3 AC ([[test-cases/patient-search-selection]]) เน้นยืนยันว่า Backend ตรวจสอบเงื่อนไขพื้นฐาน (role/isActive/email verification) ซ้ำเสมอ ไม่พึ่งพาการกรองฝั่ง Client เพียงอย่างเดียว (ไม่มีการตรวจสอบระดับรายผู้ป่วยอีกต่อไป) |
-| FR-06 (สูง) — ฟีเจอร์ 3 | Validation เลข HN ผิดพลาด (timing/รูปแบบ) ทำให้ค้นหาผิดคนหรือแสดง error ไม่ถูกต้อง | กลาง (3 AC รวม edge case ละเอียดเรื่อง timing ตรวจสอบเฉพาะหลังกดค้นหา — ลดความซับซ้อนลงจากเดิมตั้งแต่ 2026-09-25 เพราะไม่ต้องแยกข้อความ "ไม่พบ" กับ "มีอยู่จริงแต่นอกความดูแล" อีกต่อไป) | สูง (เป็นจุดแรกสุดของ journey ที่ระบุตัวตนผู้ป่วย เป็น Must have/MVP) | สูง | ทดสอบครบทั้ง 3 AC ([[test-cases/patient-search-selection]]) เน้น TC-03-07 ที่ต้องแจ้ง "ไม่พบผู้ป่วย" เมื่อ HN ไม่ตรงกับผู้ป่วยรายใดในระบบ |
+| FR-06 (สูง) — ฟีเจอร์ 3 | Validation เลข HN ผิดพลาด (timing/รูปแบบ) ทำให้ค้นหาผิดคนหรือแสดง error ไม่ถูกต้อง — **อัปเดต 2026-09-26:** เพิ่มจังหวะ validation ที่สอง (debounce แยกจากกดค้นหา) เพิ่มความซับซ้อนขึ้นจากเดิม | สูง (4 AC — เพิ่มจาก 3 เป็น 4 เมื่อ 2026-09-26 เพราะแยก AC ของ debounce (real-time ไม่บล็อก) ออกจาก AC ของกดค้นหา (บล็อกจนกว่าจะแก้ไข) ต้องทดสอบทั้ง 2 จังหวะแยกกันไม่ให้ปนกัน) | สูง (เป็นจุดแรกสุดของ journey ที่ระบุตัวตนผู้ป่วย เป็น Must have/MVP) | สูง | ทดสอบครบทั้ง 4 AC ([[test-cases/patient-search-selection]]) เน้น TC-03-07 ("ไม่พบผู้ป่วย"), TC-03-05/06 (กดค้นหาขณะ HN ไม่ครบรูปแบบ), และ TC-03-10 ใหม่ (debounce แจ้งเตือนแบบ real-time ไม่บล็อกการพิมพ์ต่อ) |
+| FR-17 (กลาง) — ฟีเจอร์ 3 | AI อธิบายผลการค้นหาผิดพลาด/ทำให้เข้าใจผิดว่าเป็นคำแนะนำทางการแพทย์ หรือการเรียก AI บล็อกผลการค้นหาปกติเมื่อ AI ล้มเหลว ทำให้แพทย์/พยาบาลเข้าใจผลการค้นหาผิดหรือใช้งานหน้าจอค้นหาไม่ได้ | กลาง (5 AC ครอบคลุม 3 กรณีผลลัพธ์ + ความทนทานเมื่อ AI ล้มเหลว + การจำกัดข้อมูลที่ส่ง ไม่ซับซ้อนเชิง logic แต่พึ่งพาบริการภายนอก (Gemini Developer API) ที่ไม่มี Cloud Function ตัวกลางคอยจัดการ error รวมศูนย์) | กลาง (ตรงกับระดับความสำคัญ "กลาง" ใน [[backlog]] — แม้อยู่ในฟีเจอร์ที่ 3 ซึ่งเป็น Must have โดยรวมจากรหัสอื่น) | กลาง | ทดสอบครบทั้ง 5 AC ([[test-cases/patient-search-selection]] — TC-03-11/12/13 สำหรับ 3 กรณีผลลัพธ์, TC-03-14 สำหรับความทนทานเมื่อ AI ล้มเหลว) ยืนยันป้ายกำกับ "ข้อมูลประกอบ ไม่ใช่คำแนะนำทางการแพทย์" ปรากฏทุกครั้ง และผลการค้นหาปกติไม่ถูกบล็อกเมื่อ AI ล้มเหลว |
 | FR-16 (สูง) — ฟีเจอร์ 2 | แพทย์/พยาบาลยืนยัน/แก้ไข (override) ผลประเมินความเสี่ยงผิดพลาด หรือระบบยอมให้ Admin แก้ไขผลได้ ทำให้ผลการประเมินทางคลินิกที่ใช้จริงคลาดเคลื่อนจากดุลยพินิจแพทย์ หรือละเมิดขอบเขตสิทธิ์ที่กำหนดไว้ | กลาง (5 AC ครอบคลุม happy path ยืนยัน/override 2 แบบ (ครอบคลุมผู้ป่วยทุกรายในระบบตั้งแต่ 2026-09-25 ยกเลิก PatientAssignment) + 2 edge case ขอบเขตข้อมูล + 1 edge case ปฏิเสธสิทธิ์ admin ไม่ซับซ้อนเชิง logic เท่า FR-03 แต่ต้องแยกสิทธิ์ให้ถูกต้อง) | สูง (กระทบผลการประเมินทางคลินิกที่แพทย์/พยาบาลใช้ตัดสินใจโดยตรง เป็น Must have/MVP) | สูง | ทดสอบครบทั้ง 5 AC ([[test-cases/complication-risk-analysis-alert]]) เน้นยืนยันว่า audit log บันทึกทุกครั้งที่ยืนยัน/แก้ไข และปฏิเสธสิทธิ์ของ admin |
 | NFR-01 (สูง) — ฟีเจอร์ 1, 2 | ข้อมูล mockup มีพฤติกรรม/โครงสร้างไม่ตรงกับ HOSxP จริง ทำให้ทดสอบผ่านแต่ระบบจริงทำงานผิดพลาดเมื่อเชื่อมต่อจริง | กลาง (1 AC แต่ผูกกับทั้ง FR-01/FR-02/FR-03 ที่ใช้ mock data เป็น input) | สูง (บล็อกการยืนยันความถูกต้องของ integration ก่อนขึ้นระบบจริง เป็น Must have/MVP) | สูง | ทดสอบ TC-01-08 และ TC-02-08 ([[test-cases/patient-ncd-diagnosis-lab-history]], [[test-cases/complication-risk-analysis-alert]]) ยืนยันโครงสร้างผลลัพธ์เหมือนกรณี HOSxP จริงทุกประการ ทบทวนซ้ำเมื่อเชื่อมต่อจริง |
 | NFR-02 (สูง) — ฟีเจอร์ 1, 2, 3 | ควบคุมสิทธิ์การเข้าถึงผิดพลาด (role-level/client-side data clearing) ทำให้ผู้ที่ไม่มีบทบาทถูกต้องเข้าถึงข้อมูลผู้ป่วยได้ ละเมิด PDPA และความเป็นส่วนตัวของผู้ป่วยอย่างร้ายแรง — **แก้ไข 2026-09-25:** ยกเลิกเงื่อนไขระดับรายผู้ป่วย (PatientAssignment) ทั้งระบบ แพทย์/พยาบาล/admin ทุกคนเห็นผู้ป่วยทุกรายเหมือนกันแล้ว ความเสี่ยงจึงเหลือเฉพาะการควบคุมระดับบทบาท/การล้างข้อมูลฝั่ง Client เท่านั้น | สูง (ครอบคลุมการป้องกัน 2 ชั้น: ปฏิเสธระดับบทบาท, ล้างข้อมูลฝั่ง Client ในทุกฟีเจอร์ที่แสดงข้อมูลระบุตัวตน/ทางคลินิก รวม 5 AC กระจายอยู่ 3 ฟีเจอร์) | สูง (เป็นความเสี่ยงด้านความปลอดภัยข้อมูลผู้ป่วยที่ร้ายแรงที่สุดในระบบ เป็น Must have/MVP) | วิกฤต | ทดสอบครบทุก AC ในทั้ง 3 ไฟล์ test case ที่เกี่ยวข้อง ([[test-cases/patient-search-selection]], [[test-cases/patient-ncd-diagnosis-lab-history]], [[test-cases/complication-risk-analysis-alert]]) รวม security regression test ทุกครั้งที่แก้ไข logic สิทธิ์ |
@@ -212,6 +232,7 @@ requirement/จำนวน edge case ที่ spec หรือ [[../../02-des
 | NFR-06 (สูง) — ฟีเจอร์ 4 | Audit log ไม่ถูกบันทึกหรือบันทึกไม่ fail-safe ทำให้ไม่สามารถตรวจสอบย้อนหลังได้ กระทบการสืบสวนข้อมูลรั่วไหลและหลัก Accountability ตาม PDPA | กลาง (3 AC รวม fail-safe logic ที่ต้องยกเลิกการดำเนินการทั้งหมดเมื่อบันทึกไม่สำเร็จ) | สูง (เป็นกลไกเดียวที่รองรับการพิสูจน์ความรับผิดชอบ/สืบสวน breach เป็น Must have/MVP) | สูง | ทดสอบครบทั้ง 3 AC ([[test-cases/pdpa-data-protection-compliance]]) เน้น fail-safe (TC-04-10) ว่าต้องไม่แสดงข้อมูลใดๆ เมื่อบันทึก log ไม่สำเร็จ |
 | NFR-07 (กลาง) — ฟีเจอร์ 4 | ไม่รองรับคำขอใช้สิทธิของเจ้าของข้อมูล (เข้าถึง/สำเนา/แก้ไข/ลบ/คัดค้าน) ทำให้ผู้ป่วยไม่สามารถใช้สิทธิตาม PDPA ได้ นำไปสู่การร้องเรียน/บทลงโทษทางกฎหมาย | กลาง (5 AC ครอบคลุมหลายประเภทคำขอและ edge case input ไม่ถูกต้อง/ไม่มีสิทธิ์/ไม่พบผู้ป่วย) | กลาง (ตรงกับระดับความสำคัญ "กลาง" ใน [[backlog]]) | กลาง | ทดสอบครบทั้ง 5 AC ([[test-cases/pdpa-data-protection-compliance]]) ครอบคลุมทุกประเภทคำขอที่ spec กำหนด |
 | NFR-08 (กลาง) — ฟีเจอร์ 4 | ไม่สามารถสืบค้น audit log สนับสนุนการสืบสวน/แจ้งเหตุละเมิดได้ทันเวลา เสี่ยงไม่ทันกรอบเวลาที่กฎหมายกำหนดสำหรับการแจ้งเหตุละเมิดข้อมูลส่วนบุคคล | กลาง (4 AC รวม edge case ช่วงเวลาไม่ถูกต้อง/ไม่มีสิทธิ์/ไม่พบผลลัพธ์) | กลาง (ตรงกับระดับความสำคัญ "กลาง" ใน [[backlog]]) | กลาง | ทดสอบครบทั้ง 4 AC ([[test-cases/pdpa-data-protection-compliance]]) ยืนยันว่าสืบค้นได้ครบทั้งกรณีระบุ/ไม่ระบุผู้ป่วย |
+| NFR-21 (สูง) — ฟีเจอร์ 4 | ส่งชื่อผู้ป่วยหรือข้อมูลระบุตัวตนอื่นให้บริการ AI ภายนอก (Gemini Developer API) โดยไม่ได้ตั้งใจ ทำให้ข้อมูลสุขภาพ/ข้อมูลส่วนบุคคลของผู้ป่วยรั่วไหลไปยังผู้ประมวลผลข้อมูลภายนอกที่ไม่มีสัญญาประมวลผลข้อมูลเฉพาะเจาะจง ผิด PDPA อย่างร้ายแรง — เพิ่มเติม (เพิ่ม 2026-09-26): [[technology-stack]] ยืนยันว่า**ไม่มี Cloud Function ตัวกลาง** คั่นระหว่าง Client กับบริการ AI (เพราะโปรเจกต์ยังไม่อยู่แพ็กเกจ Blaze) จึงไม่มีชั้นตรวจสอบฝั่งเซิร์ฟเวอร์คอยกรองซ้ำเหมือน Operation 1-6 | สูง (บังคับใช้ได้เฉพาะฝั่ง Client เท่านั้น — ถ้า Client ถูกดัดแปลง/มีบั๊ก ไม่มีกลไกใดสกัดกั้นการส่งข้อมูลเกินขอบเขต เป็นความเสี่ยงเชิงสถาปัตยกรรมที่ [[technology-stack]] ยืนยันแล้วว่ายอมรับสำหรับรอบนี้ ไม่ใช่กรณีสมมติ) | สูง (ข้อมูลสุขภาพเป็นข้อมูลอ่อนไหวตาม PDPA และ NFR-21 กำหนดระดับความสำคัญ = สูง ใน [[backlog]] แม้ FR-17 ต้นทางเป็นระดับกลาง) | วิกฤต | ทดสอบครบทั้ง 3 AC ([[test-cases/pdpa-data-protection-compliance]] — TC-04-21/22/23) ด้วย configuration/code review ของ payload ที่ Client สร้างก่อนเรียก AI ในทั้ง 3 กรณีผลการค้นหา และบันทึกความเสี่ยงที่ไม่มีชั้นตรวจสอบฝั่งเซิร์ฟเวอร์ไว้เป็นหลักฐานทุกรอบทดสอบจนกว่าโปรเจกต์จะอยู่แพ็กเกจ Blaze และเพิ่ม Cloud Function ตัวกลาง |
 | NFR-09 (สูง) — ฟีเจอร์ 5 | หน้าจอค้นหา/ประวัติวินิจฉัย/ผลตรวจ lab/ผลวิเคราะห์ความเสี่ยงตอบสนองช้ากว่า 2 วินาที ทำให้แพทย์/พยาบาลเสียเวลาในการตัดสินใจทางคลินิกในสถานการณ์เร่งด่วน กระทบคุณภาพการดูแลผู้ป่วย — เพิ่มเติม (อัปเดต 2026-09-22): [[technology-stack]] ยืนยันแล้วว่ากลไกจริงคือ **Firestore composite index เท่านั้น ไม่มี caching layer เพิ่มเติม** ทำให้ทุก request ยังอ่าน Firestore ทุกครั้งแม้เป็นข้อมูลอ้างอิงคงที่ (เช่น threshold) เป็น known trade-off | กลาง (4 AC ครอบคลุม happy path + scope + composite index verification + trade-off baseline แต่ยังไม่เคยทดสอบจริงกับข้อมูลปริมาณมาก และพึ่งพา composite index ที่ต้อง deploy ให้ครบตาม [[db-spec]] เท่านั้น ไม่มี caching สำรอง) | สูง (Must have/MVP กระทบทุกหน้าจอหลักของระบบ) | สูง | ทดสอบ TC-05-01/TC-05-02/TC-05-14/TC-05-15 ([[test-cases/operational-quality-nfr]]) วัดเวลาตอบสนองของคำขอเดี่ยวทุกหน้าจอหลัก ยืนยัน composite index ครบไม่มี unindexed query warning และบันทึก baseline สำหรับทวนซ้ำเมื่อข้อมูลจริงมีปริมาณมากขึ้น |
 | NFR-10 (กลาง) — ฟีเจอร์ 5 | ระบบใช้งานไม่ได้เกินมาตรฐาน SLA ของ Firebase ทำให้แพทย์/พยาบาลเข้าถึงข้อมูลผู้ป่วยไม่ได้ในช่วงเวลาที่ต้องการ | ต่ำ (1 AC พึ่งพา SLA มาตรฐานของผู้ให้บริการ ไม่ใช่ logic ที่ทีมพัฒนาต้องเขียนเอง) | กลาง (ตรงกับระดับความสำคัญ "กลาง" ใน [[backlog]]) | กลาง | ทดสอบ TC-05-03 ([[test-cases/operational-quality-nfr]]) ทวนสอบว่าไม่ตั้งค่า SLA ที่ขัดกับมาตรฐาน Firebase/Google Cloud |
 | NFR-11 (สูง) — ฟีเจอร์ 5 | Deploy rule/threshold ใหม่ของ Risk Rule Engine โดยไม่ผ่านการยืนยันจากแพทย์ผู้เชี่ยวชาญ ทำให้ค่า threshold/การจับคู่โรคผิดพลาดทางคลินิก กระทบความปลอดภัยผู้ป่วยโดยตรง อาจพลาด/แจ้งเตือนผิดโรคแทรกซ้อนร้ายแรง | สูง (เป็น manual/organizational gate ที่พึ่งพากระบวนการคนล้วนๆ ไม่มีการบังคับทางเทคนิคในระบบ เสี่ยงถูกข้ามขั้นตอนได้ง่ายกว่า automated check) | สูง (ผู้ใช้ระบุว่าเป็นระดับความสำคัญสูงสุดในกลุ่ม NFR ชุดนี้ กระทบความปลอดภัยทางคลินิกโดยตรง เป็น Must have/MVP) | วิกฤต | ทดสอบ TC-05-04/TC-05-05 ([[test-cases/operational-quality-nfr]]) ยืนยันว่ามีหลักฐาน/checklist การอนุมัติก่อน deploy ทุกครั้ง ผนวกเป็นส่วนหนึ่งของ deployment approval gate/CI-CD ในอนาคต |
@@ -275,16 +296,17 @@ FR-11–FR-13, FR-15 ระบุว่าการ bootstrap admin คนแร
 | --- | --- | --- | --- | --- |
 | 1 | ดูประวัติการวินิจฉัยและผลตรวจ lab ของผู้ป่วย NCD | [[test-cases/patient-ncd-diagnosis-lab-history]] | FR-01 (3 AC), FR-02 (4 AC), NFR-01 (1 AC), NFR-02 (2 AC: AC-2, AC-3) = 10 AC | 10 |
 | 2 | วิเคราะห์ แจ้งเตือน และยืนยัน/แก้ไขผลประเมินความเสี่ยงโรคแทรกซ้อน | [[test-cases/complication-risk-analysis-alert]] | FR-03 (5 AC), FR-04 (3 AC), FR-16 (5 AC), NFR-01 (1 AC, cross-ref จากฟีเจอร์ 1), NFR-02 (2 AC: AC-2 cross-ref, AC-4 ใหม่) = 16 AC | 13 |
-| 3 | ค้นหา/เลือกผู้ป่วย (เปลี่ยนชื่อ 2026-09-25) | [[test-cases/patient-search-selection]] | FR-05 (3 AC), FR-06 (3 AC), NFR-02 (2 AC: AC-1 cross-ref, AC-5 ใหม่) = 8 AC | 9 (ลดจาก 10 — รวม TC-03-08 เดิม "HN มีอยู่จริงแต่นอกความดูแล" เข้ากับ TC-03-07 แล้ว เพราะยกเลิก PatientAssignment 2026-09-25) |
-| 4 | คุ้มครองข้อมูลส่วนบุคคลของผู้ป่วยตาม PDPA | [[test-cases/pdpa-data-protection-compliance]] | NFR-03 (2 AC), NFR-04 (2 AC), NFR-05 (4 AC), NFR-06 (3 AC), NFR-07 (5 AC), NFR-08 (4 AC) = 20 AC | 20 |
+| 3 | ค้นหา/เลือกผู้ป่วย (เปลี่ยนชื่อ 2026-09-25; เพิ่ม FR-17 2026-09-26) | [[test-cases/patient-search-selection]] | FR-05 (3 AC), FR-06 (4 AC — เพิ่มจาก 3 เมื่อ 2026-09-26), FR-17 (5 AC ใหม่), NFR-02 (2 AC: AC-1 cross-ref, AC-5 ใหม่) = 14 AC | 15 (เพิ่มจาก 9 — TC-03-10 ถึง TC-03-15 ใหม่สำหรับ debounce validation แยกจากกดค้นหา, AI อธิบายผล 3 กรณี, ความทนทานเมื่อ AI ล้มเหลว, และการจำกัดข้อมูลที่ส่งให้ AI) |
+| 4 | คุ้มครองข้อมูลส่วนบุคคลของผู้ป่วยตาม PDPA (เพิ่ม NFR-21 2026-09-26) | [[test-cases/pdpa-data-protection-compliance]] | NFR-03 (2 AC), NFR-04 (2 AC), NFR-05 (4 AC), NFR-06 (3 AC), NFR-07 (5 AC), NFR-08 (4 AC), NFR-21 (3 AC ใหม่) = 23 AC | 23 (เพิ่มจาก 20 — TC-04-21 ถึง TC-04-23 ใหม่) |
 | 5 | รับประกันคุณภาพเชิงปฏิบัติการของระบบ | [[test-cases/operational-quality-nfr]] | NFR-09 (4 AC), NFR-10 (1 AC), NFR-11 (2 AC), NFR-12 (4 AC), NFR-13 (3 AC), NFR-14 (2 AC), NFR-15 (2 AC) = 18 AC (NFR-16 ไม่มี AC — Won't have) | 18 |
 | 6 | สมัครบัญชี เข้าสู่ระบบ และจัดการรหัสผ่านด้วยอีเมล (Authentication) | [[test-cases/user-authentication-email-password]] | FR-07 (3 AC), FR-08 (5 AC), FR-09 (4 AC), FR-10 (3 AC), NFR-17 (3 AC), NFR-18 (1 AC) = 19 AC | 19 |
 | 7 | จัดการบัญชีผู้ใช้งานและสิทธิ์ (Admin) (เปลี่ยนชื่อ 2026-09-25) | [[test-cases/admin-role-account-management]] | FR-11 (4 AC), FR-12 (3 AC), FR-13 (3 AC), FR-15 (3 AC), NFR-19 (3 AC), NFR-20 (3 AC) = 19 AC (FR-14 ยกเลิกแล้ว 2026-09-25 — ไม่มี AC อีกต่อไป) | 19 |
 
-**รวม:** 7 ฟีเจอร์, 33 รหัส FR/NFR ที่อยู่ในขอบเขต (ไม่รวม NFR-16, ไม่รวม FR-14 ที่ยกเลิกแล้ว), 108
-test case (ลดจาก 113 — FR-14 ทั้งหมด (4 test case) ถูกลบออกจาก [[test-cases/admin-role-account-management]],
-และ TC-03-08 เดิมถูกรวมเข้ากับ TC-03-07 ใน [[test-cases/patient-search-selection]] เพราะไม่มีแนวคิด
-"อยู่ในความดูแล" ให้แยกกรณีอีกต่อไป) — [[acceptance-criteria]] มี AC ทั้งหมด 108 ข้อ (รวม NFR-01, NFR-02 ที่ถูกอ้างอิงซ้ำข้ามฟีเจอร์
+**รวม:** 7 ฟีเจอร์, 35 รหัส FR/NFR ที่อยู่ในขอบเขต (เพิ่มจาก 33 — FR-17, NFR-21 ใหม่เมื่อ 2026-09-26;
+ไม่รวม NFR-16, ไม่รวม FR-14 ที่ยกเลิกแล้ว), 117 test case (เพิ่มจาก 108 — TC-03-10 ถึง TC-03-15 ใหม่ใน
+[[test-cases/patient-search-selection]] และ TC-04-21 ถึง TC-04-23 ใหม่ใน
+[[test-cases/pdpa-data-protection-compliance]] รวม 9 test case ใหม่) — [[acceptance-criteria]] มี AC
+ทั้งหมด 117 ข้อ (รวม NFR-01, NFR-02 ที่ถูกอ้างอิงซ้ำข้ามฟีเจอร์
 — อัปเดต 2026-09-23: เพิ่มขึ้นจาก 65 เป็น 81 ข้อ เนื่องจากเพิ่มหัวข้อ "6. สมัครบัญชี เข้าสู่ระบบ และจัดการ
 รหัสผ่านด้วยอีเมล (Authentication)" ที่ขาดหายไปทั้งหมด 16 AC ใหม่ (FR-07–FR-10, NFR-17, NFR-18); อัปเดต
 2026-09-24 (รอบสาม): เพิ่มขึ้นอีกจาก 81 เป็น 84 ข้อ เนื่องจากเทียบกับ [[technology-stack]] รอบสาม
@@ -293,10 +315,13 @@ Firestore ล้มเหลว), FR-09 AC-4 (ตรวจสอบ `email_verif
 AC-3 (กลไก Identity Platform password policy backstop ที่ Operation 9b); อัปเดต 2026-09-24 (รอบสี่,
 sync-test-plan): เพิ่มขึ้นอีกจาก 84 เป็น 112 ข้อ เนื่องจาก feature-list/user-journey เพิ่งเพิ่มฟีเจอร์
 ที่ 7 (Admin — FR-11–FR-15, NFR-19, NFR-20 = 23 AC ใหม่) และ FR-16 เข้าฟีเจอร์ที่ 2 (5 AC ใหม่) รวม
-28 AC ใหม่; **อัปเดต 2026-09-25 (sync-test-plan หลัง audit-pipeline, ยกเลิก PatientAssignment ทั้งระบบ):**
+28 AC ใหม่; อัปเดต 2026-09-25 (sync-test-plan หลัง audit-pipeline, ยกเลิก PatientAssignment ทั้งระบบ):
 ลดลงจาก 112 เป็น 108 ข้อ เนื่องจาก FR-14 (4 AC) ถูกยกเลิกทั้งหมด — เนื้อหา AC อื่นถูกแก้ไข (ไม่เพิ่ม/
-ลดจำนวน) ให้สะท้อนว่าไม่มีเงื่อนไขระดับรายผู้ป่วย (PatientAssignment) อีกต่อไป — ครอบคลุมครบทุกข้อโดย
-test case อย่างน้อย 1 รายการต่อ AC
+ลดจำนวน) ให้สะท้อนว่าไม่มีเงื่อนไขระดับรายผู้ป่วย (PatientAssignment) อีกต่อไป; **อัปเดต 2026-09-26
+(sync-test-plan หลัง audit-pipeline, เพิ่มรหัสใหม่จาก requirement ดิบเรื่อง AI ช่วยอธิบายผลการค้นหา
+ผู้ป่วยด้วย HN):** เพิ่มขึ้นจาก 108 เป็น 117 ข้อ เนื่องจาก FR-06 เพิ่ม 1 AC ใหม่ (แยก AC ของจังหวะ
+debounce ออกจากจังหวะกดค้นหา), FR-17 เพิ่มเข้ามาทั้งหมด 5 AC ใหม่, NFR-21 เพิ่มเข้ามาทั้งหมด 3 AC ใหม่
+รวม 9 AC ใหม่ — ครอบคลุมครบทุกข้อโดย test case อย่างน้อย 1 รายการต่อ AC
 
 **หมายเหตุ (ขอบเขตฟีเจอร์ที่ 7):** [[test-cases/admin-role-account-management]] เป็นไฟล์ใหม่ที่สร้าง
 เมื่อ 2026-09-24 ยังไม่มี detailed-design/prototype ของฟีเจอร์ Admin ณ ปัจจุบัน test case จึงอ้างอิง

@@ -39,16 +39,29 @@ Operation 4, 5 และ Audit Logging ผ่าน Cloud Functions จริง
 Access Control ใช้อยู่แล้ว (บัญชีที่ยังไม่มี `role` ไม่ผ่านอัตโนมัติ) ดู
 [[user-authentication-email-password]] ซึ่งเป็นฟีเจอร์ precondition ก่อนฟีเจอร์นี้ทั้งหมด
 
+**อัปเดต 2026-09-26 — เพิ่ม NFR-21 (จำกัดข้อมูลที่ส่งให้บริการ AI ภายนอก):** [[feature-list]] จัดรหัส
+ใหม่ NFR-21 เข้าฟีเจอร์ที่ 4 นี้ (คุ้มครองข้อมูลส่วนบุคคล) แม้ operation ที่เกี่ยวข้องจริง
+([[api-spec#Operation 17 — อธิบายผลการค้นหาผู้ป่วยด้วย HN โดยบริการ AI ภายนอก (AI-assisted Search Result Explanation)|Operation 17]])
+เป็นส่วนขยายของฟีเจอร์ที่ 3 (ค้นหา/เลือกผู้ป่วย) — sequence diagram ของ Operation 17 จึงอยู่ที่
+[[patient-search-selection#Sequence Diagram|patient-search-selection]] ไม่ซ้ำที่นี่ เอกสารนี้บันทึกไว้
+เพียงว่า NFR-21 ถูกบังคับใช้แล้วตามที่
+[[db-spec#คุณสมบัติร่วม (Cross-cutting Property) — จำกัดข้อมูลที่ส่งให้บริการ AI ภายนอก (NFR-21, เพิ่ม 2026-09-26)|db-spec]]
+ระบุ: จำกัดข้อมูลที่ส่งให้บริการ AI ภายนอกเฉพาะเลข HN ที่พิมพ์ + สถานะผลการค้นหาแบบไม่ระบุตัวตน + จำนวน
+ที่พบ ห้ามส่งชื่อ-นามสกุลหรือ Patient.id เด็ดขาด — บังคับใช้ที่ชั้น prompt construction ในโค้ด Client
+เท่านั้น (ไม่มี Cloud Function ตัวกลางให้ตรวจสอบซ้ำ เพราะ Operation 17 เรียก Firebase AI Logic ตรงจาก
+Client — ดู [[api-spec#Operation 17 — อธิบายผลการค้นหาผู้ป่วยด้วย HN โดยบริการ AI ภายนอก (AI-assisted Search Result Explanation)|Technical Binding ของ Operation 17]])
+ถือเป็นความเสี่ยงที่ผู้ใช้รับทราบและยืนยันให้ดำเนินการต่อแล้ว (ไม่มี audit log ของการเรียกนี้เลยในรอบนี้
+เช่นกัน — ต่างจาก Operation 1-4/16 ที่มี AuditLogRecord แบบ fail-safe ตาม NFR-06)
+
 **อัปเดต 2026-09-24 — ฟีเจอร์ที่ 7 (Admin, NFR-20): เพิ่ม attribute ใหม่ใน AuditLogRecord:**
 [[db-spec#บันทึกการเข้าถึงข้อมูล (AuditLogRecord)|AuditLogRecord]] เพิ่ม attribute
 `เข้าถึงในฐานะ Admin หรือไม่` (`isAdminAccess`, จริง/เท็จ, ดีฟอลต์เท็จ) — เขียนเป็นจริงเฉพาะเมื่อ
-Operation 1/2/3/15 ถูกเรียกโดยผู้ใช้ `role = "admin"` ผ่านข้อยกเว้น NFR-19 (ดู
-[[admin-role-account-management]]) **ไม่กระทบ sequence diagram ของ Operation 4 ในเอกสารนี้** (Admin
-ไม่มีสิทธิ์เรียก Operation 4) แต่กระทบ **Sequence Diagram 2 (Operation 5 — สืบค้น audit trail)**
-ทางอ้อม: ผลลัพธ์ AuditLogRecord ที่ Operation 5 คืนกลับมาอาจมี field `isAdminAccess = true` ปะปนอยู่
-ด้วยแล้ว (เจ้าหน้าที่ที่สืบค้น audit trail เห็นได้ว่ารายการใดเกิดจากการเข้าถึงของ Admin ผ่านข้อยกเว้น
-NFR-19) — ไม่ต้องเพิ่ม input/query parameter ใหม่ให้ Operation 5 เพราะ field นี้เป็นส่วนหนึ่งของ output
-เดิมอยู่แล้วตาม [[db-spec]]
+Operation 1/2/3 ถูกเรียกโดยผู้ใช้ `role = "admin"` (ดู [[admin-role-account-management]]) **ไม่กระทบ
+sequence diagram ของ Operation 4 ในเอกสารนี้** (Admin ไม่มีสิทธิ์เรียก Operation 4) แต่กระทบ
+**Sequence Diagram 2 (Operation 5 — สืบค้น audit trail)** ทางอ้อม: ผลลัพธ์ AuditLogRecord ที่
+Operation 5 คืนกลับมาอาจมี field `isAdminAccess = true` ปะปนอยู่ด้วยแล้ว (เจ้าหน้าที่ที่สืบค้น audit
+trail เห็นได้ว่ารายการใดเกิดจากการเข้าถึงของ Admin) — ไม่ต้องเพิ่ม input/query parameter ใหม่ให้
+Operation 5 เพราะ field นี้เป็นส่วนหนึ่งของ output เดิมอยู่แล้วตาม [[db-spec]]
 
 **อัปเดต 2026-09-22 (รอบสอง) — ตรวจสอบความสอดคล้องกับฟีเจอร์ที่ 5 (NFR-09–NFR-16):** ดูหัวข้อใหม่
 [[#Cross-cutting: คุณภาพเชิงปฏิบัติการของระบบ (NFR-09–NFR-16)|Cross-cutting: คุณภาพเชิงปฏิบัติการของระบบ]]
@@ -74,8 +87,8 @@ sequenceDiagram
 
     Staff->>Client: เลือกประเภทคำขอสิทธิ (ขอเข้าถึง/ขอสำเนา/ขอแก้ไข/ขอลบ/คัดค้านการประมวลผล) + รายละเอียดคำขอ (ถ้าจำเป็น)
     Client->>Backend: ส่งคำขอ Operation 4 พร้อมรหัสผู้ป่วย, ประเภทคำขอ, รายละเอียดคำขอ, auth context
-    Backend->>Backend: [Access Control] ตรวจสอบสิทธิ์ระดับบทบาท + ระดับรายผู้ป่วย + purpose limitation + email_verified (NFR-02, NFR-03, FR-09 — เพิ่มเงื่อนไข email_verified ในรอบ 2026-09-24 ตาม decision area 19)
-    Backend->>Store: อ่าน User, PatientAssignment (ตรวจสอบสิทธิ์)
+    Backend->>Backend: [Access Control] ตรวจสอบสิทธิ์ระดับบทบาท + purpose limitation + email_verified (NFR-02, NFR-03, FR-09 — เพิ่มเงื่อนไข email_verified ในรอบ 2026-09-24 ตาม decision area 19; แก้ไข 2026-09-25: ไม่มีการตรวจสอบระดับรายผู้ป่วยอีกต่อไป)
+    Backend->>Store: อ่าน User (ตรวจสอบสิทธิ์)
     Store-->>Backend: ผลการตรวจสอบสิทธิ์
     alt ไม่ผ่านสิทธิ์
         Backend-->>Client: ปฏิเสธการเข้าถึงข้อมูลผู้ป่วยรายนี้ (NFR-02, FR-05)
@@ -108,13 +121,7 @@ sequenceDiagram
                 else ประเภทคำขอ = "ขอแก้ไข" หรือ "คัดค้านการประมวลผล"
                     Backend->>Store: บันทึกการดำเนินการตามรายละเอียดคำขอ (เช่น แก้ไข Patient.hn/fullName)
                     Store-->>Backend: ยืนยันการดำเนินการ
-                    opt ประเภทคำขอ = "ขอแก้ไข" และรายละเอียดคำขอกระทบ Patient.hn หรือ Patient.fullName
-                        Note over Backend,Store: หมายเหตุสำคัญ (ผลจาก denormalize ใน db-spec): Patient.hn/fullName ถูกคัดลอกซ้ำไว้ใน<br/>ทุกเอกสาร patientAssignments ที่เชื่อมโยงกับผู้ป่วยรายนี้ (patientHn/patientFullName) —<br/>ต้องอัปเดตให้ตรงกันเสมอ มิฉะนั้น Operation 0 จะแสดงข้อมูลไม่ตรงกับ patients จริง
-                        Backend->>Store: ค้นหาทุกเอกสาร patientAssignments ที่มี patientId ตรงกัน (composite index patientId ASC)
-                        Store-->>Backend: ส่งรายการ patientAssignments ที่ต้องอัปเดต
-                        Backend->>Store: อัปเดต patientHn/patientFullName ในทุกเอกสารที่พบ พร้อมกับการแก้ไข Patient ในธุรกรรม/batch เดียวกัน
-                        Store-->>Backend: ยืนยันอัปเดตสำเร็จทั้งหมด
-                    end
+                    Note over Backend,Store: แก้ไข 2026-09-25: เดิมกรณีนี้ต้องอัปเดต patientHn/patientFullName ที่<br/>denormalize ไว้ในทุกเอกสาร patientAssignments ที่เกี่ยวข้องด้วย (collection นี้ถูกยกเลิกทั้งหมดแล้ว<br/>ไม่มี field denormalize ใดให้ต้องอัปเดตซ้ำอีกต่อไป — แก้ไข Patient เอกสารเดียวก็เพียงพอ)
                     Note over Staff,Store: การยืนยันตัวตน/ความถูกต้องของคำขอกับผู้ป่วยจริง และการดำเนินการ<br/>แก้ไข/หยุดประมวลผลจริงกับข้อมูลนอกระบบ เป็นกระบวนการเชิงองค์กรนอกขอบเขต
                 end
                 Backend->>Store: อัปเดต DataSubjectRequest (สถานะคำขอ = "ดำเนินการสำเร็จ" หรือ "ปฏิเสธคำขอ" ถ้าถูกระงับ, วันที่ดำเนินการเสร็จสิ้น)
@@ -129,8 +136,9 @@ sequenceDiagram
 ## Sequence Diagram 2 — สืบค้น Audit Trail เพื่อสนับสนุนการสืบสวน/แจ้งเหตุละเมิด (Operation 5)
 
 ตามที่ [[api-spec#Operation 5 — สืบค้นบันทึกการเข้าถึงข้อมูล (Audit Trail Retrieval)|Operation 5 ใน api-spec]]
-กำหนด — operation นี้ไม่บังคับต้องระบุรหัสผู้ป่วย จึงมีเส้นทางที่ตรวจสอบเฉพาะระดับบทบาท และเส้นทางที่
-ตรวจสอบระดับรายผู้ป่วยเพิ่มเติมเมื่อระบุรหัสผู้ป่วย:
+กำหนด — operation นี้ไม่บังคับต้องระบุรหัสผู้ป่วย **แก้ไข 2026-09-25 (ยกเลิกกลไก PatientAssignment
+ทั้งหมด):** เดิม operation นี้เคยมีเส้นทางตรวจสอบระดับรายผู้ป่วยเพิ่มเติมเมื่อระบุรหัสผู้ป่วย — ขั้นตอนนี้
+ถูกยกเลิกทั้งหมดแล้ว เหลือเพียงการตรวจสอบระดับบทบาทเดียวไม่ว่าจะระบุรหัสผู้ป่วยหรือไม่:
 
 ```mermaid
 sequenceDiagram
@@ -146,28 +154,20 @@ sequenceDiagram
         Backend-->>Client: ปฏิเสธการเข้าถึง (NFR-02)
         Client-->>Staff: แสดงข้อความไม่มีสิทธิ์
     else ผ่านสิทธิ์ระดับบทบาท
-        opt ระบุรหัสผู้ป่วย
-            Backend->>Backend: ตรวจสอบสิทธิ์ระดับรายผู้ป่วยเพิ่มเติม (PatientAssignment) (NFR-02)
-        end
-        alt ระบุรหัสผู้ป่วยแต่ไม่มี PatientAssignment เชื่อมโยงกับผู้ใช้นี้
-            Backend-->>Client: ปฏิเสธการเข้าถึงข้อมูล audit trail ของผู้ป่วยรายนั้น (NFR-02)
-            Client-->>Staff: แสดงข้อความไม่มีสิทธิ์เข้าถึงข้อมูลผู้ป่วยรายนี้
-        else ผ่านสิทธิ์ (หรือไม่ระบุรหัสผู้ป่วย)
-            alt ช่วงเวลาที่ระบุไม่ถูกต้อง (วันที่เริ่มต้นอยู่หลังวันที่สิ้นสุด)
-                Backend-->>Client: แจ้งว่า input ไม่ถูกต้อง
-                Client-->>Staff: แสดงข้อความให้แก้ไขช่วงเวลา
-            else input ถูกต้อง
-                Backend->>AuditStore: [Audit Logging] บันทึกการเรียก Operation 5 นี้เอง (การดำเนินการ = "ดูข้อมูลผู้ป่วย") เพื่อรักษาความสมบูรณ์ของ Accountability (NFR-06)
-                AuditStore-->>Backend: ยืนยันบันทึกสำเร็จ
-                alt บันทึก Audit Log ไม่สำเร็จ
-                    Backend-->>Client: ยกเลิกการดำเนินการทั้งหมด แจ้งข้อผิดพลาด (fail-safe, NFR-06)
-                    Client-->>Staff: แสดงข้อความเกิดข้อผิดพลาด
-                else บันทึกสำเร็จ
-                    Backend->>AuditStore: สืบค้น AuditLogRecord ที่ตรงเงื่อนไข (ผู้ป่วย/ช่วงเวลา/ผู้ใช้ — ทั้งหมดไม่บังคับ)
-                    AuditStore-->>Backend: ส่งรายการ AuditLogRecord เรียงตามวันที่-เวลาที่เข้าถึง (หรือรายการว่างถ้าไม่พบ)
-                    Backend-->>Client: ส่งข้อมูล audit trail (NFR-08)
-                    Client-->>Staff: แสดง/ส่งออกข้อมูล audit trail — การแจ้งเหตุจริงต่อ สคส. เป็นกระบวนการเชิงองค์กรนอกขอบเขตระบบ
-                end
+        alt ช่วงเวลาที่ระบุไม่ถูกต้อง (วันที่เริ่มต้นอยู่หลังวันที่สิ้นสุด)
+            Backend-->>Client: แจ้งว่า input ไม่ถูกต้อง
+            Client-->>Staff: แสดงข้อความให้แก้ไขช่วงเวลา
+        else input ถูกต้อง
+            Backend->>AuditStore: [Audit Logging] บันทึกการเรียก Operation 5 นี้เอง (การดำเนินการ = "ดูข้อมูลผู้ป่วย") เพื่อรักษาความสมบูรณ์ของ Accountability (NFR-06)
+            AuditStore-->>Backend: ยืนยันบันทึกสำเร็จ
+            alt บันทึก Audit Log ไม่สำเร็จ
+                Backend-->>Client: ยกเลิกการดำเนินการทั้งหมด แจ้งข้อผิดพลาด (fail-safe, NFR-06)
+                Client-->>Staff: แสดงข้อความเกิดข้อผิดพลาด
+            else บันทึกสำเร็จ
+                Backend->>AuditStore: สืบค้น AuditLogRecord ที่ตรงเงื่อนไข (ผู้ป่วย/ช่วงเวลา/ผู้ใช้ — ทั้งหมดไม่บังคับ)
+                AuditStore-->>Backend: ส่งรายการ AuditLogRecord เรียงตามวันที่-เวลาที่เข้าถึง (หรือรายการว่างถ้าไม่พบ)
+                Backend-->>Client: ส่งข้อมูล audit trail (NFR-08)
+                Client-->>Staff: แสดง/ส่งออกข้อมูล audit trail — การแจ้งเหตุจริงต่อ สคส. เป็นกระบวนการเชิงองค์กรนอกขอบเขตระบบ
             end
         end
     end
@@ -219,18 +219,17 @@ Sequence Diagram 1 (Operation 4 กรณี "ขอลบ" — การลบ�
 
 | ลำดับ | Operation | Entity ที่กระทบ | การกระทำ | หมายเหตุ |
 | --- | --- | --- | --- | --- |
-| 1 | [[api-spec#Operation ร่วม — ตรวจสอบสิทธิ์การเข้าถึงข้อมูลผู้ป่วย (Access Control)\|Operation ร่วม (role-level + patient-level + purpose limitation + email_verified)]] | [[db-spec#ผู้ใช้ (User)\|User]], [[db-spec#การมอบหมายผู้ป่วยในความดูแล (PatientAssignment)\|PatientAssignment]] | อ่าน | precondition ของ Operation 4 เสมอ (NFR-02, NFR-03) — เพิ่มเงื่อนไข `email_verified` ในรอบ 2026-09-24 ตาม decision area 19 (FR-09) |
+| 1 | [[api-spec#Operation ร่วม — ตรวจสอบสิทธิ์การเข้าถึงข้อมูลผู้ป่วย (Access Control)\|Operation ร่วม (role-level + purpose limitation + email_verified)]] | [[db-spec#ผู้ใช้ (User)\|User]] | อ่าน | precondition ของ Operation 4 เสมอ (NFR-02, NFR-03) — เพิ่มเงื่อนไข `email_verified` ในรอบ 2026-09-24 ตาม decision area 19 (FR-09); **แก้ไข 2026-09-25:** ไม่มีการตรวจสอบระดับรายผู้ป่วยอีกต่อไป (ยกเลิก PatientAssignment ทั้งหมด) |
 | 2 | [[api-spec#Operation 4 — ยื่นและดำเนินการคำขอใช้สิทธิของเจ้าของข้อมูล (Data Subject Rights Request)\|Operation 4]] | [[db-spec#คำขอใช้สิทธิของเจ้าของข้อมูล (DataSubjectRequest)\|DataSubjectRequest]] | สร้าง | สถานะเริ่มต้น = "รอดำเนินการ" — ต้องสร้างก่อนเรียก Audit Logging เสมอ เพราะ AuditLogRecord ต้องการรหัสคำขอนี้เพื่ออ้างอิง |
 | 3 | [[api-spec#Operation ร่วม — บันทึกร่องรอยการเข้าถึงข้อมูลผู้ป่วย (Audit Logging)\|Operation ร่วม — Audit Logging]] | [[db-spec#บันทึกการเข้าถึงข้อมูล (AuditLogRecord)\|AuditLogRecord]] | สร้าง | ระบุ DataSubjectRequest.id ที่เกี่ยวข้อง; ต้องสำเร็จก่อนค้นหา/สกัด/แก้ไข/ลบข้อมูลจริงเสมอ (fail-safe, NFR-06) |
 | 4 | [[api-spec#Operation 4 — ยื่นและดำเนินการคำขอใช้สิทธิของเจ้าของข้อมูล (Data Subject Rights Request)\|Operation 4]] (กรณี "ขอเข้าถึง"/"ขอสำเนา") | [[db-spec#ผู้ป่วย (Patient)\|Patient]], [[db-spec#ประวัติการวินิจฉัยโรค NCD (NcdDiagnosis)\|NcdDiagnosis]], [[db-spec#ผลตรวจ lab (LabResult)\|LabResult]], [[db-spec#ผลการประเมินความเสี่ยงโรคแทรกซ้อน (ComplicationRiskAssessment)\|ComplicationRiskAssessment]] (+[[db-spec#รายละเอียดผลการประเมินต่อโรคแทรกซ้อน (RiskFinding)\|RiskFinding]]) | อ่าน | สกัดข้อมูลส่วนบุคคลตามขอบเขตของ [[20260921-01-pdpa-data-protection-compliance#ขอบเขต\|spec PDPA]] |
 | 5 | [[api-spec#Operation 4 — ยื่นและดำเนินการคำขอใช้สิทธิของเจ้าของข้อมูล (Data Subject Rights Request)\|Operation 4]] (กรณี "ขอลบ") | [[db-spec#นโยบายเก็บรักษาและลบข้อมูล (RetentionPolicy)\|RetentionPolicy]] | อ่าน | ตรวจสอบว่าข้อมูลยังมีความจำเป็นตามฐานทางกฎหมายอื่นหรือไม่ ก่อนตัดสินใจลบจริง (NFR-05) |
 | 6 | [[api-spec#Operation 4 — ยื่นและดำเนินการคำขอใช้สิทธิของเจ้าของข้อมูล (Data Subject Rights Request)\|Operation 4]] (กรณี "ขอลบ" ที่ไม่มีข้อจำกัดเพิ่มเติม) | [[db-spec#ประวัติการวินิจฉัยโรค NCD (NcdDiagnosis)\|NcdDiagnosis]], [[db-spec#ผลตรวจ lab (LabResult)\|LabResult]] (หรือ entity อื่นตามขอบเขตคำขอ) | ลบ | เฉพาะเมื่อไม่มีข้อจำกัดตาม RetentionPolicy/ฐานกฎหมายอื่น (ลำดับ 5) |
 | 7 | [[api-spec#Operation 4 — ยื่นและดำเนินการคำขอใช้สิทธิของเจ้าของข้อมูล (Data Subject Rights Request)\|Operation 4]] | [[db-spec#คำขอใช้สิทธิของเจ้าของข้อมูล (DataSubjectRequest)\|DataSubjectRequest]] | แก้ไข | อัปเดตสถานะคำขอ ("ดำเนินการสำเร็จ"/"ปฏิเสธคำขอ") + วันที่ดำเนินการเสร็จสิ้น เมื่อดำเนินการเสร็จสิ้น |
-| 7b | [[api-spec#Operation 4 — ยื่นและดำเนินการคำขอใช้สิทธิของเจ้าของข้อมูล (Data Subject Rights Request)\|Operation 4]] (กรณี "ขอแก้ไข" ที่กระทบ Patient.hn/fullName เท่านั้น) | [[db-spec#การมอบหมายผู้ป่วยในความดูแล (PatientAssignment)\|PatientAssignment]] | แก้ไข | **ผลจาก denormalize `patientHn`/`patientFullName` ใน db-spec** — ต้องอัปเดตทุกระเบียนที่มี `patientId` ตรงกันภายใน transaction/batch เดียวกับการแก้ไข Patient เสมอ มิฉะนั้น Operation 0 จะแสดงข้อมูลไม่ตรงกัน (ดู [[db-spec#การมอบหมายผู้ป่วยในความดูแล (PatientAssignment)\|Firestore Technical Binding ของ PatientAssignment ใน db-spec]]) |
-| 8 | [[api-spec#Operation ร่วม — ตรวจสอบสิทธิ์การเข้าถึงข้อมูลผู้ป่วย (Access Control)\|Operation ร่วม (role-level + email_verified)]] | [[db-spec#ผู้ใช้ (User)\|User]] | อ่าน | precondition ของ Operation 5 เสมอ — เพิ่มเงื่อนไข `email_verified` ในรอบ 2026-09-24 ตาม decision area 19 (FR-09) |
-| 9 | [[api-spec#Operation ร่วม — ตรวจสอบสิทธิ์การเข้าถึงข้อมูลผู้ป่วย (Access Control)\|Operation ร่วม (patient-level, ถ้าระบุรหัสผู้ป่วย)]] | [[db-spec#การมอบหมายผู้ป่วยในความดูแล (PatientAssignment)\|PatientAssignment]] | อ่าน | ตรวจสอบเพิ่มเติมเฉพาะเมื่อ Operation 5 ระบุรหัสผู้ป่วย |
+| 7b | ~~[[api-spec#Operation 4 — ยื่นและดำเนินการคำขอใช้สิทธิของเจ้าของข้อมูล (Data Subject Rights Request)\|Operation 4]] (กรณี "ขอแก้ไข" ที่กระทบ Patient.hn/fullName)~~ | — | — | **ยกเลิกแล้ว 2026-09-25** — เดิมต้องอัปเดต `patientHn`/`patientFullName` ที่ denormalize ไว้ใน `patientAssignments` ทุกระเบียนที่เกี่ยวข้อง collection นี้ถูกลบทั้งหมดแล้ว ไม่มี field denormalize ใดให้ต้องอัปเดตซ้ำอีกต่อไป (แก้ไข Patient เอกสารเดียวก็เพียงพอ) |
+| 8 | [[api-spec#Operation ร่วม — ตรวจสอบสิทธิ์การเข้าถึงข้อมูลผู้ป่วย (Access Control)\|Operation ร่วม (role-level + email_verified)]] | [[db-spec#ผู้ใช้ (User)\|User]] | อ่าน | precondition ของ Operation 5 เสมอ — เพิ่มเงื่อนไข `email_verified` ในรอบ 2026-09-24 ตาม decision area 19 (FR-09); **แก้ไข 2026-09-25:** ไม่มีการตรวจสอบระดับรายผู้ป่วยเพิ่มเติมอีกต่อไปแม้ระบุรหัสผู้ป่วย |
 | 10 | [[api-spec#Operation ร่วม — บันทึกร่องรอยการเข้าถึงข้อมูลผู้ป่วย (Audit Logging)\|Operation ร่วม — Audit Logging]] | [[db-spec#บันทึกการเข้าถึงข้อมูล (AuditLogRecord)\|AuditLogRecord]] | สร้าง | บันทึกการเรียก Operation 5 เอง (การดำเนินการ = "ดูข้อมูลผู้ป่วย") เพื่อรักษา Accountability (NFR-06) |
-| 11 | [[api-spec#Operation 5 — สืบค้นบันทึกการเข้าถึงข้อมูล (Audit Trail Retrieval)\|Operation 5]] | [[db-spec#บันทึกการเข้าถึงข้อมูล (AuditLogRecord)\|AuditLogRecord]] | อ่าน | สืบค้นตามเงื่อนไข (ผู้ป่วย/ช่วงเวลา/ผู้ใช้ — ทั้งหมดไม่บังคับ) เรียงตามวันที่-เวลาที่เข้าถึง — ผลลัพธ์อาจมี field `เข้าถึงในฐานะ Admin หรือไม่` = จริง ปะปนอยู่ด้วย (NFR-20 — เพิ่มใหม่ 2026-09-24 ดู [[admin-role-account-management]]) |
+| 11 | [[api-spec#Operation 5 — สืบค้นบันทึกการเข้าถึงข้อมูล (Audit Trail Retrieval)\|Operation 5]] | [[db-spec#บันทึกการเข้าถึงข้อมูล (AuditLogRecord)\|AuditLogRecord]] | อ่าน | สืบค้นตามเงื่อนไข (ผู้ป่วย/ช่วงเวลา/ผู้ใช้ — ทั้งหมดไม่บังคับ) เรียงตามวันที่-เวลาที่เข้าถึง — ผลลัพธ์อาจมี field `เข้าถึงในฐานะ Admin หรือไม่` = จริง ปะปนอยู่ด้วย (NFR-20 — ดู [[admin-role-account-management]]) |
 | 12 | [[api-spec#Operation 6 — บังคับใช้นโยบายเก็บรักษาและลบข้อมูลที่พ้นระยะเวลา (Retention Enforcement)\|Operation 6]] | [[db-spec#นโยบายเก็บรักษาและลบข้อมูล (RetentionPolicy)\|RetentionPolicy]] | อ่าน | อ่านนโยบายที่จะบังคับใช้ในรอบนี้ก่อนเสมอ |
 | 13 | [[api-spec#Operation 6 — บังคับใช้นโยบายเก็บรักษาและลบข้อมูลที่พ้นระยะเวลา (Retention Enforcement)\|Operation 6]] | [[db-spec#ประวัติการวินิจฉัยโรค NCD (NcdDiagnosis)\|NcdDiagnosis]], [[db-spec#ผลตรวจ lab (LabResult)\|LabResult]] | ลบ | เมื่อประเภทข้อมูลที่บังคับใช้ = Primary Data Store และระเบียนพ้นระยะเวลาที่ RetentionPolicy กำหนด |
 | 14 | [[api-spec#Operation 6 — บังคับใช้นโยบายเก็บรักษาและลบข้อมูลที่พ้นระยะเวลา (Retention Enforcement)\|Operation 6]] | [[db-spec#บันทึกการเข้าถึงข้อมูล (AuditLogRecord)\|AuditLogRecord]] | ลบ | เมื่อประเภทข้อมูลที่บังคับใช้ = Audit Log Store และระเบียนพ้นระยะเวลาที่ RetentionPolicy กำหนด (นโยบายคนละรายการจาก Primary Data Store) |
@@ -319,13 +318,12 @@ attribute ใดรองรับ (ไม่ใช่ gap ของ db-spec —
 
 | Edge Case | วิธีจัดการ | อ้างอิง |
 | --- | --- | --- |
-| ไม่มีสิทธิ์เข้าถึง (Operation 4 — บทบาทไม่ถูกต้อง หรือผู้ป่วยรายนี้ไม่ได้อยู่ในความดูแลของผู้ใช้ตาม PatientAssignment) | ปฏิเสธการเข้าถึงข้อมูลผู้ป่วยรายนี้ ก่อนสร้าง DataSubjectRequest ใดๆ | [[backlog#Non-Functional Requirements\|NFR-02]], [[backlog#สูง (MVP)\|FR-05]] |
+| ไม่มีสิทธิ์เข้าถึง (Operation 4 — บทบาทไม่ถูกต้อง หรือบัญชีถูกระงับ — **แก้ไข 2026-09-25:** ไม่มีเงื่อนไข "ผู้ป่วยรายนี้ไม่ได้อยู่ในความดูแล" อีกต่อไป) | ปฏิเสธการเข้าถึงข้อมูลผู้ป่วยรายนี้ ก่อนสร้าง DataSubjectRequest ใดๆ | [[backlog#Non-Functional Requirements\|NFR-02]], [[backlog#สูง (MVP)\|FR-05]] |
 | ผู้ใช้ถูก auto-logout เนื่องจากไม่มีการใช้งาน (inactivity) เกิน 30 นาที (NFR-12) แล้วส่งคำขอ Operation 4/5 โดยไม่มี auth context ที่ถูกต้องแนบมา | ปฏิเสธการเข้าถึงที่ step ตรวจสอบสิทธิ์เช่นเดียวกับกรณีไม่มีสิทธิ์เข้าถึงข้างต้น — Client นำผู้ใช้กลับไปหน้าจอเข้าสู่ระบบใหม่ | [[backlog#Non-Functional Requirements\|NFR-12]] |
 | ไม่พบผู้ป่วยตามรหัสที่ระบุ (Operation 4) | แจ้งว่าไม่พบผู้ป่วย หยุดก่อนสร้าง DataSubjectRequest | [[db-spec#ผู้ป่วย (Patient)\|Patient]] |
 | ประเภทคำขอไม่ถูกต้อง/ไม่อยู่ในรายการที่กำหนด หรือระบุ "ขอแก้ไข"/"คัดค้านการประมวลผล" โดยไม่มีรายละเอียดคำขอ (Operation 4) | แจ้งว่า input ไม่ถูกต้อง ไม่สร้าง DataSubjectRequest | [[api-spec#Operation 4 — ยื่นและดำเนินการคำขอใช้สิทธิของเจ้าของข้อมูล (Data Subject Rights Request)\|Operation 4]] |
 | บันทึก Audit Log ไม่สำเร็จ (Operation 4 หรือ Operation 5) | ยกเลิกการดำเนินการทั้งหมดที่เรียกใช้ ไม่ค้นหา/สกัด/แก้ไข/ลบข้อมูลจริง แจ้งข้อผิดพลาดแก่ผู้ใช้ (fail-safe) | [[backlog#Non-Functional Requirements\|NFR-06]], [[api-spec#Operation ร่วม — บันทึกร่องรอยการเข้าถึงข้อมูลผู้ป่วย (Audit Logging)\|Operation ร่วม — Audit Logging]] |
 | คำขอ "ขอลบ" แต่ข้อมูลยังมีความจำเป็นตามฐานทางกฎหมายอื่น (เช่น ข้อบังคับเวชระเบียน) | ไม่ลบข้อมูลโดยไม่มีการยืนยันเพิ่มเติม, อัปเดต DataSubjectRequest.สถานะคำขอ = "ปฏิเสธคำขอ" | [[backlog#Non-Functional Requirements\|NFR-05]], [[db-spec#นโยบายเก็บรักษาและลบข้อมูล (RetentionPolicy)\|RetentionPolicy]] |
-| ระบุรหัสผู้ป่วยที่ไม่มี PatientAssignment เชื่อมโยงกับผู้ใช้นี้ (Operation 5) | ปฏิเสธการเข้าถึงข้อมูล audit trail ของผู้ป่วยรายนั้น (ไม่กระทบการสืบค้นแบบไม่ระบุผู้ป่วย) | [[backlog#Non-Functional Requirements\|NFR-02]] |
 | ช่วงเวลาที่ระบุไม่ถูกต้อง (วันที่เริ่มต้นอยู่หลังวันที่สิ้นสุด) (Operation 5) | แจ้งว่า input ไม่ถูกต้อง — ไม่เรียก Audit Log Store จนกว่าจะแก้ไขช่วงเวลา | [[api-spec#Operation 5 — สืบค้นบันทึกการเข้าถึงข้อมูล (Audit Trail Retrieval)\|Operation 5]] |
 | ไม่พบบันทึกที่ตรงเงื่อนไขการสืบค้น (Operation 5) | คืนรายการว่าง ไม่ถือเป็น error | [[api-spec#Operation 5 — สืบค้นบันทึกการเข้าถึงข้อมูล (Audit Trail Retrieval)\|Operation 5]] |
 | RetentionPolicy ที่ระบุไม่มีค่าระยะเวลาเก็บรักษา (ยังไม่ถูกกำหนด) (Operation 6) | ข้ามการบังคับใช้สำหรับประเภทข้อมูลนั้นในรอบนี้ (ไม่ใช่ error) รายงานให้ผู้ดูแลระบบทราบ | [[backlog#Non-Functional Requirements\|NFR-05]], [[db-spec#นโยบายเก็บรักษาและลบข้อมูล (RetentionPolicy)\|RetentionPolicy]] |
@@ -336,10 +334,10 @@ attribute ใดรองรับ (ไม่ใช่ gap ของ db-spec —
 - **Operation 4:** Cloud Functions (2nd gen, Node.js + TypeScript) — **HTTPS Callable Function ชื่อ
   `submitDataSubjectRequest`** — เขียน/อัปเดต `dataSubjectRequests/{requestId}` ผ่าน Admin SDK ตาม
   [[api-spec#Operation 4 — ยื่นและดำเนินการคำขอใช้สิทธิของเจ้าของข้อมูล (Data Subject Rights Request)|Technical Binding ของ Operation 4 ใน api-spec]]
-  — **ข้อกำหนดเพิ่มเติมสำคัญ:** กรณี "ขอแก้ไข" ที่กระทบ `Patient.hn`/`Patient.fullName` ฟังก์ชันนี้
-  **ต้อง**ค้นหา `patientAssignments` ทุกรายการที่มี `patientId` ตรงกัน (composite index `(patientId
-  ASC)`) แล้วอัปเดต `patientHn`/`patientFullName` ให้ตรงกันภายใน transaction/batch เดียวกับการแก้ไข
-  `patients/{patientId}` เสมอ (ดูลำดับ 7b ในตารางด้านบนและ sequence diagram 1)
+  — **แก้ไข 2026-09-25:** เดิมกรณี "ขอแก้ไข" ที่กระทบ `Patient.hn`/`Patient.fullName` เคยต้องค้นหา/
+  อัปเดต `patientAssignments` ที่ denormalize field เหล่านี้ไว้ด้วย — collection นี้ถูกยกเลิกทั้งหมด
+  แล้ว จึงแก้ไขเพียง `patients/{patientId}` เอกสารเดียวก็เพียงพอ (ดูลำดับ 7b ในตารางด้านบนและ
+  sequence diagram 1)
 - **Operation 5:** HTTPS Callable Function ชื่อ **`getAuditTrail`** — สืบค้น `auditLogRecords` ผ่าน
   Admin SDK ด้วย composite index ที่ตรงกับเงื่อนไขที่ระบุ (ผู้ป่วย/ผู้ใช้/ช่วงเวลา — ผสมกันได้ 4 แบบ)
   ตาม [[db-spec#บันทึกการเข้าถึงข้อมูล (AuditLogRecord)|Firestore Technical Binding ของ

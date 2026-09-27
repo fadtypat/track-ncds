@@ -7,13 +7,18 @@ operation เชิง logical ใน [[api-spec]], entity เชิง logical 
 เก็บจากผู้ใช้โดยตรงผ่านกระบวนการ intake (สรุปไว้ด้านล่าง) — **ไม่มีการเลือกเพราะความนิยม/ความชอบส่วนตัว
 โดยไม่มีเหตุผลรองรับ**
 
-อัปเดตล่าสุด: 2026-09-26 (ปรับปรุงรอบสี่ — **เพิ่มเติมเฉพาะ decision area ใหม่** สำหรับ FR-17 (AI
-ช่วยอธิบายผลการค้นหาผู้ป่วยด้วย HN เป็นภาษาคน, ระดับกลาง) และ NFR-21 (PDPA — ห้ามส่งชื่อ/ข้อมูลระบุ
-ตัวตนให้บริการ AI ภายนอก, ระดับสูง) ที่เพิ่งบันทึกใน [[20260917-01-patient-ncd-history-lab-complication-risk]]/
-[[20260921-01-pdpa-data-protection-compliance]]/[[backlog]] เมื่อ 2026-09-26 — ไม่แตะ/ไม่ทบทวน decision
-area 1-19 เดิม ตามที่ผู้ใช้ยืนยันโหมด "เพิ่มเติมเฉพาะ component/decision area ใหม่" ดู decision area
-20-22 ด้านล่าง — รอบก่อนหน้า 2026-09-24 เพิ่มกลไกสำหรับฟีเจอร์ที่ 6 (Authentication) ไว้ที่ decision area
-13-19, รอบ 2026-09-22 เพิ่มกลไกสำหรับ NFR-09/NFR-12/NFR-13/NFR-15 ไว้ที่ decision area 9-12)
+อัปเดตล่าสุด: 2026-09-27 (**Sync แก้ไขข้อความให้ตรงกับการยกเลิก PatientAssignment** — ผู้ใช้ยกเลิกกลไก
+PatientAssignment ทั้งหมดไปแล้วตั้งแต่ 2026-09-25 (ดู [[ACL]]/[[api-spec]]/[[db-spec]] เป็นแหล่งความจริง
+หลัก) แต่ `technology-stack.md` ยังมีข้อความหลายจุดที่อธิบาย PatientAssignment/`patientAssignments`
+เป็นสถาปัตยกรรมที่ยังใช้งานอยู่จริง (ตรวจพบโดย `nfr-reviewer`) — รอบนี้แก้ไขเฉพาะจุดที่ได้รับผลกระทบ
+(decision area 3, 4, 7, 19, หัวข้อความเสี่ยง Security Rules, Deployment Diagram) ให้ตรงกับสถานะปัจจุบัน
+คือ **ทุกบทบาท (แพทย์/พยาบาล/admin) เห็นผู้ป่วยทุกรายในระบบเหมือนกัน หลังผ่านเงื่อนไข
+role/isActive/email_verified ระดับบัญชีเท่านั้น ไม่มีการกรองระดับรายผู้ป่วยอีกต่อไป** — ข้อความเดิมที่
+อธิบาย PatientAssignment คงไว้แบบ ~~ขีดฆ่า~~ พร้อมหมายเหตุแก้ไขกำกับเพื่อ traceability ไม่ได้ลบทิ้ง
+ทั้งหมด ไม่แตะ/ไม่ทบทวน decision area อื่นที่ไม่เกี่ยวข้อง — รอบก่อนหน้า 2026-09-26 เพิ่ม decision area
+20-22 สำหรับ FR-17/NFR-21 (AI) และแก้ไขชื่อโมเดลเป็น `gemini-3.5-flash-lite`, รอบ 2026-09-24 เพิ่มกลไก
+สำหรับฟีเจอร์ที่ 6 (Authentication) ไว้ที่ decision area 13-19, รอบ 2026-09-22 เพิ่มกลไกสำหรับ
+NFR-09/NFR-12/NFR-13/NFR-15 ไว้ที่ decision area 9-12)
 
 ## ภาพรวมบริบทที่ได้จาก Intake
 
@@ -131,9 +136,13 @@ IT ที่จะรับช่วงดูแลต่อ (Q6)
 
 **เลือก:** ไม่มี persistent backend server แยกต่างหาก — แบ่งเป็น 2 เส้นทาง:
 - **เส้นทาง Client → Firestore ตรง** (ผ่าน Firebase SDK + Security Rules): ใช้เฉพาะ **Operation 0**
-  (ค้นหา/แสดงรายชื่อผู้ป่วยในความดูแล) เพราะยังไม่มีการระบุผู้ป่วยรายบุคคล ไม่ trigger audit log ตาม
-  เจตนาของ [[architecture]] อยู่แล้ว และ Security Rules สามารถกรองผลลัพธ์ตาม PatientAssignment ได้
-  ค่อนข้างตรงไปตรงมา (query แบบ exact-match บน field เดียว)
+  (ค้นหา/แสดงรายชื่อผู้ป่วยทุกรายในระบบ — **แก้ไข 2026-09-27 เพื่อสอดคล้องกับการยกเลิก PatientAssignment
+  เมื่อ 2026-09-25** เดิมข้อความนี้เขียนว่า "แสดงรายชื่อผู้ป่วยในความดูแล" และ "กรองผลลัพธ์ตาม
+  PatientAssignment" ซึ่งไม่ตรงกับสถาปัตยกรรมปัจจุบันอีกต่อไป — ดู [[ACL]]/[[api-spec#Operation 0 — ค้นหา/แสดงรายชื่อผู้ป่วยทั้งหมดในระบบ (ค้นหาเฉพาะรายด้วยเลข HN)|api-spec Operation 0]] เป็นแหล่งความจริง)
+  เพราะยังไม่มีการระบุผู้ป่วยรายบุคคล ไม่ trigger audit log ตามเจตนาของ [[architecture]] อยู่แล้ว และ
+  Security Rules ตรวจสอบเพียง **role/isActive/email_verified ระดับบัญชีเท่านั้น** (ไม่มีการกรองระดับ
+  รายผู้ป่วยอีกต่อไป — ทุกบทบาทที่ผ่านเงื่อนไขพื้นฐานเห็นผู้ป่วยทุกรายเหมือนกัน) ด้วย query แบบ
+  exact-match บน field `hn` เดียว (หรืออ่านทั้ง collection เมื่อไม่ระบุ HN)
 - **เส้นทาง Client → Cloud Functions (callable)**: ใช้กับ **Operation 1, 2, 3, 4, 5, 6** ทั้งหมด — คือ
   ทุก operation ที่เข้าถึงข้อมูลผู้ป่วยรายบุคคล/ข้อมูล audit trail/คำขอสิทธิ
 
@@ -159,26 +168,40 @@ Logging ใน api-spec]]) **ไม่สามารถบังคับใช
 
 **คำเตือน/ความเสี่ยงที่ต้องพิจารณาเมื่อ implement จริง (ส่งต่อให้ `sync-api-db`/`sync-detailed-design`):**
 
-[[db-spec]] ออกแบบ ER model เป็น relational เต็มรูปแบบ มี foreign key และความสัมพันธ์ N:M ผ่าน
-PatientAssignment รวมถึง RiskFinding ที่อ้างอิง 3 entity พร้อมกัน (ComplicationRiskAssessment,
-ComplicationRiskThreshold, LabResult) — Firestore เป็น NoSQL document store ไม่มี join/foreign key
-constraint แบบ native จึงต้อง **denormalize** ข้อมูลเมื่อ implement จริง แนวทางเบื้องต้นที่แนะนำ
-(รายละเอียดสุดท้ายควรกำหนดใน `sync-api-db`):
+**หมายเหตุแก้ไข 2026-09-27 (sync กับการยกเลิก PatientAssignment เมื่อ 2026-09-25):** ย่อหน้าและรายการ
+ด้านล่างในหัวข้อนี้เดิมอธิบายความสัมพันธ์ N:M ระหว่าง User และ Patient ผ่าน entity "PatientAssignment"
+และแนวทาง denormalize เป็น collection `patientAssignments` — **entity/collection นี้ถูกยกเลิกไปแล้ว
+ทั้งหมดตั้งแต่ 2026-09-25** ตามที่ผู้ใช้ยืนยัน (ดู [[ACL]] เป็นแหล่งความจริงหลักของสิทธิ์, [[api-spec#Operation 14, 15 — ยกเลิกแล้ว (2026-09-25)|api-spec หัวข้อ "Operation 14, 15 — ยกเลิกแล้ว"]],
+และ [[db-spec]] ที่ลบ collection นี้ออกแล้ว) **แพทย์/พยาบาล/admin ทุกคนเห็นผู้ป่วยทุกรายในระบบเหมือนกัน
+หลังผ่านเงื่อนไข role/isActive/email_verified ระดับบัญชีเท่านั้น ไม่มีการกรองระดับรายผู้ป่วยอีกต่อไป**
+— คงข้อความเดิมด้านล่างไว้แบบขีดฆ่าเพื่อ traceability ประวัติการตัดสินใจ ไม่ใช่สถาปัตยกรรมปัจจุบัน:
 
-- **PatientAssignment (N:M ระหว่าง User และ Patient):** แทนที่จะเป็น collection กลางแบบ relational
+~~[[db-spec]] ออกแบบ ER model เป็น relational เต็มรูปแบบ มี foreign key และความสัมพันธ์ N:M ผ่าน
+PatientAssignment รวมถึง RiskFinding ที่อ้างอิง 3 entity พร้อมกัน (ComplicationRiskAssessment,
+ComplicationRiskThreshold, LabResult)~~ — Firestore เป็น NoSQL document store ไม่มี join/foreign key
+constraint แบบ native จึงยังต้อง **denormalize** ข้อมูลบางส่วนเมื่อ implement จริง (ส่วนที่ยังใช้งานอยู่
+จริง แนวทางเบื้องต้นที่แนะนำ รายละเอียดสุดท้ายควรกำหนดใน `sync-api-db`):
+
+- ~~**PatientAssignment (N:M ระหว่าง User และ Patient):** แทนที่จะเป็น collection กลางแบบ relational
   table ให้พิจารณาเก็บเป็น subcollection `patients/{patientId}/assignments/{userId}` (หรือ document
   ID แบบ composite `{userId}_{patientId}` ใน top-level collection `patientAssignments`) เพื่อให้
-  Security Rules ใช้ `exists()` ตรวจสอบสิทธิ์ได้ง่ายโดยไม่ต้อง query แบบ collection group เสมอไป
+  Security Rules ใช้ `exists()` ตรวจสอบสิทธิ์ได้ง่ายโดยไม่ต้อง query แบบ collection group เสมอไป~~
+  **(ยกเลิกแล้ว 2026-09-25 — ไม่มี collection นี้อีกต่อไป Operation 0 อ่าน collection `patients`
+  โดยตรงด้วย equality query บน `hn` เมื่อผู้ใช้ค้นหา หรืออ่านทั้ง collection เมื่อแสดงรายชื่อทั้งหมด
+  ไม่ต้องมี composite index — ตรงกับข้อมูลอ้างอิงจากโค้ดจริงของ `web/`)**
 - **RiskFinding (อ้างอิง 3 entity):** เก็บเป็น subcollection ของ ComplicationRiskAssessment
   (`complicationRiskAssessments/{id}/riskFindings/{id}`) และ **copy ค่า threshold/comparator แบบ
   snapshot ลงไปในเอกสารโดยตรง** (ตามที่ [[db-spec#รายละเอียดผลการประเมินต่อโรคแทรกซ้อน (RiskFinding)|
-  db-spec ระบุไว้แล้วว่าต้อง snapshot อยู่แล้ว]] — สอดคล้องกับข้อจำกัดของ Firestore โดยบังเอิญ)
+  db-spec ระบุไว้แล้วว่าต้อง snapshot อยู่แล้ว]] — สอดคล้องกับข้อจำกัดของ Firestore โดยบังเอิญ) — ไม่ได้
+  รับผลกระทบจากการยกเลิก PatientAssignment
 - **AuditLogRecord ที่ต้องสืบค้นตามผู้ป่วย/ผู้ใช้/ช่วงเวลาพร้อมกัน (Operation 5):** Firestore composite
   index จำเป็นสำหรับ query แบบหลายเงื่อนไข ต้องออกแบบ index ล่วงหน้าใน `firestore.indexes.json`
-- โดยรวม การ query ที่ซับซ้อนกว่า exact-match เดียว (เช่น "ผู้ป่วยที่มี HN ตรงกัน **และ** อยู่ใน
+- ~~โดยรวม การ query ที่ซับซ้อนกว่า exact-match เดียว (เช่น "ผู้ป่วยที่มี HN ตรงกัน **และ** อยู่ใน
   PatientAssignment ของผู้ใช้") ต้องพึ่งพา Cloud Functions ประมวลผลแทนการ query ตรงจาก client ในหลาย
-  กรณี ซึ่งสอดคล้องกับการตัดสินใจใน decision area 3 ที่ให้ Cloud Functions มาเป็นตัวกลางของ
-  Operation 1–6 อยู่แล้ว
+  กรณี~~ **(ไม่มีเงื่อนไข PatientAssignment ให้ตรวจสอบร่วมอีกต่อไปตั้งแต่ 2026-09-25 — Operation 0 จึง
+  เป็น equality query เดี่ยวที่ไม่ต้องพึ่ง Cloud Functions จริง)** ซึ่งยังคงสอดคล้องกับการตัดสินใจใน
+  decision area 3 ที่ให้ Cloud Functions มาเป็นตัวกลางของ Operation 1–6 อยู่แล้ว (ด้วยเหตุผลเรื่อง
+  audit log fail-safe ตาม NFR-06 ไม่ใช่เพราะ query ซับซ้อนอีกต่อไป)
 
 **ทางเลือกอื่นที่พิจารณาแล้ว (ไม่ถูกเลือก แม้จะเคยแนะนำ):**
 - Cloud SQL (MySQL) — ตรงกับ ER model โดยตรง และเป็น engine ตระกูลเดียวกับ HOSxP (MySQL/MariaDB)
@@ -222,8 +245,10 @@ collection นี้โดยตรงเลย (Security Rules: `allow read, wr
 [[db-spec#ผู้ใช้ (User)|User]] ไว้ใน custom claims อีกต่อไป** — ทั้ง Firestore Security Rules (สำหรับ
 Operation 0) และ Cloud Functions (สำหรับ Operation 1–6) **อ่าน `role`/`isActive` จากเอกสาร Firestore
 `users/{uid}` โดยตรงทุกครั้ง** เป็น source of truth เดียว (ตรงกับ Technical Binding ที่ [[api-spec]]
-ระบุไว้แล้วในทางปฏิบัติ — ดูเหตุผลเต็มที่ decision area 18) ส่วนการตรวจสอบระดับรายผู้ป่วย
-(PatientAssignment) ยังคง query/exists check กับ Firestore เช่นเดิม
+ระบุไว้แล้วในทางปฏิบัติ — ดูเหตุผลเต็มที่ decision area 18) ~~ส่วนการตรวจสอบระดับรายผู้ป่วย
+(PatientAssignment) ยังคง query/exists check กับ Firestore เช่นเดิม~~ **(แก้ไข 2026-09-27 — ไม่มีการ
+ตรวจสอบระดับรายผู้ป่วยอีกต่อไปตั้งแต่ 2026-09-25 หลังยกเลิก PatientAssignment ทั้งหมด ทุกบทบาทที่ผ่าน
+role/isActive/email_verified เห็นผู้ป่วยทุกรายเหมือนกัน ดู [[ACL]])**
 
 **เหตุผลของการแก้ไขจากที่เคยระบุไว้เดิม (ใน rounds ก่อนหน้าเคยเลือกเก็บบทบาทใน custom claims):**
 เมื่อผู้ใช้ตัดสินใจใน decision area 18 (การ sync role/isActive กับ custom claims เมื่อผู้ดูแลอนุมัติผ่าน
@@ -516,8 +541,10 @@ Rules ของ Operation 0 และ shared helper module ของ Cloud Funct
 **เลือก:** เพิ่มการตรวจสอบ **`decodedToken.email_verified`** ใน shared helper module ของ Cloud
 Functions ที่ใช้ร่วมกันทุก callable function (Operation 1-6 ตาม decision area 3) และเพิ่มเงื่อนไข
 **`request.auth.token.email_verified == true`** ใน Firestore Security Rules ของ collection ที่
-Operation 0 อ่าน (`patientAssignments`) — ทั้งสองจุดอ่านค่าจาก **Firebase ID token ที่ verify อยู่แล้ว
-ทุกครั้ง** ไม่ต้องเพิ่ม field ใหม่ใน Firestore และไม่ต้องเพิ่ม Firestore read เพิ่มเติม
+Operation 0 อ่าน (`patients` — **แก้ไข 2026-09-27**: เดิมระบุ `patientAssignments` ซึ่งถูกยกเลิกไปแล้ว
+ตั้งแต่ 2026-09-25 Operation 0 อ่าน collection `patients` โดยตรง) — ทั้งสองจุดอ่านค่าจาก **Firebase ID
+token ที่ verify อยู่แล้วทุกครั้ง** ไม่ต้องเพิ่ม field ใหม่ใน Firestore และไม่ต้องเพิ่ม Firestore read
+เพิ่มเติม
 
 **เหตุผล:** ปิดช่องว่างที่
 [[user-authentication-email-password#Edge Case และวิธีจัดการ|detailed-design ระบุไว้ชัดเจนว่าเป็น
@@ -529,16 +556,18 @@ path (ไม่ใช่แค่ Cloud Functions) เพื่อให้ส�
 ของ NFR-02/NFR-06 ที่ระบบยึดถืออยู่แล้ว
 
 **ผลกระทบที่ต้องส่งต่อให้ `sync-api-db`/`sync-detailed-design`:** ต้องเพิ่ม test case ใหม่ในชุด
-Security Rules Verification (NFR-14) สำหรับกรณี "ผู้ใช้ที่ role/isActive/PatientAssignment ผ่านครบแต่
-`emailVerified=false`" และปรับ Technical Binding ของ Operation ร่วม Access Control ใน [[api-spec]] ให้
-ระบุเงื่อนไขนี้เพิ่ม (เอกสารนี้เพียงตัดสินใจกลไกทางเทคโนโลยี ไม่ได้แก้ไข [[api-spec]]/[[db-spec]] เอง)
+Security Rules Verification (NFR-14) สำหรับกรณี ~~"ผู้ใช้ที่ role/isActive/PatientAssignment ผ่านครบแต่
+`emailVerified=false`"~~ **(แก้ไข 2026-09-27 — ไม่มีเงื่อนไข PatientAssignment ให้ตรวจสอบอีกต่อไปตั้งแต่
+2026-09-25 ข้อความที่ถูกต้องคือ "ผู้ใช้ที่ role/isActive ผ่านครบแต่ `emailVerified=false`")** และปรับ
+Technical Binding ของ Operation ร่วม Access Control ใน [[api-spec]] ให้ระบุเงื่อนไขนี้เพิ่ม (เอกสารนี้
+เพียงตัดสินใจกลไกทางเทคโนโลยี ไม่ได้แก้ไข [[api-spec]]/[[db-spec]] เอง)
 
 **ทางเลือกอื่นที่พิจารณาแล้วไม่เลือก:**
 - ไม่ตรวจซ้ำฝั่งเซิร์ฟเวอร์เลย (คงแบบเดิม) — ไม่เพิ่มความซับซ้อน แต่เหลือช่องว่างจริงตามที่ detailed-design
   ระบุไว้ ผู้ใช้เลือกปิดช่องว่างนี้แทน
 - ตรวจเฉพาะใน Cloud Functions (Operation 1-6) โดยไม่แก้ Security Rules ของ Operation 0 — ปิดช่องว่าง
-  บางส่วน แต่ Operation 0 (แสดงรายชื่อผู้ป่วยในความดูแล) ยังคง expose ข้อมูลได้แม้ยังไม่ยืนยันอีเมล
-  ผู้ใช้เลือกปิดให้ครบทั้งสอง path แทน
+  บางส่วน แต่ Operation 0 (แสดงรายชื่อผู้ป่วย~~ในความดูแล~~**ทุกรายในระบบ — แก้ไข 2026-09-27**) ยังคง
+  expose ข้อมูลได้แม้ยังไม่ยืนยันอีเมล ผู้ใช้เลือกปิดให้ครบทั้งสอง path แทน
 
 ### 20. AI ช่วยอธิบายผลการค้นหาผู้ป่วยด้วย HN (FR-17, NFR-21) — Firebase AI Logic (Gemini Developer API) เรียกตรงจาก Client
 
@@ -655,7 +684,17 @@ deprecation ในอนาคตแทนการอิงกำหนดก�
 
 ## ความเสี่ยงที่ต้องพิจารณาเพิ่มเติม (สำคัญ — ผู้ใช้รับทราบและยืนยันให้ดำเนินการต่อแล้ว)
 
-สถาปัตยกรรม Firebase-native ที่เลือก (decision area 3) — โดยเฉพาะการใช้ **Firestore Security Rules**
+**หมายเหตุแก้ไข 2026-09-27 (sync กับการยกเลิก PatientAssignment เมื่อ 2026-09-25):** หัวข้อความเสี่ยงนี้
+เดิมเขียนขึ้นตอนที่ Operation 0 ยังต้องตรวจสอบสิทธิ์ 2 ระดับ (role-level + patient-level ผ่าน
+PatientAssignment) — **ตั้งแต่ 2026-09-25 ผู้ใช้ยกเลิก PatientAssignment ทั้งหมด** ทุกบทบาท
+(แพทย์/พยาบาล/admin) ที่ผ่านเงื่อนไข role/isActive/email_verified เห็นผู้ป่วยทุกรายเหมือนกัน จึง**ไม่มี
+การตรวจสอบระดับรายผู้ป่วยด้วย `exists()`/`get()` ที่ซ้อนกันอีกต่อไป** — **ความเสี่ยงข้อ 1 ด้านล่างจึง
+ไม่มีผลอีกต่อไป** (Security Rules ของ Operation 0 ปัจจุบันตรวจสอบแค่ role/isActive/email_verified ระดับ
+บัญชีเท่านั้น ซึ่งเป็น logic ที่ตรงไปตรงมากว่าเดิมมาก ไม่มีความซับซ้อนของการ nested `exists()` ตาม
+เงื่อนไข patient-level อีกต่อไป) คงข้อความเดิมด้านล่างไว้แบบ ~~ขีดฆ่า~~ เพื่อ traceability ประวัติการ
+ตัดสินใจ:
+
+~~สถาปัตยกรรม Firebase-native ที่เลือก (decision area 3) — โดยเฉพาะการใช้ **Firestore Security Rules**
 เป็นกลไกหลักในการบังคับสิทธิ์การเข้าถึงสำหรับ Operation 0 — มีความเสี่ยงเชิงเทคนิคที่ต้องบันทึกไว้
 อย่างเด่นชัด เนื่องจากกระทบ NFR-02 (Access Control) และ NFR-03 (Purpose Limitation) โดยตรง:
 
@@ -664,25 +703,34 @@ deprecation ในอนาคตแทนการอิงกำหนดก�
    purpose programming language เต็มรูปแบบ) การตรวจสอบที่ซับซ้อน เช่น "อนุญาตเฉพาะบทบาทแพทย์/พยาบาล
    ที่บัญชียังใช้งานได้ **และ** มี PatientAssignment เชื่อมโยงกับผู้ป่วยรายนี้จริง" ต้องเขียนเป็นชุด
    `exists()`/`get()` call ที่ซ้อนกัน ซึ่ง**เสี่ยงต่อการตั้งค่าผิดพลาดจนข้อมูลผู้ป่วยรั่วไหล**ได้ง่ายกว่า
-   การตรวจสอบในโค้ด backend ที่ unit test ได้ตรงไปตรงมากว่า
+   การตรวจสอบในโค้ด backend ที่ unit test ได้ตรงไปตรงมากว่า~~
 2. **ผลกระทบจำกัดเฉพาะ Operation 0 เท่านั้น** เนื่องจาก decision area 3 ได้ลดขอบเขตของ Security Rules
    ให้ครอบคลุมเฉพาะ Operation 0 (ค้นหา/แสดงรายชื่อ — ไม่มีข้อมูลผู้ป่วยรายบุคคลละเอียดอ่อน) ส่วน
    Operation 1–6 ทั้งหมดผ่าน Cloud Functions ที่ตรวจสอบในโค้ดแทน จึงลดพื้นที่เสี่ยงของ Security Rules
-   ลงมากแล้ว แต่ยังไม่ใช่ศูนย์ (Operation 0 ยังคง expose รายชื่อ+HN ของผู้ป่วยในความดูแลอยู่)
+   ลงมากแล้ว **(ยังคงเป็นจริงในปัจจุบัน)** แต่ยังไม่ใช่ศูนย์ (Operation 0 ยังคง expose รายชื่อ+HN ของ
+   ผู้ป่วย~~ในความดูแล~~**ทุกรายในระบบ (แก้ไข 2026-09-27 — ไม่ใช่แค่ "ในความดูแล" อีกต่อไป)**อยู่)
 
-**คำแนะนำเชิงป้องกัน (mitigation) ที่ควรปฏิบัติก่อนใช้งานจริงกับข้อมูลผู้ป่วยจริง:**
+**คำแนะนำเชิงป้องกัน (mitigation) ที่ควรปฏิบัติก่อนใช้งานจริงกับข้อมูลผู้ป่วยจริง (ปรับปรุงให้ตรงกับ
+สถาปัตยกรรมปัจจุบัน 2026-09-27):**
 
 - ต้องมี **code review เข้มงวดสำหรับ Firestore Security Rules ทุกครั้งก่อน deploy จริง** โดยเฉพาะ
-  rule ที่เกี่ยวกับ collection `patients` และ `patientAssignments`
+  rule ที่เกี่ยวกับ collection `patients` ~~และ `patientAssignments`~~ **(collection `patientAssignments`
+  ถูกยกเลิกแล้ว ไม่มี rule สำหรับ collection นี้อีกต่อไป)**
 - ต้องเขียน **automated test สำหรับ Security Rules ด้วย Firebase Emulator Suite** (`@firebase/rules-
-  unit-testing`) ให้ครอบคลุมทุกกรณีสิทธิ์ก่อนใช้งานจริง — อย่างน้อยต้องทดสอบ: (ก) ผู้ใช้ที่ไม่มี
-  PatientAssignment กับผู้ป่วยรายใดเลย, (ข) ผู้ใช้ที่มี PatientAssignment กับผู้ป่วยบางรายเท่านั้น
-  ต้องไม่เห็นผู้ป่วยรายอื่น, (ค) ผู้ใช้ที่บัญชีถูกระงับ (สถานะการใช้งานบัญชี = เท็จ), (ง) ผู้ใช้ที่ไม่มี
-  custom claims บทบาทที่ถูกต้อง
+  unit-testing`) ให้ครอบคลุมทุกกรณีสิทธิ์ก่อนใช้งานจริง — อย่างน้อยต้องทดสอบ: (ก) ผู้ใช้ที่บทบาทไม่ผ่าน
+  เงื่อนไข (ไม่ใช่แพทย์/พยาบาล/admin), (ข) ผู้ใช้ที่บัญชีถูกระงับ (`isActive=false`), (ค) ผู้ใช้ที่ยังไม่
+  ยืนยันอีเมล (`email_verified=false`) — ~~(ก) ผู้ใช้ที่ไม่มี PatientAssignment กับผู้ป่วยรายใดเลย,
+  (ข) ผู้ใช้ที่มี PatientAssignment กับผู้ป่วยบางรายเท่านั้น ต้องไม่เห็นผู้ป่วยรายอื่น~~ **(เคสเหล่านี้
+  ไม่มีผลอีกต่อไปตั้งแต่ 2026-09-25 เพราะไม่มีการกรองระดับรายผู้ป่วยแล้ว — ทุกผู้ใช้ที่ผ่านเงื่อนไข
+  role/isActive/email_verified เห็นผู้ป่วยทุกรายเหมือนกัน)**, ~~(ง) ผู้ใช้ที่ไม่มี custom claims บทบาท
+  ที่ถูกต้อง~~ **(ไม่เกี่ยวข้องอีกต่อไปตั้งแต่ decision area 18 — ไม่ใช้ custom claims แล้ว ตรวจ
+  `role`/`isActive` จาก Firestore `users/{uid}` โดยตรงแทน)**
 - ควรพิจารณารัน automated test ชุดนี้เป็นส่วนหนึ่งของ CI/CD pipeline ก่อน deploy ทุกครั้ง ไม่ใช่ทดสอบ
   ครั้งเดียวตอนเริ่มโครงการ
 - **สิ่งนี้ควรถูกยกระดับความสำคัญเป็นพิเศษก่อนเปลี่ยนจากข้อมูลจำลองเป็นข้อมูลผู้ป่วยจริง** เนื่องจาก
-  ความเสี่ยงข้อมูลรั่วไหลจาก Security Rules ที่ตั้งค่าผิดพลาดจะกระทบข้อมูลสุขภาพจริงของผู้ป่วยโดยตรง
+  ความเสี่ยงข้อมูลรั่วไหลจาก Security Rules ที่ตั้งค่าผิดพลาดจะกระทบข้อมูลสุขภาพจริงของผู้ป่วยโดยตรง —
+  แม้ logic จะเรียบง่ายขึ้นมากหลังยกเลิก PatientAssignment แล้ว แต่ Operation 0 ยัง expose รายชื่อ+HN
+  ของผู้ป่วยทุกรายในระบบ จึงยังต้องระวังเรื่อง role/isActive/email_verified ให้ถูกต้องเสมอ
 
 ### ความเสี่ยงเพิ่มเติม: NFR-12 Session Timeout เป็น Best-effort ฝั่ง Client เท่านั้น (ไม่มี Server-side Token Revocation)
 
@@ -770,7 +818,7 @@ flowchart LR
         Hosting["Firebase Hosting\nReact + TypeScript SPA"]
         Auth["Firebase Authentication\n(อัปเกรดเป็น Google Cloud Identity Platform บางส่วน\nสำหรับ password policy — Op.9 backstop, decision area 13)\nEmail Enumeration Protection เปิดใช้ (decision area 14)\nไม่เก็บ role/isActive ใน Custom Claims (decision area 18)"]
         Functions["Cloud Functions (2nd gen)\nNode.js + TypeScript\n- Op.1,2: Data Aggregation (ผู้ป่วยรายบุคคล)\n- Op.3: Risk Rule Engine\n- Op.4: Data Subject Rights\n- Op.5: Audit Trail Retrieval\n- Op.6: Retention Enforcement (scheduled)\n- Op.8: signUpUser (สร้าง Auth user + users/{uid} ในฟังก์ชันเดียว, rollback ถ้าล้มเหลว — decision area 17)\n- Op.9: requestPasswordReset\n- shared helper: ตรวจ role/isActive จาก Firestore + email_verified จาก token (decision area 19)\n- เขียน Audit Log ก่อน อ่าน/แก้ไขข้อมูลจริงเสมอ (fail-safe)"]
-        Firestore[("Cloud Firestore (Native mode)\nPrimary Data Store: users, patients, patientAssignments,\nncdDiagnoses, labResults, complicationRiskThresholds,\ncomplicationRiskAssessments, riskFindings,\ndataSubjectRequests, retentionPolicies\n(users/{uid} = source of truth เดียวของ role/isActive — decision area 18)\n\nAudit Log Store: auditLogRecords\n(client เขียนไม่ได้เลย — เฉพาะ Cloud Functions ผ่าน Admin SDK)")]
+        Firestore[("Cloud Firestore (Native mode)\nPrimary Data Store: users, patients,\nncdDiagnoses, labResults, complicationRiskThresholds,\ncomplicationRiskAssessments, riskFindings,\ndataSubjectRequests, retentionPolicies\n(patientAssignments ยกเลิกแล้ว 2026-09-25 — ทุกบทบาทเห็นผู้ป่วยทุกราย)\n(users/{uid} = source of truth เดียวของ role/isActive — decision area 18)\n\nAudit Log Store: auditLogRecords\n(client เขียนไม่ได้เลย — เฉพาะ Cloud Functions ผ่าน Admin SDK)")]
         AppCheck["Firebase App Check\nreCAPTCHA v3 (production) +\nDebug Provider (local dev)\nบังคับใช้กับ AI Logic — decision area 21"]
         AILogic["Firebase AI Logic\nbackend: Gemini Developer API\nโมเดล: gemini-3.5-flash-lite\n(แก้ไข 2026-09-26 จาก gemini-2.5-flash-lite\nชื่อโมเดลกำหนดที่จุดเดียว\nweb/src/ai/config.ts — decision area 22)"]
     end
@@ -781,7 +829,7 @@ flowchart LR
 
     User -->|HTTPS/TLS| Hosting
     Hosting -->|"Firebase Auth SDK ตรง — Op.7 (เข้าสู่ระบบ)\nOp.9 confirmPasswordReset (ตั้งรหัสผ่านใหม่จริง)"| Auth
-    Hosting -->|"Firestore SDK — Op.0 เท่านั้น\n(อ่านตรงผ่าน Security Rules, กรองตาม PatientAssignment,\nตรวจ role/isActive/email_verified — decision area 18-19)"| Firestore
+    Hosting -->|"Firestore SDK — Op.0 เท่านั้น\n(อ่านตรงผ่าน Security Rules บน collection patients,\nไม่มีการกรองระดับรายผู้ป่วยอีกต่อไป (PatientAssignment ยกเลิก 2026-09-25),\nตรวจ role/isActive/email_verified ระดับบัญชีเท่านั้น — decision area 18-19)"| Firestore
     Hosting -->|"HTTPS Callable Functions — Op.1-6, Op.8, Op.9\n(ผ่านช่องทางเข้ารหัส TLS — NFR-04)"| Functions
     Functions -->|"Admin SDK (bypass Security Rules)\nตรวจสิทธิ์ (role/isActive/email_verified) → บันทึก Audit Log →\nอ่าน/แก้ไขข้อมูลจริง / สร้าง users/{uid}"| Firestore
     Functions -->|"Admin SDK — Op.8 createUser/deleteUser (rollback),\nOp.9 ตรวจสอบบัญชี+สั่งส่งอีเมลรีเซ็ต"| Auth
