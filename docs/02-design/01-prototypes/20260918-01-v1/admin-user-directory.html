@@ -28,7 +28,6 @@
         <a href="admin-dashboard.html">Admin: หน้าหลัก</a>
         <a href="admin-account-approval.html">Admin: อนุมัติบัญชี</a>
         <a href="admin-user-directory.html" class="current">Admin: จัดการผู้ใช้งาน</a>
-        <a href="admin-patient-assignment.html">Admin: มอบหมายผู้ป่วย</a>
         <a href="admin-patient-directory.html">Admin: ผู้ป่วยทุกราย</a>
         <a href="admin-patient-detail-readonly.html">Admin: ดูประวัติ (read-only)</a>
       </div>
@@ -197,7 +196,7 @@
         statusPill.className = "status-pill success";
         statusPill.textContent = "ใช้งานอยู่";
         toggleBtn.textContent = "ระงับการใช้งาน";
-        showNote("tip", "เปิดใช้งานบัญชีแล้ว", name + " กลับมาเข้าถึงข้อมูลผู้ป่วยที่ได้รับมอบหมายได้ตามปกติ (FR-13)");
+        showNote("tip", "เปิดใช้งานบัญชีแล้ว", name + " กลับมาเข้าถึงข้อมูลผู้ป่วยได้ตามปกติ (FR-13)");
       } else {
         statusPill.className = "status-pill rejected";
         statusPill.textContent = "ระงับการใช้งาน";

@@ -28,7 +28,6 @@
         <a href="admin-dashboard.html">Admin: หน้าหลัก</a>
         <a href="admin-account-approval.html">Admin: อนุมัติบัญชี</a>
         <a href="admin-user-directory.html">Admin: จัดการผู้ใช้งาน</a>
-        <a href="admin-patient-assignment.html">Admin: มอบหมายผู้ป่วย</a>
         <a href="admin-patient-directory.html">Admin: ผู้ป่วยทุกราย</a>
         <a href="admin-patient-detail-readonly.html">Admin: ดูประวัติ (read-only)</a>
       </div>
@@ -55,8 +54,11 @@
       <strong>แพทย์/พยาบาลผู้ดูแลผู้ป่วย NCD</strong> และ <strong>Admin (ผู้ดูแลระบบ)</strong>
       (อัปเดต 20260924: เพิ่มฟีเจอร์ที่ 6 — สมัครบัญชี/เข้าสู่ระบบ/จัดการรหัสผ่านด้วยอีเมล เป็น
       precondition ก่อน Journey ที่ 1 และ 2 ด้านล่าง, เพิ่มฟีเจอร์ที่ 7 — Admin อนุมัติบัญชี/จัดการสิทธิ์/
-      มอบหมายผู้ป่วย/ดูประวัติผู้ป่วยทุกรายแบบอ่านอย่างเดียว และเพิ่ม FR-16 — ยืนยัน/แก้ไขผลประเมิน
-      ความเสี่ยงในหน้าประวัติ+ความเสี่ยงของแพทย์/พยาบาล)
+      ดูประวัติผู้ป่วยทุกรายแบบอ่านอย่างเดียว และเพิ่ม FR-16 — ยืนยัน/แก้ไขผลประเมิน
+      ความเสี่ยงในหน้าประวัติ+ความเสี่ยงของแพทย์/พยาบาล — อัปเดต 20260927: ยกเลิกกลไก PatientAssignment
+      ทั้งหมด แพทย์/พยาบาล/Admin ทุกคนเห็นผู้ป่วยทุกรายในระบบเหมือนกัน (FR-05, NFR-02), ลบงาน "จัดการการ
+      มอบหมายผู้ป่วย" (เดิม FR-14) ออกจากฟีเจอร์ที่ 7 ทั้งหมด, เพิ่ม FR-17/NFR-21 — AI ช่วยอธิบายผลการ
+      ค้นหาผู้ป่วยด้วย HN ในหน้ารายชื่อผู้ป่วย และปรับ FR-06 ให้ตรวจสอบ HN ทั้งตอนหยุดพิมพ์และตอนกดค้นหา)
     </p>
     <div style="display:flex; gap:var(--space-2); flex-wrap:wrap;">
       <span class="chip chip-neutral">บทบาทผู้ใช้: แพทย์/พยาบาลผู้ดูแลผู้ป่วย NCD (NFR-02)</span>
@@ -111,16 +113,16 @@
       <li class="dx-item" style="border-color:var(--border-default);">
         <div class="dx-item-main">
           <span class="dx-item-name">1. ระบบตรวจสอบสิทธิ์การเข้าถึง</span>
-          <span class="dx-item-meta">ถ้าไม่มีสิทธิ์ หรือผู้ป่วยไม่ได้อยู่ในความดูแล → ปฏิเสธการเข้าถึง</span>
+          <span class="dx-item-meta">ถ้าไม่มีสิทธิ์ (role/isActive/email_verified ไม่ผ่าน) → ปฏิเสธการเข้าถึง</span>
         </div>
         <a class="btn btn-secondary btn-sm" href="access-denied.html">เปิดหน้าปฏิเสธการเข้าถึง <span class="proto-code" style="margin-left:6px;">NFR-02</span></a>
       </li>
       <li class="dx-item" style="border-color:var(--border-default);">
         <div class="dx-item-main">
-          <span class="dx-item-name">2. ค้นหา/เลือกผู้ป่วยในความดูแล</span>
-          <span class="dx-item-meta">ค้นหาด้วยเลข HN 7 หลัก หรือเรียกดูรายชื่อทั้งหมดที่อยู่ในความดูแล</span>
+          <span class="dx-item-name">2. ค้นหา/เลือกผู้ป่วย</span>
+          <span class="dx-item-meta">ค้นหาด้วยเลข HN 7 หลัก (ตรวจสอบทั้งตอนหยุดพิมพ์และตอนกดค้นหา พร้อม AI ช่วยอธิบายผลลัพธ์) หรือเรียกดูรายชื่อผู้ป่วยทุกรายในระบบ</span>
         </div>
-        <a class="btn btn-primary btn-sm" href="patient-list.html">เปิดหน้ารายชื่อผู้ป่วย <span class="proto-code" style="margin-left:6px;">FR-05·FR-06</span></a>
+        <a class="btn btn-primary btn-sm" href="patient-list.html">เปิดหน้ารายชื่อผู้ป่วย <span class="proto-code" style="margin-left:6px;">FR-05·FR-06·FR-17</span></a>
       </li>
       <li class="dx-item" style="border-color:var(--border-default);">
         <div class="dx-item-main">
@@ -165,7 +167,7 @@
   <section class="section-card">
     <div class="section-head">
       <h2 class="type-section-title">Journey ที่ 3 — Admin อนุมัติบัญชี จัดการสิทธิ์ และดูประวัติผู้ป่วยทุกรายแบบอ่านอย่างเดียว (ฟีเจอร์ 7)</h2>
-      <span class="type-caption">บทบาทใหม่: Admin (ผู้ดูแลระบบ) — เข้าสู่ระบบด้วยกลไกเดียวกับแพทย์/พยาบาล (FR-07) แต่มีสิทธิ์ต่างออกไป · งานบริหารจัดการ 4 อย่าง ทำทีละงานแล้ววนกลับมาเลือกงานอื่นต่อได้</span>
+      <span class="type-caption">บทบาทใหม่: Admin (ผู้ดูแลระบบ) — เข้าสู่ระบบด้วยกลไกเดียวกับแพทย์/พยาบาล (FR-07) แต่มีสิทธิ์ต่างออกไป · งานบริหารจัดการ 3 อย่าง ทำทีละงานแล้ววนกลับมาเลือกงานอื่นต่อได้ (เดิม 4 อย่าง — งาน "จัดการการมอบหมายผู้ป่วย" ถูกยกเลิกแล้ว 2026-09-25 เพราะเลิกใช้กลไก PatientAssignment)</span>
     </div>
     <ol class="stack" style="gap:12px; padding-left:0;">
       <li class="dx-item" style="border-color:var(--border-default);">
@@ -184,25 +186,18 @@
       </li>
       <li class="dx-item" style="border-color:var(--border-default);">
         <div class="dx-item-main">
-          <span class="dx-item-name">3ค. จัดการการมอบหมายผู้ป่วย (Patient Assignment)</span>
-          <span class="dx-item-meta">มอบหมาย/ยกเลิกการมอบหมายผู้ป่วยให้แพทย์/พยาบาล — ควบคุมการมองเห็นผู้ป่วยตาม FR-05</span>
-        </div>
-        <a class="btn btn-primary btn-sm" href="admin-patient-assignment.html">เปิดหน้ามอบหมายผู้ป่วย <span class="proto-code" style="margin-left:6px;">FR-14</span></a>
-      </li>
-      <li class="dx-item" style="border-color:var(--border-default);">
-        <div class="dx-item-main">
-          <span class="dx-item-name">3ง. ดูประวัติผู้ป่วยทุกรายในระบบ (อ่านอย่างเดียว)</span>
-          <span class="dx-item-meta">ไม่ต้องมี PatientAssignment เป็นของตนเอง (NFR-19) ทุกครั้งที่เข้าถึงต้องบันทึก audit log แบบ fail-safe ก่อนเสมอ (NFR-20)</span>
+          <span class="dx-item-name">3ค. ดูประวัติผู้ป่วยทุกรายในระบบ (อ่านอย่างเดียว)</span>
+          <span class="dx-item-meta">เห็นผู้ป่วยทุกรายเช่นเดียวกับแพทย์/พยาบาล (NFR-19) ทุกครั้งที่เข้าถึงต้องบันทึก audit log แบบ fail-safe ก่อนเสมอ (NFR-20)</span>
         </div>
         <a class="btn btn-primary btn-sm" href="admin-patient-directory.html">เปิดหน้าผู้ป่วยทุกราย <span class="proto-code" style="margin-left:6px;">FR-15·NFR-19</span></a>
         <a class="btn btn-secondary btn-sm" href="admin-patient-detail-readonly.html">เปิดตัวอย่างหน้ารายละเอียด <span class="proto-code" style="margin-left:6px;">FR-15·NFR-20</span></a>
       </li>
       <li class="dx-item" style="border-color:var(--border-default);">
         <div class="dx-item-main">
-          <span class="dx-item-name">3จ. เมนูหลักของ Admin</span>
-          <span class="dx-item-meta">หน้ารวมทางเข้าสู่ทั้ง 4 งานข้างต้น เข้าถึงหลัง Admin เข้าสู่ระบบสำเร็จ (FR-07)</span>
+          <span class="dx-item-name">3ง. เมนูหลักของ Admin</span>
+          <span class="dx-item-meta">หน้ารวมทางเข้าสู่ทั้ง 3 งานข้างต้น เข้าถึงหลัง Admin เข้าสู่ระบบสำเร็จ (FR-07)</span>
         </div>
-        <a class="btn btn-secondary btn-sm" href="admin-dashboard.html">เปิดแผงควบคุม Admin <span class="proto-code" style="margin-left:6px;">FR-11–FR-15</span></a>
+        <a class="btn btn-secondary btn-sm" href="admin-dashboard.html">เปิดแผงควบคุม Admin <span class="proto-code" style="margin-left:6px;">FR-11–FR-13·FR-15</span></a>
       </li>
     </ol>
   </section>
@@ -249,8 +244,8 @@
           </tr>
           <tr>
             <td class="param-name"><a href="patient-list.html">patient-list.html</a></td>
-            <td style="font-family:var(--font-sans); font-size:14px;">3. ค้นหา/เลือกผู้ป่วยในความดูแล</td>
-            <td>FR-05, FR-06, NFR-02</td>
+            <td style="font-family:var(--font-sans); font-size:14px;">3. ค้นหา/เลือกผู้ป่วย</td>
+            <td>FR-05, FR-06, FR-17, NFR-02, NFR-21</td>
           </tr>
           <tr>
             <td class="param-name"><a href="patient-detail-risk-found.html">patient-detail-risk-found.html</a></td>
@@ -279,32 +274,27 @@
           </tr>
           <tr>
             <td class="param-name"><a href="admin-dashboard.html">admin-dashboard.html</a></td>
-            <td style="font-family:var(--font-sans); font-size:14px;">7. จัดการบัญชีผู้ใช้งาน สิทธิ์ และการมอบหมายผู้ป่วย (Admin)</td>
-            <td>FR-11, FR-12, FR-13, FR-14, FR-15, NFR-19, NFR-20</td>
+            <td style="font-family:var(--font-sans); font-size:14px;">7. จัดการบัญชีผู้ใช้งานและสิทธิ์ (Admin)</td>
+            <td>FR-11, FR-12, FR-13, FR-15, NFR-19, NFR-20</td>
           </tr>
           <tr>
             <td class="param-name"><a href="admin-account-approval.html">admin-account-approval.html</a></td>
-            <td style="font-family:var(--font-sans); font-size:14px;">7. จัดการบัญชีผู้ใช้งาน สิทธิ์ และการมอบหมายผู้ป่วย (Admin)</td>
+            <td style="font-family:var(--font-sans); font-size:14px;">7. จัดการบัญชีผู้ใช้งานและสิทธิ์ (Admin)</td>
             <td>FR-11</td>
           </tr>
           <tr>
             <td class="param-name"><a href="admin-user-directory.html">admin-user-directory.html</a></td>
-            <td style="font-family:var(--font-sans); font-size:14px;">7. จัดการบัญชีผู้ใช้งาน สิทธิ์ และการมอบหมายผู้ป่วย (Admin)</td>
+            <td style="font-family:var(--font-sans); font-size:14px;">7. จัดการบัญชีผู้ใช้งานและสิทธิ์ (Admin)</td>
             <td>FR-12, FR-13</td>
           </tr>
           <tr>
-            <td class="param-name"><a href="admin-patient-assignment.html">admin-patient-assignment.html</a></td>
-            <td style="font-family:var(--font-sans); font-size:14px;">7. จัดการบัญชีผู้ใช้งาน สิทธิ์ และการมอบหมายผู้ป่วย (Admin)</td>
-            <td>FR-14</td>
-          </tr>
-          <tr>
             <td class="param-name"><a href="admin-patient-directory.html">admin-patient-directory.html</a></td>
-            <td style="font-family:var(--font-sans); font-size:14px;">7. จัดการบัญชีผู้ใช้งาน สิทธิ์ และการมอบหมายผู้ป่วย (Admin)</td>
+            <td style="font-family:var(--font-sans); font-size:14px;">7. จัดการบัญชีผู้ใช้งานและสิทธิ์ (Admin)</td>
             <td>FR-15, NFR-19</td>
           </tr>
           <tr>
             <td class="param-name"><a href="admin-patient-detail-readonly.html">admin-patient-detail-readonly.html</a></td>
-            <td style="font-family:var(--font-sans); font-size:14px;">7. จัดการบัญชีผู้ใช้งาน สิทธิ์ และการมอบหมายผู้ป่วย (Admin)</td>
+            <td style="font-family:var(--font-sans); font-size:14px;">7. จัดการบัญชีผู้ใช้งานและสิทธิ์ (Admin)</td>
             <td>FR-15, NFR-19, NFR-20</td>
           </tr>
         </tbody>

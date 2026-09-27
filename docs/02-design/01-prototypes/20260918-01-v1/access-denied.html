@@ -28,7 +28,6 @@
         <a href="admin-dashboard.html">Admin: หน้าหลัก</a>
         <a href="admin-account-approval.html">Admin: อนุมัติบัญชี</a>
         <a href="admin-user-directory.html">Admin: จัดการผู้ใช้งาน</a>
-        <a href="admin-patient-assignment.html">Admin: มอบหมายผู้ป่วย</a>
         <a href="admin-patient-directory.html">Admin: ผู้ป่วยทุกราย</a>
         <a href="admin-patient-detail-readonly.html">Admin: ดูประวัติ (read-only)</a>
       </div>
@@ -47,22 +46,24 @@
     <div class="stack" style="gap:8px;">
       <h1 class="type-section-title">ไม่มีสิทธิ์เข้าถึงข้อมูลนี้</h1>
       <p class="type-body">
-        ผู้ป่วยรายนี้ไม่ได้อยู่ในความดูแลของท่าน หรือบัญชีของท่านไม่ได้รับสิทธิ์บทบาท
-        <strong>แพทย์/พยาบาลผู้ดูแลผู้ป่วย NCD</strong> ระบบจึงปฏิเสธการแสดงประวัติ, ผลตรวจ lab
-        และผลวิเคราะห์ความเสี่ยงของผู้ป่วยรายนี้ (NFR-02)
+        บัญชีของท่านไม่ผ่านเงื่อนไขการเข้าถึงข้อมูลผู้ป่วย (role/isActive/email_verified) ตาม NFR-02 —
+        แพทย์/พยาบาล/Admin ทุกคนที่ผ่านเงื่อนไขพื้นฐานจะเห็นผู้ป่วยทุกรายในระบบเหมือนกัน (ไม่มีการจำกัด
+        ตามรายผู้ป่วยอีกต่อไป ตั้งแต่ยกเลิกกลไก PatientAssignment เมื่อ 2026-09-25) ระบบจึงปฏิเสธการแสดง
+        ประวัติ, ผลตรวจ lab และผลวิเคราะห์ความเสี่ยงของผู้ป่วยรายนี้
       </p>
     </div>
 
     <div class="callout warn" style="text-align:left; width:100%;">
       <span class="callout-title">เหตุผลที่เป็นไปได้</span>
       <ul>
-        <li>ผู้ป่วยรายนี้ยังไม่ถูก assign ให้อยู่ในความดูแลของท่าน (assignment ระดับรายผู้ป่วย)</li>
-        <li>บทบาทของบัญชีท่านไม่ใช่แพทย์/พยาบาลผู้ดูแลผู้ป่วย NCD</li>
+        <li>บทบาทของบัญชีท่านไม่ใช่แพทย์/พยาบาล/Admin ที่ระบบอนุญาต</li>
+        <li>บัญชีของท่านยังไม่ได้รับการอนุมัติ (isActive = false) หรือถูกระงับการใช้งานแล้ว</li>
+        <li>บัญชีของท่านยังไม่ได้ยืนยันอีเมล (email_verified = false)</li>
         <li>ลิงก์/URL ที่เปิดอาจถูกแก้ไขพารามิเตอร์ผู้ป่วยโดยไม่ผ่านหน้าค้นหา/เลือกผู้ป่วยตามสิทธิ์</li>
       </ul>
     </div>
 
-    <a class="btn btn-primary" href="patient-list.html">กลับไปหน้ารายชื่อผู้ป่วยของท่าน</a>
+    <a class="btn btn-primary" href="patient-list.html">กลับไปหน้ารายชื่อผู้ป่วย</a>
   </div>
 
 </div>

@@ -28,7 +28,6 @@
         <a href="admin-dashboard.html">Admin: หน้าหลัก</a>
         <a href="admin-account-approval.html">Admin: อนุมัติบัญชี</a>
         <a href="admin-user-directory.html">Admin: จัดการผู้ใช้งาน</a>
-        <a href="admin-patient-assignment.html">Admin: มอบหมายผู้ป่วย</a>
         <a href="admin-patient-directory.html">Admin: ผู้ป่วยทุกราย</a>
         <a href="admin-patient-detail-readonly.html">Admin: ดูประวัติ (read-only)</a>
       </div>
@@ -129,9 +128,10 @@
 
 <script>
 (function () {
-  // ผู้ป่วยที่อยู่ในความดูแล (ตรงกับ mock ใน patient-list.html) — ใช้ตรวจสอบ NFR-02 ระดับรายผู้ป่วย
-  var assignedHns = ["6500123", "6500089", "6500201", "6500345"];
-
+  // ผู้ป่วยทุกรายในระบบ (ตรงกับ mock ใน patient-list.html) — เลข HN ใดก็ตามที่ครบ 7 หลักค้นหาได้ทั้งหมด
+  // ตาม ACL.md Op.5 (สืบค้น audit trail: แพทย์/พยาบาล ✅ ทุกราย ไม่มีเงื่อนไขระดับรายผู้ป่วยอีกต่อไป
+  // ตั้งแต่ยกเลิก PatientAssignment 2026-09-25 — Admin ยังเป็นประเด็นรอตัดสินใจ แยกต่างหาก ไม่เกี่ยวกับ
+  // หน้านี้ซึ่งสมมติผู้ใช้เป็นแพทย์/พยาบาลอยู่แล้ว)
   var records = [
     { date: "2026-09-22", dt: "22 ก.ย. 2569 09:12", user: "พญ. อรุณี ศรีสุข", action: "ดูข้อมูลผู้ป่วย", hn: "6500123", name: "นายสมชาย ใจกล้า", detail: "เปิดประวัติวินิจฉัย + ผลตรวจ lab" },
     { date: "2026-09-22", dt: "22 ก.ย. 2569 09:40", user: "พญ. อรุณี ศรีสุข", action: "ดูข้อมูลผู้ป่วย", hn: "6500089", name: "นางสมหญิง พูนสุข", detail: "เปิดประวัติวินิจฉัย + ผลตรวจ lab" },
@@ -163,16 +163,6 @@
       '<div class="callout note" role="alert" style="margin-top:var(--space-4);">' +
         '<span class="callout-title">' + escapeHtml(title) + "</span>" +
         '<p class="type-body" style="color:inherit;">' + escapeHtml(message) + "</p>" +
-      "</div>";
-  }
-
-  function renderDenied(hn) {
-    resultSection.hidden = true;
-    errorBox.innerHTML =
-      '<div class="callout warn" role="alert" style="margin-top:var(--space-4);">' +
-        '<span class="callout-title">ไม่มีสิทธิ์เข้าถึงข้อมูล audit trail ของผู้ป่วยรายนี้ (NFR-02)</span>' +
-        '<p class="type-body" style="color:inherit;">เลข HN ' + escapeHtml(hn) + ' ไม่มี PatientAssignment ' +
-        'เชื่อมโยงกับบัญชีของท่าน — ลบเงื่อนไข HN หรือระบุผู้ป่วยที่อยู่ในความดูแลของท่านแล้วค้นหาใหม่</p>' +
       "</div>";
   }
 
@@ -232,10 +222,6 @@
     if (hn !== "") {
       if (!/^\d{7}$/.test(hn)) {
         renderNote("รูปแบบเลข HN ไม่ถูกต้อง", "เลขประจำตัวผู้ป่วย (HN) ต้องเป็นตัวเลขล้วน 7 หลัก หรือเว้นว่างไว้เพื่อค้นหาทุกผู้ป่วย");
-        return;
-      }
-      if (assignedHns.indexOf(hn) === -1) {
-        renderDenied(hn);
         return;
       }
     }

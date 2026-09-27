@@ -28,7 +28,6 @@
         <a href="admin-dashboard.html" class="current">Admin: หน้าหลัก</a>
         <a href="admin-account-approval.html">Admin: อนุมัติบัญชี</a>
         <a href="admin-user-directory.html">Admin: จัดการผู้ใช้งาน</a>
-        <a href="admin-patient-assignment.html">Admin: มอบหมายผู้ป่วย</a>
         <a href="admin-patient-directory.html">Admin: ผู้ป่วยทุกราย</a>
         <a href="admin-patient-detail-readonly.html">Admin: ดูประวัติ (read-only)</a>
       </div>
@@ -37,7 +36,6 @@
       <span class="proto-code">FR-11</span>
       <span class="proto-code">FR-12</span>
       <span class="proto-code">FR-13</span>
-      <span class="proto-code">FR-14</span>
       <span class="proto-code">FR-15</span>
       <span class="proto-code">NFR-19</span>
       <span class="proto-code">NFR-20</span>
@@ -59,11 +57,11 @@
     <h1 class="type-page-title">แผงควบคุมผู้ดูแลระบบ (Admin)</h1>
     <p class="type-body" style="max-width:720px;">
       Admin เป็นบทบาทใหม่ (role ที่ 3 ควบคู่แพทย์/พยาบาล) มีสิทธิ์อนุมัติบัญชี เปลี่ยนบทบาท ระงับ/เปิด
-      ใช้งานบัญชี มอบหมายผู้ป่วย และดูประวัติผู้ป่วยทุกรายแบบอ่านอย่างเดียวผ่านหน้าจอในระบบ (FR-11–FR-15)
-      — ไม่มีสิทธิ์แก้ไขข้อมูลทางคลินิกใดๆ สิทธิ์ยืนยัน/แก้ไขผลวิเคราะห์ความเสี่ยงยังคงเป็นของแพทย์/
-      พยาบาลเท่านั้น (FR-16)
+      ใช้งานบัญชี และดูประวัติผู้ป่วยทุกรายแบบอ่านอย่างเดียวผ่านหน้าจอในระบบ (FR-11–FR-13, FR-15) — ไม่มี
+      สิทธิ์แก้ไขข้อมูลทางคลินิกใดๆ สิทธิ์ยืนยัน/แก้ไขผลวิเคราะห์ความเสี่ยงยังคงเป็นของแพทย์/พยาบาลเท่านั้น
+      (FR-16)
     </p>
-    <span class="chip chip-neutral" style="align-self:flex-start;">บทบาท: Admin — เข้าถึงผู้ป่วยทุกรายโดยไม่ต้องมี PatientAssignment (NFR-19)</span>
+    <span class="chip chip-neutral" style="align-self:flex-start;">บทบาท: Admin — เห็นผู้ป่วยทุกรายเช่นเดียวกับแพทย์/พยาบาล จุดต่างคือสิทธิ์อ่านอย่างเดียว (NFR-19)</span>
   </header>
 
   <section class="stat-grid">
@@ -103,15 +101,8 @@
       </li>
       <li class="dx-item" style="border-color:var(--border-default);">
         <div class="dx-item-main">
-          <span class="dx-item-name">3. จัดการการมอบหมายผู้ป่วย</span>
-          <span class="dx-item-meta">มอบหมาย/ยกเลิกการมอบหมายผู้ป่วยรายบุคคลให้แพทย์/พยาบาล (patientAssignments)</span>
-        </div>
-        <a class="btn btn-primary btn-sm" href="admin-patient-assignment.html">เปิดหน้ามอบหมายผู้ป่วย <span class="proto-code" style="margin-left:6px;">FR-14</span></a>
-      </li>
-      <li class="dx-item" style="border-color:var(--border-default);">
-        <div class="dx-item-main">
-          <span class="dx-item-name">4. ดูประวัติผู้ป่วยทุกรายในระบบ (อ่านอย่างเดียว)</span>
-          <span class="dx-item-meta">ไม่ต้องมี PatientAssignment เป็นของตนเอง ทุกครั้งที่เข้าถึงต้องบันทึก audit log แบบ fail-safe ก่อนเสมอ</span>
+          <span class="dx-item-name">3. ดูประวัติผู้ป่วยทุกรายในระบบ (อ่านอย่างเดียว)</span>
+          <span class="dx-item-meta">เห็นผู้ป่วยทุกรายเช่นเดียวกับแพทย์/พยาบาล ทุกครั้งที่เข้าถึงต้องบันทึก audit log แบบ fail-safe ก่อนเสมอ</span>
         </div>
         <a class="btn btn-primary btn-sm" href="admin-patient-directory.html">เปิดหน้าผู้ป่วยทุกราย <span class="proto-code" style="margin-left:6px;">FR-15·NFR-19</span></a>
       </li>

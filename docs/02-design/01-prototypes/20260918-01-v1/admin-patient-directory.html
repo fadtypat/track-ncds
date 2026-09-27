@@ -28,7 +28,6 @@
         <a href="admin-dashboard.html">Admin: หน้าหลัก</a>
         <a href="admin-account-approval.html">Admin: อนุมัติบัญชี</a>
         <a href="admin-user-directory.html">Admin: จัดการผู้ใช้งาน</a>
-        <a href="admin-patient-assignment.html">Admin: มอบหมายผู้ป่วย</a>
         <a href="admin-patient-directory.html" class="current">Admin: ผู้ป่วยทุกราย</a>
         <a href="admin-patient-detail-readonly.html">Admin: ดูประวัติ (read-only)</a>
       </div>
@@ -48,12 +47,11 @@
   <header class="stack" style="gap:8px;">
     <h1 class="type-page-title">ผู้ป่วยทั้งหมดในระบบ (มุมมอง Admin)</h1>
     <p class="type-body" style="max-width:680px;">
-      Admin เห็นผู้ป่วย<strong>ทุกราย</strong>ในระบบโดยไม่ต้องมี PatientAssignment เป็นของตนเอง
-      (ข้อยกเว้นจาก NFR-02 ตาม NFR-19) เพื่อสนับสนุนงานบริหารจัดการเท่านั้น — การเปิดดูประวัติแต่ละราย
-      เป็นแบบ<strong>อ่านอย่างเดียว</strong> (FR-15) และทุกครั้งที่เข้าถึงระบบจะบันทึก audit log แบบ
-      fail-safe ก่อนเสมอ (NFR-20)
+      Admin เห็นผู้ป่วย<strong>ทุกราย</strong>ในระบบเช่นเดียวกับแพทย์/พยาบาล (FR-05, NFR-02) เพื่อสนับสนุน
+      งานบริหารจัดการ — จุดต่างของ Admin คือการเปิดดูประวัติแต่ละรายเป็นแบบ<strong>อ่านอย่างเดียว</strong>
+      เท่านั้น (FR-15, NFR-19) และทุกครั้งที่เข้าถึงระบบจะบันทึก audit log แบบ fail-safe ก่อนเสมอ (NFR-20)
     </p>
-    <span class="chip chip-neutral" style="align-self:flex-start;">มุมมอง Admin: ไม่จำกัดด้วย PatientAssignment (NFR-19)</span>
+    <span class="chip chip-neutral" style="align-self:flex-start;">มุมมอง Admin: อ่านอย่างเดียว ไม่มีสิทธิ์แก้ไขข้อมูลทางคลินิก (NFR-19)</span>
   </header>
 
   <section class="patient-grid">
@@ -69,7 +67,6 @@
       <div class="patient-card-chips">
         <span class="chip chip-chronic">เบาหวาน (E11)</span>
         <span class="chip chip-ckd">CKD stage 3</span>
-        <span class="chip chip-neutral">ผู้ดูแล: พญ. อรุณี ศรีสุข</span>
       </div>
       <div class="patient-card-action">
         <a class="btn btn-primary btn-sm" href="admin-patient-detail-readonly.html">เปิดประวัติ (อ่านอย่างเดียว)</a>
@@ -87,7 +84,6 @@
       <div class="patient-card-chips">
         <span class="chip chip-chronic">เบาหวาน (E11)</span>
         <span class="chip chip-ckd">CKD stage 3</span>
-        <span class="chip chip-neutral">ผู้ดูแล: พญ. อรุณี ศรีสุข</span>
       </div>
       <div class="patient-card-action">
         <a class="btn btn-primary btn-sm" href="admin-patient-detail-readonly.html">เปิดประวัติ (อ่านอย่างเดียว)</a>
@@ -104,7 +100,6 @@
       </div>
       <div class="patient-card-chips">
         <span class="chip chip-chronic">ถุงลมโป่งพอง (J44)</span>
-        <span class="chip chip-neutral">ผู้ดูแล: นายวรรณะ ใจดี</span>
       </div>
       <div class="patient-card-action">
         <a class="btn btn-primary btn-sm" href="admin-patient-detail-readonly.html">เปิดประวัติ (อ่านอย่างเดียว)</a>
@@ -121,7 +116,6 @@
       </div>
       <div class="patient-card-chips">
         <span class="chip chip-chronic">ความดันโลหิตสูง (I10)</span>
-        <span class="chip chip-neutral">ผู้ดูแล: ยังไม่ได้มอบหมาย</span>
       </div>
       <div class="patient-card-action">
         <a class="btn btn-primary btn-sm" href="admin-patient-detail-readonly.html">เปิดประวัติ (อ่านอย่างเดียว)</a>
@@ -138,7 +132,6 @@
       </div>
       <div class="patient-card-chips">
         <span class="chip chip-chronic">เบาหวาน (E11)</span>
-        <span class="chip chip-neutral">ผู้ดูแล: ยังไม่ได้มอบหมาย</span>
       </div>
       <div class="patient-card-action">
         <a class="btn btn-primary btn-sm" href="admin-patient-detail-readonly.html">เปิดประวัติ (อ่านอย่างเดียว)</a>
@@ -155,7 +148,6 @@
       </div>
       <div class="patient-card-chips">
         <span class="chip chip-chronic">ความดันโลหิตสูง (I10)</span>
-        <span class="chip chip-neutral">ผู้ดูแล: พญ. สุนีย์ แจ้งใส</span>
       </div>
       <div class="patient-card-action">
         <a class="btn btn-primary btn-sm" href="admin-patient-detail-readonly.html">เปิดประวัติ (อ่านอย่างเดียว)</a>
