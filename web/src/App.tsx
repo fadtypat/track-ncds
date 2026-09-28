@@ -7,6 +7,7 @@ import {AdminApprovalPage} from "./pages/AdminApprovalPage";
 import {AuthActionPage} from "./pages/AuthActionPage";
 import {ForgotPasswordPage} from "./pages/ForgotPasswordPage";
 import {LoginPage} from "./pages/LoginPage";
+import {PatientHistoryPage} from "./pages/PatientHistoryPage";
 import {PatientListPage} from "./pages/PatientListPage";
 import {SignUpPage} from "./pages/SignUpPage";
 import {RouterProvider, useRouter} from "./router";
@@ -39,6 +40,8 @@ function Routes() {
   if (state.status === "pending-approval") return <PendingApprovalPage />;
   // หน้าของ Admin — บทบาทอื่นเปิด path นี้แล้วได้หน้ารายชื่อผู้ป่วยแทน
   if (path === "/admin/approvals" && state.role === "admin") return <AdminApprovalPage callerUid={state.user.uid} />;
+  // ประวัติวินิจฉัย/ผล lab ของผู้ป่วยรายบุคคล (Operation 1/2, Phase 3) — ทุกบทบาทเปิดได้เหมือน Operation 0
+  if (path === "/patient") return <PatientHistoryPage />;
   // ทุกบทบาทเห็นผู้ป่วยทุกราย (ACL.md, 2026-09-25)
   return <PatientListPage displayName={state.displayName} role={state.role} />;
 }

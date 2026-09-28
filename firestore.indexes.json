@@ -1,4 +1,30 @@
 {
-  "indexes": [],
+  "indexes": [
+    {
+      "collectionGroup": "ncdDiagnoses",
+      "queryScope": "COLLECTION",
+      "fields": [
+        {"fieldPath": "patientId", "order": "ASCENDING"},
+        {"fieldPath": "diagnosedAt", "order": "DESCENDING"}
+      ]
+    },
+    {
+      "collectionGroup": "labResults",
+      "queryScope": "COLLECTION",
+      "fields": [
+        {"fieldPath": "patientId", "order": "ASCENDING"},
+        {"fieldPath": "testedAt", "order": "DESCENDING"}
+      ]
+    },
+    {
+      "collectionGroup": "labResults",
+      "queryScope": "COLLECTION",
+      "fields": [
+        {"fieldPath": "patientId", "order": "ASCENDING"},
+        {"fieldPath": "testType", "order": "ASCENDING"},
+        {"fieldPath": "testedAt", "order": "DESCENDING"}
+      ]
+    }
+  ],
   "fieldOverrides": []
 }

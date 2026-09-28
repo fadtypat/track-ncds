@@ -3,7 +3,7 @@
 // แสดงเฉพาะ dataSource = "ข้อมูลจำลอง" (NFR-01) เพราะ collection patients อาจยังมีข้อมูลจาก Firestore demo
 // ที่สร้างจาก dump ของ HOSxP — query แบบ equality ล้วนจึงไม่ต้องมี composite index
 
-import {addDoc, collection, getDocs, query, where, type QueryDocumentSnapshot} from "firebase/firestore";
+import {addDoc, collection, doc, getDoc, getDocs, query, where, type QueryDocumentSnapshot} from "firebase/firestore";
 
 import {db} from "../firebase";
 
@@ -37,6 +37,13 @@ const mockPatients = () => collection(db, "patients");
 export async function listPatients(): Promise<Patient[]> {
   const snapshot = await getDocs(query(mockPatients(), where("dataSource", "==", MOCK_DATA_SOURCE)));
   return snapshot.docs.map(toPatient).sort((a, b) => a.fullName.localeCompare(b.fullName, "th"));
+}
+
+// ใช้แสดงหัวหน้าจอประวัติผู้ป่วย (Phase 3) — คืน null เมื่อไม่พบ หรือพบแต่ไม่ใช่ dataSource จำลอง (NFR-01)
+export async function getPatientById(patientId: string): Promise<Patient | null> {
+  const snapshot = await getDoc(doc(db, "patients", patientId));
+  if (!snapshot.exists() || snapshot.data().dataSource !== MOCK_DATA_SOURCE) return null;
+  return toPatient(snapshot as QueryDocumentSnapshot);
 }
 
 export async function searchPatientByHn(input: string): Promise<HnSearchResult> {
