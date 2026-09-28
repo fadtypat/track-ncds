@@ -14,6 +14,51 @@ NFR-09–NFR-16),
 [[20260924-01-admin-role-account-management]] (ฟีเจอร์ที่ 7 — จัดการบัญชีผู้ใช้งานและสิทธิ์โดยบทบาท
 Admin ใหม่, FR-11–FR-13/FR-15, NFR-19–NFR-20 — FR-14 ยกเลิกแล้วตั้งแต่ 2026-09-25)
 
+**หมายเหตุการอัปเดตล่าสุด (2026-09-28, รอบ sync ที่เก้า — เพิ่ม FR-18 AI สรุปสถิติการตรวจ HbA1c รายปี
+งบประมาณ):** `[[backlog]]`/`[[feature-list]]`/`[[user-journey]]` เพิ่มรหัสใหม่ 1 รหัสเข้าฟีเจอร์ที่ 3
+เมื่อ 2026-09-27 — **FR-18** (กลาง — ปุ่มบนการ์ดผู้ป่วยแต่ละรายในหน้ารายชื่อ/ผลค้นหา ให้ระบบ (ไม่ใช่ AI)
+คำนวณจำนวนครั้งตรวจ HbA1c และระยะห่างเป็นวันระหว่างการตรวจแต่ละครั้งในปีงบประมาณราชการไทยที่เลือกจาก
+ผลตรวจ lab (FR-02) ก่อน แล้วส่งเฉพาะตัวเลขสรุปให้บริการ AI ภายนอกเขียนสรุปเป็นภาษาคน บันทึกผลกลับลง
+ฐานข้อมูลแยกรายผู้ป่วยต่อปีงบประมาณ กดซ้ำ = เขียนทับ ไม่เก็บประวัติ) และขยาย **NFR-21** เพิ่มเติม (ห้าม
+ส่ง HN/ชื่อผู้ป่วย/วันที่ตรวจจริง/ค่าผล HbA1c ใดๆ ให้บริการ AI ส่งได้เฉพาะตัวเลขสรุปที่คำนวณแล้ว) สิทธิ์
+กดปุ่มนี้เปิดให้ **แพทย์/พยาบาล/Admin ทุกคน** (ต่างจาก FR-16 ที่จำกัดเฉพาะแพทย์/พยาบาล) เพราะเป็นการ
+คำนวณสถิติ ไม่ใช่การวินิจฉัย/ตัดสินใจทางคลินิก การกดปุ่มถือเป็นการเข้าถึงข้อมูลผลตรวจ lab รายบุคคล ต้อง
+บันทึก audit log ตาม NFR-06/NFR-20 `[[technology-stack]]` ปรับปรุงรอบห้า (2026-09-27) เพิ่ม decision
+area 23 ตัดสินใจกลไกจริงครบแล้ว: **คำนวณ visit/ระยะห่างวันในโค้ด Client ทั้งหมด** (ไม่ใช้ AI สำหรับขั้น
+ตอนนี้), **อ่าน `labResults` ตรงจาก Client ผ่าน Firebase SDK** และ**เขียนผลลง Firestore collection ใหม่
+`hba1cVisitSummaries/{patientId}_{fiscalYear}` ตรงจาก Client เช่นกัน** (reuse Firebase AI Logic/App
+Check/model constant เดิมจาก decision area 20-22 สำหรับขั้นตอนเขียนสรุปภาษาไทยเท่านั้น) **ไม่มี Cloud
+Function ตัวกลาง** ด้วยเหตุผลเดียวกับ FR-17 (โปรเจกต์ยังไม่อยู่แพ็กเกจ Blaze) แต่ผลกระทบรุนแรงกว่า FR-17
+เพราะ FR-18 อ่านค่าผลตรวจ lab รายบุคคลของผู้ป่วยจริง (แม้จะไม่ส่งค่าที่อ่านได้ไปให้ AI) — เอกสารนี้จึงถูก
+ปรับปรุงเพิ่ม:
+
+- **ไม่มี component ใหม่** — FR-18 reuse ที่เก็บข้อมูลหลัก (Primary Data Store, เพิ่ม collection
+  `hba1cVisitSummaries`) และบริการ AI ภายนอก (External AI Service) เดิมทั้งคู่ เพียงเพิ่มเส้นทางใหม่ที่
+  Client เรียกทั้งสอง component **ตรง** (ไม่ผ่าน Backend Service) แบบเดียวกับที่ FR-17/Operation 0
+  ทำอยู่แล้ว
+- **Component Diagram:** เพิ่มเส้นทาง Client↔DataStore (อ่าน `labResults`/เขียน `hba1cVisitSummaries`
+  ตรง — ชั่วคราวจนกว่าจะอยู่ Blaze) และ Client↔AIService (ส่งเฉพาะตัวเลขสรุปให้เขียนข้อความภาษาไทย)
+  พร้อมหมายเหตุ NFR-06/NFR-20/NFR-21 กำกับ
+- **Client:** เพิ่มความรับผิดชอบคำนวณ visit/ระยะห่างวัน HbA1c ต่อปีงบประมาณ (deterministic logic),
+  อ่าน/เขียน Firestore ตรง, เรียก AIService ด้วยตัวเลขสรุปเท่านั้น
+- **Backend Service:** เพิ่มหมายเหตุว่า FR-18 **ไม่ผ่าน Backend Service เลยในรอบนี้** (ต่างจาก
+  FR-11–FR-13/FR-16 ที่ยังผ่าน Cloud Functions) พร้อม target design ย้ายไปเป็น Cloud Function
+  `computeHba1cVisitSummary` เมื่อโปรเจกต์อยู่แพ็กเกจ Blaze
+- **Primary Data Store:** เพิ่ม collection ใหม่ `hba1cVisitSummaries/{patientId}_{fiscalYear}` — เขียน
+  ตรงจาก Client ด้วย `set()` เขียนทับทั้งฉบับเมื่อกดซ้ำ ไม่มี version history
+- **Data Flow Diagram — Journey หลัก:** เพิ่มขั้นตอน FR-18 หลังแสดงรายชื่อ/ผลค้นหา ก่อนขั้นตอนเลือก
+  ผู้ป่วยรายบุคคล (ตามตำแหน่งใน [[user-journey]])
+- **Data Flow Diagram — Journey ที่สี่ (Admin):** เพิ่ม `alt` ใหม่ "ให้ AI สรุปสถิติการตรวจ HbA1c ของ
+  ผู้ป่วยรายบุคคล (FR-18)"
+- **ตาราง Mapping NFR:** ขยายคำอธิบายแถว NFR-21 ให้ครอบคลุม FR-18 และเพิ่มหมายเหตุช่องว่าง NFR-06/NFR-20
+  ของ FR-18 ในแถวเดิม
+- **ความเสี่ยงใหม่ที่ต้องบันทึกไว้อย่างเด่นชัด (ผู้ใช้รับทราบแล้วผ่าน technology-stack — รุนแรงกว่า FR-17):**
+  ไม่มี audit log ฝั่งเซิร์ฟเวอร์สำหรับการเข้าถึง `labResults` รายบุคคลผ่านเส้นทางนี้เลย (ขัดกับ
+  NFR-06/NFR-20 ที่ spec ยืนยันไว้ชัดเจนว่าต้องบันทึก), ไม่มีการตรวจสอบตัวเลขที่ Client คำนวณก่อนเขียนลง
+  Firestore, และ Security Rules ปัจจุบันที่ root (`firestore.rules`) เป็นกฎเปิดกว้างตาม `CLAUDE.md`
+  ทำให้เส้นทางนี้ทำงานได้จริงในทางเทคนิคแต่ไม่ใช่กฎ production ที่ตั้งใจไว้ — ดูรายละเอียดที่หัวข้อ
+  [[#ที่เก็บข้อมูลหลัก (Primary Data Store)]] และ "ประเด็นรอตัดสินใจ" ท้ายเอกสาร
+
 **หมายเหตุการอัปเดตล่าสุด (2026-09-26, รอบ sync ที่แปด — เพิ่ม FR-17/NFR-21 AI ช่วยอธิบายผลการค้นหา
 ด้วย HN, แก้ไข FR-06 ให้ตรวจสอบ HN ทั้งตอนหยุดพิมพ์และตอนกดค้นหา):** `[[backlog]]`/`[[feature-list]]`/
 `[[user-journey]]` เพิ่มรหัสใหม่ 2 รหัส — **FR-17** (กลาง — AI ช่วยอธิบายผลการค้นหาผู้ป่วยด้วย HN เป็น
@@ -220,7 +265,16 @@ feature-list]] และหัวข้อ [[#บริการฝั่งเ�
    ไม่ใช่คำแนะนำทางการแพทย์ ข้อมูลที่ส่งให้ AI จำกัดเฉพาะเลข HN ที่พิมพ์และผลการค้นหาแบบไม่ระบุตัวตน
    เท่านั้น ห้ามส่งชื่อผู้ป่วยหรือข้อมูลระบุตัวตนใดๆ (NFR-21 — ดูฟีเจอร์ที่ 4) หากบริการ AI ล้มเหลว
    การค้นหาปกติ (FR-05/FR-06) ยังคงใช้งานได้ตามปกติ ไม่ถูกบล็อก — ดูหัวข้อ
-   [[#บริการ AI ภายนอก (External AI Service)]] ด้านล่าง
+   [[#บริการ AI ภายนอก (External AI Service)]] ด้านล่าง เพิ่มเติมจากนี้ (เพิ่ม 2026-09-27 — FR-18) การ์ด
+   ผู้ป่วยแต่ละรายในหน้ารายชื่อ/ผลค้นหาเดียวกันนี้มีปุ่มให้เลือกปีงบประมาณราชการไทย (1 ตุลาคม–30 กันยายน)
+   แล้วให้ระบบ (ไม่ใช่ AI) คำนวณจำนวนครั้งตรวจ HbA1c และระยะห่างเป็นวันระหว่างการตรวจแต่ละครั้งจากผลตรวจ
+   lab (FR-02) ของผู้ป่วยรายนั้นก่อน แล้วส่งเฉพาะตัวเลขสรุปที่คำนวณแล้วให้บริการ AI ภายนอกเขียนสรุปเป็น
+   ภาษาคน บันทึกผลกลับลงฐานข้อมูลแยกรายผู้ป่วยต่อปีงบประมาณ (กดซ้ำ = เขียนทับผลเดิม ไม่เก็บประวัติ) —
+   ข้อมูลที่ส่งให้ AI จำกัดเฉพาะตัวเลขสรุปเท่านั้น ห้ามส่ง HN/ชื่อผู้ป่วย/วันที่ตรวจจริง/ค่าผล HbA1c ใดๆ
+   (NFR-21 ขยายเพิ่ม 2026-09-27) การกดปุ่มนี้ถือเป็นการเข้าถึงข้อมูลผลตรวจ lab รายบุคคล ต้องบันทึก audit
+   log (NFR-06/NFR-20) ต่างจาก FR-16/FR-17 ปุ่มนี้เปิดให้ **แพทย์/พยาบาล/Admin ทุกคน** กดได้เพราะเป็นการ
+   คำนวณสถิติ ไม่ใช่การวินิจฉัย/ตัดสินใจทางคลินิก — ดูหัวข้อ
+   [[#บริการ AI ภายนอก (External AI Service)]] และ [[#ที่เก็บข้อมูลหลัก (Primary Data Store)]] ด้านล่าง
 1. ดูประวัติการวินิจฉัยโรค NCD และผลตรวจ lab ย้อนหลังของผู้ป่วยรายบุคคล (FR-01, FR-02)
 2. รับผลการวิเคราะห์ความเสี่ยงโรคแทรกซ้อนแบบ rule-based พร้อม flag/สัญญาณเตือนบนหน้าจอ (FR-03,
    FR-04) และยืนยัน/แก้ไข (override) ผลการประเมินความเสี่ยงนั้นได้กับผู้ป่วย**ทุกราย**ในระบบ
@@ -291,7 +345,10 @@ Client, Backend Service, Primary Data Store, ที่เก็บบันท�
 เรียก component นี้ตรง (รูปแบบเดียวกับที่เรียก Authentication Service ตรงสำหรับ FR-07) ทั้งฟีเจอร์ที่ 5
 และฟีเจอร์ที่ 7 (Admin) ไม่ต้องการ component ใหม่เพิ่มเติม เพราะ NFR-09–NFR-16 และ FR-11–FR-13/FR-15/
 NFR-19–NFR-20 ทุกรหัสอธิบายได้ด้วย component เดิม (ดูรายละเอียดในหัวข้อขอบเขตความรับผิดชอบของแต่ละ
-component และตาราง Mapping NFR ด้านล่าง)
+component และตาราง Mapping NFR ด้านล่าง) **FR-18 (เพิ่ม 2026-09-27) ก็ไม่ต้องการ component ใหม่
+เพิ่มเติมเช่นกัน** — reuse ที่เก็บข้อมูลหลัก (Primary Data Store) และบริการ AI ภายนอก (External AI
+Service) เดิมทั้งคู่ เพียงเพิ่มเส้นทางใหม่ที่ Client เรียกทั้งสอง component ตรง (ไม่ผ่าน Backend
+Service) แบบเดียวกับ FR-17/Operation 0
 
 ## Component Diagram
 
@@ -327,6 +384,9 @@ flowchart LR
     Backend -->|"เขียนผลการยืนยัน/แก้ไข (override) ผลการประเมินความเสี่ยงพร้อมเหตุผล (FR-16) — ผ่าน Admin SDK เท่านั้น"| DataStore
     Client -->|"FR-17 — เมื่อกดปุ่มค้นหาด้วย HN (ไม่ใช่ตอนหยุดพิมพ์/debounce) ส่งเฉพาะเลข HN ที่พิมพ์ + สถานะ/จำนวนผลลัพธ์แบบไม่ระบุตัวตน (พบ/ไม่พบ/HN ไม่ครบ 7 หลัก) เรียกตรงผ่าน firebase/ai SDK ไม่ผ่าน Backend Service (NFR-21, decision area 20) — ป้องกันด้วย App Check reCAPTCHA v3/Debug Provider (decision area 21)"| AIService
     AIService -->|"ข้อความอธิบายผลการค้นหาเป็นภาษาคน พร้อมป้ายกำกับชัดเจนว่าเป็นข้อมูลประกอบ ไม่ใช่คำแนะนำทางการแพทย์ (FR-17) — ถ้าล้มเหลว/timeout การค้นหาปกติ (FR-05/FR-06) ยังคงใช้งานได้ตามปกติ ไม่ถูกบล็อก"| Client
+    Client -->|"FR-18 (เพิ่ม 2026-09-27) — อ่าน labResults ตรงผ่าน Firebase SDK (testType=HbA1c, dataSource=ข้อมูลจำลอง) เพื่อคำนวณจำนวน visit/ระยะห่างวันในโค้ด Client เอง (ไม่มี Cloud Function ตัวกลาง, ไม่มี audit log — ขัดกับ NFR-06/NFR-20 ชั่วคราว, decision area 23) แล้วเขียนผลลง hba1cVisitSummaries/{patientId}_{fiscalYear} ด้วย set() เขียนทับ — ชั่วคราวจนกว่าจะอยู่ Blaze"| DataStore
+    Client -->|"FR-18 — ส่งเฉพาะตัวเลขสรุปที่คำนวณแล้ว (จำนวน visit, ระยะห่างเป็นวัน) ให้เขียนสรุปภาษาไทย ห้ามส่ง HN/ชื่อ/วันที่จริง/ค่า HbA1c ใดๆ (NFR-21 ขยาย, reuse stack เดียวกับ FR-17 — decision area 20-22)"| AIService
+    AIService -->|"ข้อความสรุปสถิติ HbA1c เป็นภาษาคน พร้อมป้ายกำกับข้อมูลประกอบ ไม่ใช่คำแนะนำทางการแพทย์ (FR-18) — ถ้าล้มเหลว/timeout ยังคงบันทึกตัวเลขที่คำนวณได้ตามปกติ"| Client
 ```
 
 หมายเหตุ: ทุกเส้นทางการสื่อสารระหว่าง component ข้างต้นที่มีข้อมูลส่วนบุคคล/ข้อมูลสุขภาพของผู้ป่วยไหล
@@ -400,6 +460,27 @@ area 3/17) และ Audit Logging (decision area 5) ที่มีอยู่
 แล้ว ไม่ต้องพิจารณาอีกต่อไป) — บันทึกไว้เป็น "ประเด็นรอตัดสินใจ" ท้ายเอกสาร แนะนำให้รัน
 `/build-tech-stack`
 
+**หมายเหตุเทคโนโลยีจริง (FR-18 — เพิ่ม 2026-09-27):** เส้นทาง Client↔Primary Data Store (อ่าน
+`labResults`/เขียน `hba1cVisitSummaries` ตรง) และ Client↔External AI Service (ส่งตัวเลขสรุปให้เขียน
+ข้อความภาษาไทย) ที่เพิ่มเข้ามาด้านบน **ไม่ผ่าน Backend Service เลย** ต่างจาก FR-11–FR-13/FR-16 ที่ยังผ่าน
+Cloud Functions ตาม
+[[technology-stack#23. FR-18 — สรุปจำนวนครั้งตรวจ HbA1c/ระยะห่างระหว่างการตรวจในปีงบประมาณ + บันทึกผลลง Firestore (Client-side compute + Firebase AI Logic เขียนสรุป + เขียน Firestore ตรงจาก Client — ชั่วคราวจนกว่าจะอยู่ Blaze)|
+decision area 23 ใน technology-stack]] — เกิดจากข้อจำกัดเดียวกับ FR-17 (โปรเจกต์ยังไม่อยู่แพ็กเกจ Blaze
+จึง deploy Cloud Functions ไม่ได้) แต่**ผลกระทบรุนแรงกว่า FR-17 อย่างมีนัยสำคัญ**: FR-18 อ่านค่าผลตรวจ
+lab รายบุคคลของผู้ป่วยจริงจาก Client โดยตรง (แม้จะไม่ส่งค่าที่อ่านได้ไปให้ AI ก็ตาม) ซึ่ง**ขัดกับสถาปัตยกรรม
+ที่ออกแบบไว้โดยตรง** (decision area 3 กำหนดให้ Operation 1-6 ทั้งหมดต้องผ่าน Cloud Functions เพื่อบังคับ
+ลำดับ "ตรวจสิทธิ์ → บันทึก audit log → อ่าน/แก้ไขข้อมูลจริง") และขัดกับเจตนาของ Security Rules ที่
+[[db-spec]] ออกแบบไว้ว่า `labResults` ต้องเป็น `allow read, write: if false` สำหรับ client ทั้งหมด —
+**ไม่มี audit log ฝั่งเซิร์ฟเวอร์สำหรับการเข้าถึง `labResults` ผ่านเส้นทางนี้เลยในรอบนี้** ขัดกับ
+NFR-06/NFR-20 ที่ spec ยืนยันไว้ชัดเจนว่า "การกดปุ่มนี้ถือเป็นการเข้าถึงข้อมูลผลตรวจ lab รายบุคคล ต้อง
+บันทึก audit log" — ผู้ใช้รับทราบและยืนยันให้ดำเนินการต่อแล้ว (ดูรายละเอียดเต็มที่หัวข้อ
+[[#ที่เก็บข้อมูลหลัก (Primary Data Store)]] ด้านล่าง และ "ประเด็นรอตัดสินใจ" ท้ายเอกสาร) **Target
+design เมื่อโปรเจกต์อัปเกรดเป็นแพ็กเกจ Blaze:** ย้ายทั้งหมดไปเป็น Cloud Function callable ใหม่
+(`computeHba1cVisitSummary`) ที่ตรวจสิทธิ์ → บันทึก audit log แบบ fail-safe ก่อนเสมอ (NFR-06/NFR-20) →
+อ่าน `labResults` ผ่าน Admin SDK → เรียก Firebase AI Logic → เขียนผลผ่าน Admin SDK เท่านั้น (ปรับ
+Security Rules ของ `hba1cVisitSummaries` เป็น `allow read, write: if false` เหมือน collection ข้อมูล
+ผู้ป่วยอื่น)
+
 ## ขอบเขตความรับผิดชอบของแต่ละ Component
 
 ### ฝั่งไคลเอนต์ / หน้าจอผู้ใช้ (Client) — เทคโนโลยีจริง: [[technology-stack#1. ภาษา/Framework ฝั่ง Client — React + TypeScript|React + TypeScript]] บน Firebase Hosting
@@ -426,6 +507,26 @@ area 3/17) และ Audit Logging (decision area 5) ที่มีอยู่
   เด็ดขาด (NFR-21) หากเรียก AI ล้มเหลว/timeout ต้อง handle แยกจาก error handling ของการค้นหาปกติ
   โดยสิ้นเชิง (แบบ non-blocking/fire-and-forget) — ผลการค้นหาปกติ (FR-05/FR-06) ต้องยังคงแสดงและใช้งาน
   ต่อได้ตามปกติเสมอ ไม่ถูกบล็อกจากความล้มเหลวของ AI
+- **(เพิ่ม 2026-09-27 — FR-18)** บนการ์ดผู้ป่วยแต่ละรายในหน้าเดียวกัน (รายชื่อ/ผลค้นหา) แสดงปุ่มให้เลือก
+  ปีงบประมาณราชการไทย (1 ตุลาคม–30 กันยายน) แล้วกดสรุปสถิติการตรวจ HbA1c ของผู้ป่วยรายนั้น — **คำนวณ
+  จำนวนครั้งตรวจ (visit) และระยะห่างเป็นวันระหว่างการตรวจแต่ละครั้งในโค้ด Client ทั้งหมด** (deterministic
+  logic ไม่ใช้ AI) โดย**อ่าน `labResults` ตรงจาก Client ผ่าน Firebase SDK** (query
+  `patientId`/`testType=HbA1c`/`dataSource=ข้อมูลจำลอง` แล้วกรอง/เรียงตาม `testedAt` — ไม่ผ่าน Backend
+  Service, decision area 23) แล้วส่ง**เฉพาะตัวเลขสรุปที่คำนวณแล้ว** (จำนวน visit, ระยะห่างเป็นวัน)
+  ให้**บริการ AI ภายนอก (External AI Service) ตรง** เขียนสรุปเป็นภาษาไทย (reuse stack เดียวกับ FR-17 —
+  Firebase AI Logic/App Check/model constant) ห้ามส่ง HN/ชื่อผู้ป่วย/วันที่ตรวจจริง/ค่าผล HbA1c ใดๆ เข้า
+  ไปใน prompt เด็ดขาด (NFR-21 ขยายเพิ่ม 2026-09-27) แล้ว**เขียนผลลง Firestore collection ใหม่
+  `hba1cVisitSummaries/{patientId}_{fiscalYear}` ตรงจาก Client เช่นกัน** ด้วย `set()` (เขียนทับทั้งฉบับ
+  เมื่อกดซ้ำ ไม่มี version history) กรณีไม่มีผลตรวจ HbA1c ในปีงบที่เลือก ปุ่มยังกดได้ตามปกติ บันทึก
+  `visitCount: 0`; กรณีตรวจครั้งเดียว บันทึก `visitCount: 1` ไม่มีค่าระยะห่าง หากเรียก AI ล้มเหลว/timeout
+  ยังคงบันทึกตัวเลขที่คำนวณได้ตามปกติ (`summaryText: null`) สิทธิ์กดปุ่มนี้เปิดให้**แพทย์/พยาบาล/Admin
+  ทุกคน** (ต่างจาก FR-16 ที่จำกัดเฉพาะแพทย์/พยาบาล) ไม่ต้องมี role check เพิ่มเติมนอกเหนือจากเงื่อนไข
+  role/isActive/email_verified มาตรฐานของ Operation 0 — **ความเสี่ยงสำคัญที่ต้องรับทราบ:** เส้นทางนี้
+  อ่านค่าผลตรวจ lab รายบุคคลของผู้ป่วยจริงและเขียนผลลง Firestore **โดยไม่มี Cloud Function ตัวกลางและ
+  ไม่มี audit log ฝั่งเซิร์ฟเวอร์เลยในรอบนี้** ขัดกับ NFR-06/NFR-20 ที่ต้องบันทึก audit log ทุกครั้งที่
+  เข้าถึงข้อมูลผลตรวจ lab รายบุคคล — ผู้ใช้รับทราบและยืนยันให้ดำเนินการต่อแล้ว (ดู
+  [[technology-stack#23. FR-18 — สรุปจำนวนครั้งตรวจ HbA1c/ระยะห่างระหว่างการตรวจในปีงบประมาณ + บันทึกผลลง Firestore (Client-side compute + Firebase AI Logic เขียนสรุป + เขียน Firestore ตรงจาก Client — ชั่วคราวจนกว่าจะอยู่ Blaze)|
+  decision area 23]] และ "ประเด็นรอตัดสินใจ" ท้ายเอกสาร)
 - แสดงประวัติการวินิจฉัยโรค NCD เรียงตามช่วงเวลา (FR-01)
 - แสดงแนวโน้มผลตรวจ lab ย้อนหลัง (FR-02)
 - แสดง flag/สัญญาณเตือนความเสี่ยงโรคแทรกซ้อนที่มองเห็นได้ชัดเจน หรือข้อความเมื่อไม่พบความเสี่ยง
@@ -638,6 +739,13 @@ Firebase project เดียวกัน ตาม [[technology-stack#6. Hostin
     `searchPatientByHn` — Firestore equality query บน `patients` — ทั้งหลัง debounce 500ms และหลังกด
     ปุ่มค้นหา) มีเพียงการเรียกบริการ AI ภายนอก (FR-17) เท่านั้นที่ทำงานเฉพาะจังหวะกดค้นหา ไม่ใช่การยิง
     query
+  - **หมายเหตุ (FR-18 — เพิ่ม 2026-09-27):** ปุ่มสรุปสถิติ HbA1c บนการ์ดผู้ป่วย **ไม่ผ่านกลุ่มงานนี้
+    หรือ Backend Service เลยในรอบนี้** — Client อ่าน `labResults`/เขียน `hba1cVisitSummaries` ตรงผ่าน
+    Firebase SDK ทั้งหมด (ต่างจาก Operation 0 ที่ยังคงเป็นความรับผิดชอบเชิง logical ของกลุ่มงานนี้ แม้
+    implement จริงเป็น Security Rules) ดูรายละเอียดที่หัวข้อ Client ด้านบนและ
+    [[technology-stack#23. FR-18 — สรุปจำนวนครั้งตรวจ HbA1c/ระยะห่างระหว่างการตรวจในปีงบประมาณ + บันทึกผลลง Firestore (Client-side compute + Firebase AI Logic เขียนสรุป + เขียน Firestore ตรงจาก Client — ชั่วคราวจนกว่าจะอยู่ Blaze)|
+    decision area 23]] — target design ย้ายไปเป็น Cloud Function `computeHba1cVisitSummary` เมื่อ
+    โปรเจกต์อยู่แพ็กเกจ Blaze
 - **การวิเคราะห์ความเสี่ยง (Risk Rule Engine):** ประมวลผลค่า lab ของผู้ป่วยเทียบกับ threshold
   มาตรฐานของโรคแทรกซ้อนในขอบเขต (ไตวายเรื้อรัง, โรคหัวใจ, โรคหลอดเลือดสมอง) แบบ rule-based
   (ไม่ใช้ AI/ML ใน MVP ตามขอบเขตของ spec) แล้วส่งผลลัพธ์ระดับความเสี่ยงให้ Client แสดงผล (FR-03,
@@ -837,6 +945,22 @@ component ใหม่จากฟีเจอร์ที่ 6 — ก่อน
   Operation 0 ตาม [[technology-stack]]) ต้องผ่าน automated test ด้วย Firebase Emulator Suite
   ครอบคลุมทุกกรณีสิทธิ์ก่อน deploy ใช้งานกับข้อมูลผู้ป่วยจริงเสมอ (ดูรายละเอียดกรณีทดสอบที่ต้องครอบคลุม
   ในหัวข้อ Backend Service — การควบคุมการเข้าถึง ด้านบน)
+- **ใหม่จากฟีเจอร์ที่ 3 (FR-18 — เพิ่ม 2026-09-27):** เก็บ collection ใหม่
+  `hba1cVisitSummaries/{patientId}_{fiscalYear}` (composite document ID) ประกอบด้วยตัวเลขที่ Client
+  คำนวณแล้ว (`visitCount`, `intervalsDays`, `intervalMinDays`, `intervalAvgDays`, `intervalMaxDays`),
+  ข้อความสรุปจาก AI (`summaryText`, nullable ถ้า AI ล้มเหลว), ชื่อ/รุ่นโมเดล AI ที่ใช้ (`aiModel`) และ
+  เวลาที่สร้าง (`createdAt`) — กดปุ่มซ้ำ = เขียนทับเอกสารเดิมทั้งฉบับด้วย `set()` ไม่มี version history
+  **เขียนตรงจาก Client** (ไม่มี Cloud Function/Admin SDK คั่นกลาง) ต่างจาก `users`/`auditLogRecords`
+  ที่ Client ไม่มีสิทธิ์เขียนเอง — **นี่คือข้อยกเว้นเดียวในสถาปัตยกรรมนี้ที่ Client เขียนผลลัพธ์จาก AI
+  ลง Firestore โดยตรง** (FR-17 ไม่บันทึกผลลง Firestore เลย) ตาม
+  [[technology-stack#23. FR-18 — สรุปจำนวนครั้งตรวจ HbA1c/ระยะห่างระหว่างการตรวจในปีงบประมาณ + บันทึกผลลง Firestore (Client-side compute + Firebase AI Logic เขียนสรุป + เขียน Firestore ตรงจาก Client — ชั่วคราวจนกว่าจะอยู่ Blaze)|
+  decision area 23]] — **ความเสี่ยงที่ต้องบันทึกไว้อย่างเด่นชัด:** (1) การอ่าน `labResults` ผ่าน
+  เส้นทางนี้**ไม่มี audit log ฝั่งเซิร์ฟเวอร์เลย** ขัดกับ NFR-06/NFR-20 ที่กำหนดว่าการเข้าถึงผลตรวจ lab
+  รายบุคคลต้องบันทึก audit log ทุกครั้ง (2) ไม่มีการตรวจสอบฝั่งเซิร์ฟเวอร์ว่าตัวเลขที่ Client คำนวณมา
+  ถูกต้องก่อนบันทึก (3) Security Rules ที่ตั้งใจไว้สำหรับ collection นี้คือ
+  `allow read, write: if false` (เหมือน collection ข้อมูลผู้ป่วยอื่น) แต่ปัจจุบัน `firestore.rules` ที่
+  root เป็นกฎเปิดกว้างตามที่ระบุใน `CLAUDE.md` ทำให้เส้นทางนี้ทำงานได้จริงชั่วคราว — ผู้ใช้รับทราบและ
+  ยืนยันให้ดำเนินการต่อแล้ว จนกว่าโปรเจกต์จะอัปเกรดเป็นแพ็กเกจ Blaze (ดู "ประเด็นรอตัดสินใจ" ท้ายเอกสาร)
 
 ### ที่เก็บบันทึกการเข้าถึง (Audit Log Store) — เทคโนโลยีจริง: [[technology-stack#5. Audit Log Store — Cloud Firestore collection แยก เขียนผ่าน Cloud Functions เท่านั้น|Cloud Firestore collection แยก (`auditLogRecords`)]]
 
@@ -908,6 +1032,18 @@ component ใหม่จากฟีเจอร์ที่ 6 — ก่อน
 
   ดูรายละเอียดเต็มที่ [[technology-stack#20. AI ช่วยอธิบายผลการค้นหาผู้ป่วยด้วย HN (FR-17, NFR-21) — Firebase AI Logic (Gemini Developer API) เรียกตรงจาก Client|decision area 20 ใน technology-stack]]
 
+**หมายเหตุ (FR-18 — เพิ่ม 2026-09-27):** ปุ่มสรุปสถิติการตรวจ HbA1c บนการ์ดผู้ป่วย reuse component นี้
+ทั้งหมด (Firebase AI Logic/Gemini Developer API, App Check reCAPTCHA v3/Debug Provider, model name
+constant เดียวกัน — ไม่มีการตัดสินใจ AI provider/โมเดลใหม่) ต่างจาก FR-17 เพียงจุดเดียว: **ข้อมูลที่
+ส่งให้ component นี้เป็นตัวเลขสรุปที่ Client คำนวณจากข้อมูลรายบุคคลของผู้ป่วยแล้ว** (จำนวน visit,
+ระยะห่างเป็นวัน) ไม่ใช่ข้อมูลไม่ระบุตัวตนล้วนแบบ FR-17 (HN ที่พิมพ์ + สถานะผลลัพธ์) — ยังคง**ไม่ได้รับ**
+HN/ชื่อผู้ป่วย/วันที่ตรวจจริง/ค่าผล HbA1c ใดๆ (NFR-21 ขยายเพิ่ม 2026-09-27) และ**ต่างจาก FR-17 อีกจุด
+หนึ่ง:** ข้อความสรุปที่ component นี้ส่งกลับมาถูก**บันทึกลง Primary Data Store จริง**
+(`hba1cVisitSummaries`) ไม่ใช่แสดงผลชั่วคราวแล้วจบเหมือน FR-17 — ดู
+[[technology-stack#23. FR-18 — สรุปจำนวนครั้งตรวจ HbA1c/ระยะห่างระหว่างการตรวจในปีงบประมาณ + บันทึกผลลง Firestore (Client-side compute + Firebase AI Logic เขียนสรุป + เขียน Firestore ตรงจาก Client — ชั่วคราวจนกว่าจะอยู่ Blaze)|
+decision area 23 ใน technology-stack]] และหัวข้อ
+[[#ที่เก็บข้อมูลหลัก (Primary Data Store)]] ด้านบนสำหรับความเสี่ยงด้าน audit log ที่เกี่ยวข้อง
+
 ## Cross-cutting: การคุ้มครองข้อมูลส่วนบุคคล (PDPA)
 
 ฟีเจอร์ที่ 4 (NFR-03–NFR-08 ดู [[feature-list#4. คุ้มครองข้อมูลส่วนบุคคลของผู้ป่วยตาม PDPA]]) ไม่ได้
@@ -933,7 +1069,11 @@ component ด้านบน และตาราง Mapping NFR ด้าน�
 - **Audit log & Accountability (NFR-06):** เป็นความรับผิดชอบใหม่ของ Audit Logging & Accountability
   ใน Backend Service ร่วมกับ component ใหม่ Audit Log Store — ถูก trigger ทุกครั้งที่มีการเข้าถึง/ดู/
   แก้ไขข้อมูลผู้ป่วยใน journey หลัก (ดู Data Flow Diagram — Journey หลัก ด้านล่าง) (**กลไกจริง:**
-  Cloud Functions เขียนผ่าน Admin SDK เท่านั้น ลง Firestore collection `auditLogRecords`)
+  Cloud Functions เขียนผ่าน Admin SDK เท่านั้น ลง Firestore collection `auditLogRecords`) **ข้อยกเว้น
+  ที่ต้องบันทึกไว้ (FR-18 — เพิ่ม 2026-09-27):** ปุ่มสรุปสถิติ HbA1c อ่านค่าผลตรวจ lab รายบุคคลของ
+  ผู้ป่วยจริงตรงจาก Client โดย**ไม่มี audit log ฝั่งเซิร์ฟเวอร์เลยในรอบนี้** ขัดกับหลักการข้างต้น —
+  เป็นความเสี่ยงชั่วคราวที่ผู้ใช้รับทราบและยืนยันให้ดำเนินการต่อแล้ว (ดูหัวข้อ
+  [[#ที่เก็บข้อมูลหลัก (Primary Data Store)]] และ "ประเด็นรอตัดสินใจ")
 - **Data Subject Rights (NFR-07):** เป็นความรับผิดชอบของ Data Subject Rights & Retention Management
   ใน Backend Service ซึ่งนำความสามารถค้นหา/เลือกผู้ป่วยที่มีอยู่แล้ว (FR-05) มาใช้ซ้ำ แล้วต่อยอดด้วย
   การสกัด/แก้ไข/ลบข้อมูลตามคำขอ (**กลไกจริง:** Cloud Functions callable function — Operation 4)
@@ -1092,7 +1232,10 @@ sequence diagram เดียวดังนี้ — FR-05/FR-06 เป็น�
 จำกัดเฉพาะจังหวะกดค้นหา (ไม่ทำงานตอน debounce) — เมื่อกดปุ่มค้นหาระบบเรียกบริการ AI ภายนอกให้อธิบายผลลัพธ์
 เป็นภาษาคนประกอบทั้ง 3 กรณี พร้อมป้ายกำกับข้อมูลประกอบ ไม่ใช่คำแนะนำทางการแพทย์ (FR-17) โดยจำกัดข้อมูล
 ที่ส่งเฉพาะ HN ที่พิมพ์ + สถานะ/จำนวนผลลัพธ์แบบไม่ระบุตัวตน (NFR-21) หากบริการ AI ล้มเหลวการค้นหาปกติยัง
-คงใช้งานได้ตามปกติ จากนั้นตรวจสิทธิ์
+คงใช้งานได้ตามปกติ นอกจากนี้ (เพิ่ม 2026-09-27 — FR-18) หลังแสดงรายชื่อ/ผลค้นหาแล้ว ผู้ใช้ (แพทย์/
+พยาบาล/Admin ทุกคน) เลือกกดปุ่มสรุปสถิติการตรวจ HbA1c บนการ์ดผู้ป่วยรายใดก็ได้ก่อนเลือกผู้ป่วยรายบุคคล
+ได้ — เส้นทางนี้**ไม่ผ่าน Backend Service เลย** Client อ่าน `labResults`/เขียน `hba1cVisitSummaries`
+ตรงและเรียกบริการ AI ภายนอกตรงทั้งหมด (decision area 23) จากนั้นตรวจสิทธิ์
 ระดับบทบาทอีกครั้งก่อนเข้าถึงข้อมูลของผู้ป่วยที่เลือก ตามที่ NFR-02 กำหนด (ไม่มีการตรวจสอบระดับ
 รายผู้ป่วยอีกต่อไป — ยกเลิกกลไก PatientAssignment ทั้งหมดตั้งแต่ 2026-09-25) และเมื่อเลือกผู้ป่วยแล้ว
 ระบบต้องบันทึกการเข้าถึงลง Audit Log Store ก่อนดึงข้อมูลจริงเสมอ ตามที่ NFR-06 กำหนด นอกจากนี้ตาม
@@ -1184,6 +1327,18 @@ sequenceDiagram
             Store-->>Backend: ส่งรายชื่อผู้ป่วยทุกรายในระบบ
             Backend-->>Client: ส่งรายชื่อผู้ป่วยทุกรายในระบบ (FR-05)
             Client-->>User: แสดงรายชื่อผู้ป่วยให้เลือก (FR-05)
+        end
+        opt (เพิ่ม 2026-09-27) ต้องการให้ AI สรุปสถิติการตรวจ HbA1c ของผู้ป่วยรายใดในรายชื่อ/ผลค้นหา (FR-18 — แพทย์/พยาบาล/Admin ทุกคนกดได้)
+            Note over Client,Store: หมายเหตุเทคโนโลยีจริง (decision area 23): เส้นทางนี้ไม่ผ่าน Backend Service เลย — Client อ่าน/เขียน Store และเรียก AIService ตรงทั้งหมด ไม่มี Cloud Function ตัวกลาง ไม่มี audit log ฝั่งเซิร์ฟเวอร์ (ขัดกับ NFR-06/NFR-20 ชั่วคราว — ผู้ใช้รับทราบและยืนยันให้ดำเนินการต่อแล้ว)
+            User->>Client: เลือกปีงบประมาณราชการไทย (1 ต.ค.–30 ก.ย.) แล้วกดปุ่มสรุปบนการ์ดผู้ป่วยรายที่เลือก (FR-18)
+            Client->>Store: อ่าน labResults ตรง (testType=HbA1c, dataSource=ข้อมูลจำลอง) ของผู้ป่วยรายนั้นในปีงบที่เลือก (จริง: Firestore SDK ตรง ไม่ผ่าน Backend Service)
+            Store-->>Client: ส่งผลตรวจ lab ที่ตรงเงื่อนไข (หรือไม่มีเลย)
+            Client->>Client: คำนวณจำนวนครั้งตรวจ (visit) และระยะห่างเป็นวันระหว่างการตรวจแต่ละครั้ง (deterministic logic ในโค้ด Client ทั้งหมด ไม่ใช้ AI) — ถ้าไม่มีผลตรวจเลย visitCount=0; ถ้าตรวจครั้งเดียว visitCount=1 ไม่มีค่าระยะห่าง
+            Client->>AIService: ส่งเฉพาะตัวเลขสรุปที่คำนวณแล้ว (จำนวน visit, ระยะห่างเป็นวัน) ขอเขียนสรุปเป็นภาษาไทย — ห้ามส่ง HN/ชื่อ/วันที่จริง/ค่า HbA1c ใดๆ (FR-18, NFR-21 ขยาย)
+            AIService-->>Client: ข้อความสรุปเป็นภาษาไทย พร้อมป้ายกำกับข้อมูลประกอบ ไม่ใช่คำแนะนำทางการแพทย์ (หรือไม่ตอบสนอง/ล้มเหลว — ยังคงบันทึกตัวเลขที่คำนวณได้ตามปกติ)
+            Client->>Store: เขียน hba1cVisitSummaries/{patientId}_{fiscalYear} ด้วย set() (เขียนทับผลเดิม ไม่เก็บประวัติ) — ตัวเลขที่คำนวณ + ข้อความสรุป AI + ชื่อโมเดล + เวลาที่สร้าง (จริง: Firestore SDK ตรงจาก Client ไม่ผ่าน Admin SDK)
+            Store-->>Client: ยืนยันบันทึกสำเร็จ
+            Client-->>User: แสดงผลสรุปจำนวนครั้งตรวจ/ระยะห่างวัน พร้อมข้อความจาก AI บนการ์ดผู้ป่วย (FR-18)
         end
         Note over Client,AuditStore: ตั้งแต่ขั้นตอนถัดไปเป็นต้นไป (เลือกผู้ป่วยรายบุคคล, บันทึก Audit Log, ดูประวัติ/ผลตรวจ lab, วิเคราะห์ความเสี่ยง — Operation 1-3) ทุก request ผ่าน Cloud Functions (Backend Service ที่มีตัวตนจริง) เสมอ ตาม technology-stack
         User->>Client: เลือกผู้ป่วยรายบุคคลจากรายชื่อ/ผลค้นหา (FR-05)
@@ -1277,22 +1432,26 @@ sequenceDiagram
 journey ใหม่ใน
 [[user-journey#Journey Admin อนุมัติบัญชีผู้ใช้งาน จัดการสิทธิ์ และดูประวัติผู้ป่วยทุกรายแบบอ่านอย่างเดียว]]
 ครอบคลุมฟีเจอร์ที่ 7 ทั้งหมด (FR-11–FR-13, FR-15, NFR-19, NFR-20 — FR-14 ยกเลิกแล้วตั้งแต่ 2026-09-25)
-เป็นชุดงานบริหารจัดการที่ Admin เลือกทำ
+พร้อมทางเลือกที่ 5 (FR-18 — เพิ่ม 2026-09-27) ที่เปิดให้ Admin สรุปสถิติการตรวจ HbA1c ของผู้ป่วยรายบุคคล
+ได้เหมือนแพทย์/พยาบาล เป็นชุดงานบริหารจัดการที่ Admin เลือกทำ
 อย่างใดอย่างหนึ่งแล้ววนกลับมาเลือกงานอื่นต่อได้ ไม่ใช่ flow เชิงเส้น จึงแสดงเป็น `alt` แยกตามงานที่
 เลือก — Admin เข้าสู่ระบบด้วยกลไกเดียวกับแพทย์/พยาบาล (FR-07) การอนุมัติบัญชี (FR-11) แทนที่กลไกเดิม
 ที่เคยเป็นการแก้ไข Firebase Console/Firestore โดยตรง (ดู Data Flow Diagram — Journey Authentication
 ด้านบน) และการดูประวัติผู้ป่วยทุกรายต้องบันทึก audit log แบบ fail-safe ก่อนคืนข้อมูลเสมอ (NFR-20)
-**หมายเหตุเทคโนโลยีจริง:** ยังไม่มี decision area ใดใน `[[technology-stack]]` ระบุกลไกจริงของ
-ฟีเจอร์นี้โดยตรง (ดูหมายเหตุใต้ Component Diagram ด้านบน) diagram นี้จึงระบุเฉพาะระดับ logical
-component/ทิศทางข้อมูล ไม่ระบุรายละเอียด Cloud Function/implementation ที่ยังไม่มีเหตุผลรองรับ:
+**หมายเหตุเทคโนโลยีจริง:** ยังไม่มี decision area ใดใน `[[technology-stack]]` ระบุกลไกจริงของ FR-11–
+FR-13/FR-15 โดยตรง (ดูหมายเหตุใต้ Component Diagram ด้านบน) ส่วนที่เกี่ยวกับ FR-18 นั้น
+`[[technology-stack]]` ตัดสินใจกลไกจริงไว้แล้วครบใน decision area 23 (เหมือนกับที่แพทย์/พยาบาลใช้ —
+ไม่ผ่าน Backend Service เลย) diagram นี้จึงระบุเฉพาะระดับ logical component/ทิศทางข้อมูลสำหรับ FR-11–
+FR-13/FR-15 ไม่ระบุรายละเอียด Cloud Function/implementation ที่ยังไม่มีเหตุผลรองรับ:
 
 ```mermaid
 sequenceDiagram
     actor Admin as Admin (ผู้ดูแลระบบ)
     participant Client as ฝั่งไคลเอนต์ (Client)<br/>React+TS บน Firebase Hosting
     participant Backend as บริการฝั่งเซิร์ฟเวอร์ (Backend Service)<br/>Cloud Functions — Admin Account & Role Management
-    participant Store as ที่เก็บข้อมูลหลัก (Primary Data Store)<br/>Cloud Firestore — users
+    participant Store as ที่เก็บข้อมูลหลัก (Primary Data Store)<br/>Cloud Firestore — users, labResults, hba1cVisitSummaries
     participant AuditStore as ที่เก็บบันทึกการเข้าถึง (Audit Log Store)<br/>Firestore collection auditLogRecords
+    participant AIService as บริการ AI ภายนอก (External AI Service)<br/>Firebase AI Logic (Gemini Developer API)
 
     Admin->>Client: เข้าสู่ระบบสำเร็จ (FR-07, กลไกเดียวกับแพทย์/พยาบาล)
     Client->>Backend: ทุกคำขอด้านล่างตรวจสอบ role=admin ก่อนเสมอ (ผ่าน HTTPS Callable Function)
@@ -1336,15 +1495,31 @@ sequenceDiagram
             Backend-->>Client: ส่งข้อมูลแบบอ่านอย่างเดียว (read-only) (FR-15)
             Client-->>Admin: แสดงประวัติ/ผล lab/ผลวิเคราะห์ความเสี่ยงแบบอ่านอย่างเดียว — ไม่มีตัวเลือกแก้ไข/ยืนยันผลใดๆ
         end
+    else ให้ AI สรุปสถิติการตรวจ HbA1c ของผู้ป่วยรายบุคคล (FR-18 — เพิ่ม 2026-09-27)
+        Note over Client,Store: หมายเหตุเทคโนโลยีจริง (decision area 23): เส้นทางนี้ไม่ผ่าน Backend Service เลย เหมือนกับที่แพทย์/พยาบาลใช้ — ไม่มี audit log ฝั่งเซิร์ฟเวอร์ (ขัดกับ NFR-06/NFR-20 ชั่วคราว — ผู้ใช้รับทราบและยืนยันให้ดำเนินการต่อแล้ว)
+        Admin->>Client: เลือกผู้ป่วยรายบุคคลจากรายชื่อ (เหมือนแพทย์/พยาบาลตามฟีเจอร์ที่ 3) และเลือกปีงบประมาณราชการไทย แล้วกดปุ่มสรุปบนการ์ดผู้ป่วยรายนั้น (FR-18)
+        Client->>Store: อ่าน labResults ตรง (testType=HbA1c, dataSource=ข้อมูลจำลอง) ของผู้ป่วยรายนั้นในปีงบที่เลือก (จริง: Firestore SDK ตรง)
+        Store-->>Client: ส่งผลตรวจ lab ที่ตรงเงื่อนไข (หรือไม่มีเลย)
+        Client->>Client: คำนวณจำนวนครั้งตรวจ (visit) และระยะห่างเป็นวันระหว่างการตรวจแต่ละครั้ง (deterministic logic ในโค้ด Client ทั้งหมด ไม่ใช้ AI)
+        Client->>AIService: ส่งเฉพาะตัวเลขสรุปที่คำนวณแล้ว ขอเขียนสรุปเป็นภาษาไทย — ห้ามส่ง HN/ชื่อ/วันที่จริง/ค่า HbA1c ใดๆ (FR-18, NFR-21 ขยาย)
+        AIService-->>Client: ข้อความสรุปเป็นภาษาไทย พร้อมป้ายกำกับข้อมูลประกอบ (หรือไม่ตอบสนอง/ล้มเหลว — ยังคงบันทึกตัวเลขที่คำนวณได้ตามปกติ)
+        Client->>Store: เขียน hba1cVisitSummaries/{patientId}_{fiscalYear} ด้วย set() (เขียนทับผลเดิม) — ตัวเลขที่คำนวณ + ข้อความสรุป AI + ชื่อโมเดล + เวลาที่สร้าง (จริง: Firestore SDK ตรงจาก Client)
+        Store-->>Client: ยืนยันบันทึกสำเร็จ
+        Client-->>Admin: แสดงผลสรุปจำนวนครั้งตรวจ/ระยะห่างวัน พร้อมข้อความจาก AI บนการ์ดผู้ป่วย (FR-18)
     end
 ```
 
 **เหตุผลการตัดสินใจ:** โครงสร้าง diagram นี้ (Cloud Functions เป็นตัวกลางเสมอ, เขียนผ่าน Admin SDK
-เท่านั้น, audit log แบบ fail-safe ก่อนคืนข้อมูล) เป็นการต่อยอดจากรูปแบบที่มีอยู่แล้วในสถาปัตยกรรมนี้
-(Account Onboarding, Audit Logging & Accountability) อย่างสมเหตุสมผลตามที่ spec/user-journey ระบุไว้
-ชัดเจนแล้ว (FR-11–FR-13, FR-15, NFR-19, NFR-20 ไม่มีความคลุมเครือเชิงสถาปัตยกรรมที่ต้องถามผู้ใช้เพิ่มเติม
-ในรอบนี้ — FR-14 ยกเลิกแล้ว) ส่วนรายละเอียดว่าจะ implement เป็น Cloud Function กี่ตัว/ชื่อ operation ใด ยังไม่ตัดสินใจและปล่อย
-ให้เป็นขอบเขตของ `[[api-spec]]`/`[[technology-stack]]` ต่อไป (ดู "ประเด็นรอตัดสินใจ")
+เท่านั้น, audit log แบบ fail-safe ก่อนคืนข้อมูล) สำหรับ FR-11–FR-13/FR-15 เป็นการต่อยอดจากรูปแบบที่มี
+อยู่แล้วในสถาปัตยกรรมนี้ (Account Onboarding, Audit Logging & Accountability) อย่างสมเหตุสมผลตามที่
+spec/user-journey ระบุไว้ชัดเจนแล้ว (FR-11–FR-13, FR-15, NFR-19, NFR-20 ไม่มีความคลุมเครือเชิง
+สถาปัตยกรรมที่ต้องถามผู้ใช้เพิ่มเติมในรอบนี้ — FR-14 ยกเลิกแล้ว) ส่วนรายละเอียดว่าจะ implement เป็น
+Cloud Function กี่ตัว/ชื่อ operation ใด ยังไม่ตัดสินใจและปล่อย
+ให้เป็นขอบเขตของ `[[api-spec]]`/`[[technology-stack]]` ต่อไป (ดู "ประเด็นรอตัดสินใจ") — ส่วน **FR-18**
+(alt สุดท้าย) ใช้กลไกที่ `[[technology-stack]]` ตัดสินใจไว้แล้วครบใน decision area 23 (Client อ่าน/เขียน
+Firestore ตรง + เรียก AI ตรง ไม่ผ่าน Backend Service) ซึ่ง**ต่างจากรูปแบบของ FR-11–FR-13/FR-15 ข้างต้น
+โดยเจตนา** เพราะเป็นข้อจำกัดชั่วคราวจากการที่โปรเจกต์ยังไม่อยู่แพ็กเกจ Blaze ไม่ใช่การออกแบบ logical
+ที่ตั้งใจให้ต่างกัน (ดู "ประเด็นรอตัดสินใจ" สำหรับความเสี่ยง audit log ที่ยังค้างอยู่)
 
 ## ตาราง Mapping NFR ไปยัง Component
 
@@ -1355,7 +1530,7 @@ sequenceDiagram
 | NFR-03 | PDPA / Lawful Basis & Purpose Limitation — จำกัดการประมวลผลข้อมูลเฉพาะเท่าที่จำเป็นตามวัตถุประสงค์การดูแลรักษา | Backend Service (Access Control) | ตรวจสอบและจำกัดขอบเขตข้อมูล/การประมวลผลที่ส่งต่อให้กลุ่มงานอื่นทุกครั้งให้อยู่ในขอบเขตวัตถุประสงค์การดูแลรักษาผู้ป่วยตาม FR-01–FR-04 เท่านั้น ไม่ส่งต่อ/เปิดเผยข้อมูลนอกวัตถุประสงค์โดยไม่มีฐานทางกฎหมายรองรับ การกำหนดฐานทางกฎหมายที่ชัดเจนต้องรอฝ่ายกฎหมาย/DPO ยืนยัน (ดูประเด็นรอตัดสินใจ) | บังคับใช้ในโค้ด Cloud Functions (Operation 1-6) ก่อนส่งต่อข้อมูล — ไม่มีกลไกทางเทคนิคเพิ่มเติมสำหรับฐานทางกฎหมาย เป็นการตีความเชิงกฎหมายที่รอ DPO ยืนยัน (ไม่เกี่ยวกับ technology stack) |
 | NFR-04 | PDPA / Encryption at rest & in transit | Client + Backend Service + Primary Data Store + Audit Log Store (cross-cutting ทุก component) | ทุกช่องทางสื่อสารระหว่าง component ต้องเข้ารหัสขณะส่งผ่านเครือข่าย และทุกที่จัดเก็บข้อมูล (Primary Data Store, Audit Log Store) ต้องเข้ารหัสข้อมูลขณะพัก | Google-managed encryption keys (ค่าเริ่มต้นของ Firestore — encryption at rest) + HTTPS/TLS บังคับโดย Firebase Hosting และ Cloud Functions (encryption in transit) โดยอัตโนมัติ ไม่ต้องตั้งค่าเพิ่มเติม — ยังไม่มี CMEK หรือ field-level encryption เพิ่มเติมในขั้นนี้ (ควรทบทวนก่อนใช้ข้อมูลผู้ป่วยจริง ดูประเด็นรอตัดสินใจ) |
 | NFR-05 | PDPA / Retention & Deletion — จำกัดระยะเวลาเก็บรักษาและรองรับการลบข้อมูล | Backend Service (Data Subject Rights & Retention Management) + Primary Data Store | Backend Service ต้องมีกลไกบังคับใช้นโยบายระยะเวลาเก็บรักษาและสั่งลบ/ทำลายข้อมูลเมื่อพ้นระยะเวลาหรือไม่มีความจำเป็นแล้ว โดย Primary Data Store ต้องรองรับการลบ/ทำลายข้อมูลตามคำสั่งนี้ได้ ระยะเวลาที่แน่นอนยังไม่ถูกกำหนด รอหน่วยงาน/ฝ่ายกฎหมายยืนยัน (ดูประเด็นรอตัดสินใจ) | Cloud Functions scheduled function (ผ่าน Cloud Scheduler) — Operation 6 บังคับใช้กับ Cloud Firestore ทั้ง Primary Data Store และ Audit Log Store (คนละ RetentionPolicy) — ค่าระยะเวลาจริงยังรอยืนยัน (ดูประเด็นรอตัดสินใจ) |
-| NFR-06 | PDPA / Audit Log & Accountability — บันทึกร่องรอยการเข้าถึงข้อมูล | Backend Service (Audit Logging & Accountability) + Audit Log Store | ทุกการเข้าถึง/ดู/แก้ไขข้อมูลส่วนบุคคลของผู้ป่วยต้องถูกบันทึกลง Audit Log Store ทันที (ผู้ใช้งานคนใด เข้าถึงข้อมูลของผู้ป่วยรายใด เมื่อใด ผ่านการดำเนินการใด) ก่อนที่ Backend Service จะดึง/แก้ไขข้อมูลจริงจาก Primary Data Store บันทึกต้องคงสภาพเดิมตลอดระยะเวลาที่ต้องเก็บรักษาไว้เพื่อการตรวจสอบ | Cloud Functions เขียนลง Firestore collection `auditLogRecords` ผ่าน Firebase Admin SDK เท่านั้น (bypass Security Rules); Security Rules กำหนด `allow read, write: if false;` สำหรับ Client ทั้งหมด เพื่อบังคับ append-only/immutable และบังคับให้ทุกการเข้าถึงข้อมูลผู้ป่วยรายบุคคลต้องผ่าน Cloud Functions เสมอ |
+| NFR-06 | PDPA / Audit Log & Accountability — บันทึกร่องรอยการเข้าถึงข้อมูล | Backend Service (Audit Logging & Accountability) + Audit Log Store | ทุกการเข้าถึง/ดู/แก้ไขข้อมูลส่วนบุคคลของผู้ป่วยต้องถูกบันทึกลง Audit Log Store ทันที (ผู้ใช้งานคนใด เข้าถึงข้อมูลของผู้ป่วยรายใด เมื่อใด ผ่านการดำเนินการใด) ก่อนที่ Backend Service จะดึง/แก้ไขข้อมูลจริงจาก Primary Data Store บันทึกต้องคงสภาพเดิมตลอดระยะเวลาที่ต้องเก็บรักษาไว้เพื่อการตรวจสอบ | Cloud Functions เขียนลง Firestore collection `auditLogRecords` ผ่าน Firebase Admin SDK เท่านั้น (bypass Security Rules); Security Rules กำหนด `allow read, write: if false;` สำหรับ Client ทั้งหมด เพื่อบังคับ append-only/immutable และบังคับให้ทุกการเข้าถึงข้อมูลผู้ป่วยรายบุคคลต้องผ่าน Cloud Functions เสมอ — **ข้อยกเว้นที่ต้องบันทึกไว้ (FR-18, เพิ่ม 2026-09-27):** ปุ่มสรุปสถิติ HbA1c อ่าน `labResults` ตรงจาก Client โดย**ไม่มี audit log ฝั่งเซิร์ฟเวอร์เลยในรอบนี้** (ไม่ผ่าน Cloud Functions) — ผู้ใช้รับทราบและยืนยันให้ดำเนินการต่อแล้วจนกว่าโปรเจกต์จะอัปเกรดเป็นแพ็กเกจ Blaze (ดู decision area 23 ใน [[technology-stack]]) |
 | NFR-07 | PDPA / Data Subject Rights — รองรับคำขอเข้าถึง/สำเนา/แก้ไข/ลบ/คัดค้านการประมวลผลข้อมูลสำหรับผู้ป่วยทุกรายในระบบ (แก้ไข 2026-09-25 — ยกเลิกกลไก PatientAssignment) | Backend Service (Data Subject Rights & Retention Management) + Primary Data Store | เจ้าหน้าที่ที่มีสิทธิ์ต้องสามารถค้นหาผู้ป่วยรายบุคคล (ใช้ความสามารถเดียวกับ FR-05) แล้วสกัด/แก้ไข/ลบข้อมูลส่วนบุคคลของผู้ป่วยทุกรายในระบบตามคำขอผ่าน Backend Service ซึ่งต้องผ่าน Access Control ก่อนเสมอ ยังไม่รองรับช่องทาง self-service ให้ผู้ป่วยยื่นคำขอโดยตรงในขอบเขต MVP | Cloud Functions (Operation 4, callable) — เรียกจาก Client โดยตรงหลังค้นหาผู้ป่วยด้วย Operation 0 |
 | NFR-08 | PDPA / Breach Notification Support — สนับสนุนข้อมูลสำหรับการแจ้งเหตุละเมิดข้อมูลส่วนบุคคล | Backend Service (Audit Logging & Accountability) + Audit Log Store | ต้องให้บริการค้นคืนข้อมูล audit trail จาก Audit Log Store ได้เพียงพอและทันเวลาต่อการสืบสวน/แจ้งเหตุละเมิดภายในกรอบเวลาที่กฎหมายกำหนด กระบวนการแจ้งเหตุจริงต่อสำนักงานคณะกรรมการคุ้มครองข้อมูลส่วนบุคคลเป็นกระบวนการเชิงองค์กรนอกขอบเขตระบบ | Cloud Functions (Operation 5, callable) สืบค้น Firestore collection `auditLogRecords` — ต้องออกแบบ composite index สำหรับ query หลายเงื่อนไข (ผู้ป่วย/ผู้ใช้/ช่วงเวลา) ใน `firestore.indexes.json` |
 
@@ -1370,12 +1545,16 @@ sequenceDiagram
 | NFR-17 | Security / Password Policy — รหัสผ่านขั้นต่ำ 8 ตัวอักษร มีทั้งตัวอักษรและตัวเลข | Client (ตรวจสอบเบื้องต้นเพื่อ UX) + Backend Service (Account Onboarding & Authentication Gateway — บังคับใช้จริง) | Client ตรวจสอบรูปแบบรหัสผ่านเบื้องต้นเพื่อ feedback ที่รวดเร็ว แต่ Backend Service ต้องตรวจสอบซ้ำและเป็นผู้บังคับใช้จริงก่อนสร้างบัญชี/อัปเดตรหัสผ่านทุกครั้ง (ทั้งตอนสมัครบัญชีและตอนตั้งรหัสผ่านใหม่จากการรีเซ็ต) เพื่อไม่ให้พึ่งพา Client-side validation เพียงอย่างเดียว | regex ในโค้ด Cloud Function `signUpUser` (Operation 8, ความยาว ≥ 8 ตัวอักษร มีตัวอักษร+ตัวเลข) เป็นกลไกหลัก + **Google Cloud Identity Platform password policy** เป็น backstop ฝั่งเซิร์ฟเวอร์สำหรับ Operation 9 (`confirmPasswordReset` ที่ไม่ผ่าน Cloud Function) — ดู decision area 13 ใน [[technology-stack]] (การเปิด Identity Platform เป็นการอัปเกรดโปรเจกต์ Firebase ที่ทีม IT ต้องรับทราบ — ดูประเด็นรอตัดสินใจเรื่อง billing/quota) |
 | NFR-18 | Security / Account Enumeration Prevention — ไม่เปิดเผยว่าอีเมลมีบัญชีในระบบหรือไม่ (สมัครบัญชี, เข้าสู่ระบบผิดพลาด, ขอรีเซ็ตรหัสผ่าน) | Backend Service (Account Onboarding & Authentication Gateway) + Authentication Service + Client | Backend Service ต้องคืนข้อความ generic เดียวกันเสมอสำหรับผลลัพธ์การสมัครบัญชี/ขอรีเซ็ตรหัสผ่าน ไม่ว่าอีเมลที่กรอกจะมีบัญชีอยู่แล้วหรือไม่ก็ตาม (ทั้งเนื้อหาข้อความและพฤติกรรมที่สังเกตได้จากภายนอก เช่น เวลาตอบสนอง); Client ต้องแสดงข้อความรวมเดียวกันเสมอเมื่อเข้าสู่ระบบผิดพลาด ไม่แยกแยะว่าอีเมลผิดหรือรหัสผ่านผิด | **Firebase "Email Enumeration Protection"** เปิดใช้ระดับโปรเจกต์ (ปิดเฉพาะ Operation 7 ที่ Client เรียก Firebase Auth ตรง — Operation 8/9 คืนข้อความ generic จากโค้ด Cloud Function เองอยู่แล้ว) ดู decision area 14 ใน [[technology-stack]] — **ไม่เพิ่ม fixed minimum delay** ปิด**เฉพาะ**ความแตกต่างของ error code/ข้อความ **timing side-channel ยังไม่ปิด** (ผู้ใช้รับทราบและยืนยันให้ดำเนินการต่อแล้ว ดูหัวข้อความเสี่ยงท้ายเอกสาร) |
 | NFR-19 | Security / Access Control สำหรับบทบาท Admin — เข้าถึงประวัติ/ผล lab/ผลวิเคราะห์ความเสี่ยงของผู้ป่วยทุกรายได้ (เฉพาะการอ่าน — แก้ไข 2026-09-25: ไม่ใช่ "ข้อยกเว้น" อีกต่อไป เพราะแพทย์/พยาบาลเข้าถึงผู้ป่วยทุกรายอยู่แล้วเช่นกันตั้งแต่ยกเลิก PatientAssignment) | Backend Service (Access Control + การจัดการบัญชีผู้ใช้และสิทธิ์) + Primary Data Store | Access Control ต้องตรวจสอบ `role = admin` จาก `users/{uid}` เพื่ออนุญาตเฉพาะการ**อ่าน**ข้อมูลผู้ป่วย — ยังคงตรวจสอบ role/isActive/emailVerified ตามปกติทุกเงื่อนไข และ Admin ต้องไม่มีสิทธิ์แก้ไขข้อมูลทางคลินิกหรือยืนยัน/แก้ไขผลประเมินความเสี่ยง (FR-16 ยังเป็นสิทธิ์ของแพทย์/พยาบาลเท่านั้น) ต้องเพิ่มเป็นกรณีทดสอบใหม่ในชุด automated test ของ NFR-14 | ยังไม่มี decision area ใน `[[technology-stack]]` ระบุไว้โดยตรง — คาดว่า implement เป็นเงื่อนไข `role == 'admin'` เพิ่มเติมในโค้ด Cloud Functions (Operation 1-3 เดิม) รูปแบบเดียวกับการตรวจสอบ role/isActive ที่มีอยู่แล้ว (ดู "ประเด็นรอตัดสินใจ") |
-| NFR-20 | PDPA / Audit Log & Accountability แบบ fail-safe เฉพาะการเข้าถึงข้อมูลผู้ป่วยของ Admin | Backend Service (Audit Logging & Accountability + การจัดการบัญชีผู้ใช้และสิทธิ์) + Audit Log Store | ทุกครั้งที่ Admin เข้าถึงข้อมูลผู้ป่วย ต้องบันทึก audit log ก่อนคืนข้อมูลเสมอ (fail-safe รูปแบบเดียวกับ NFR-06 — ถ้าบันทึกไม่สำเร็จต้องปฏิเสธการเข้าถึงข้อมูลผู้ป่วยรายนั้นทันที ไม่คืนข้อมูลไปก่อน) ควรระบุแยกว่าเป็นการเข้าถึงโดย Admin เพื่อรองรับการตรวจสอบย้อนหลัง | ยังไม่มี decision area ใน `[[technology-stack]]` ระบุไว้โดยตรง — คาดว่าใช้กลไกเดียวกับ NFR-06 (Cloud Functions เขียนผ่าน Firebase Admin SDK เท่านั้น ลง `auditLogRecords`) เพิ่ม field ระบุว่าเป็นการเข้าถึงโดย Admin (ดู "ประเด็นรอตัดสินใจ") |
-| NFR-21 | PDPA / Data Minimization for External AI Service — ห้ามส่งชื่อ/ข้อมูลระบุตัวตนของผู้ป่วยให้บริการ AI ภายนอก ส่งได้เฉพาะเลข HN ที่พิมพ์และผลการค้นหาแบบไม่ระบุตัวตน (เพิ่ม 2026-09-26) | Client + External AI Service | Client ต้องสร้าง prompt จากข้อมูลไม่ระบุตัวตนเท่านั้น (เลข HN ที่พิมพ์ + สถานะ/จำนวนผลลัพธ์: พบ/ไม่พบ/HN ไม่ครบ 7 หลัก) ก่อนเรียก External AI Service ทุกครั้ง ห้ามส่งชื่อผู้ป่วยหรือ field ระบุตัวตนอื่นใดเข้าไปใน prompt เด็ดขาด — **ไม่มีชั้นตรวจสอบฝั่งเซิร์ฟเวอร์คอยกรองซ้ำ** ต่างจาก NFR-03/NFR-06 ที่ Cloud Functions เป็นจุดบังคับใช้กลาง | **Firebase AI Logic (Gemini Developer API backend)** เรียกตรงจาก Client ผ่าน `firebase/ai` SDK — **ไม่มี Cloud Function ตัวกลาง** ในรอบนี้ (โปรเจกต์ยังไม่อยู่แพ็กเกจ Blaze) จึงบังคับ NFR-21 ได้เฉพาะที่ชั้น prompt construction ฝั่ง Client เท่านั้น — เป็นความเสี่ยงเชิงสถาปัตยกรรมที่ผู้ใช้รับทราบและยืนยันให้ดำเนินการต่อแล้ว (ดู [[technology-stack#20. AI ช่วยอธิบายผลการค้นหาผู้ป่วยด้วย HN (FR-17, NFR-21) — Firebase AI Logic (Gemini Developer API) เรียกตรงจาก Client|decision area 20]] และหัวข้อ [[#บริการ AI ภายนอก (External AI Service)]] ด้านบน) |
+| NFR-20 | PDPA / Audit Log & Accountability แบบ fail-safe เฉพาะการเข้าถึงข้อมูลผู้ป่วยของ Admin | Backend Service (Audit Logging & Accountability + การจัดการบัญชีผู้ใช้และสิทธิ์) + Audit Log Store | ทุกครั้งที่ Admin เข้าถึงข้อมูลผู้ป่วย ต้องบันทึก audit log ก่อนคืนข้อมูลเสมอ (fail-safe รูปแบบเดียวกับ NFR-06 — ถ้าบันทึกไม่สำเร็จต้องปฏิเสธการเข้าถึงข้อมูลผู้ป่วยรายนั้นทันที ไม่คืนข้อมูลไปก่อน) ควรระบุแยกว่าเป็นการเข้าถึงโดย Admin เพื่อรองรับการตรวจสอบย้อนหลัง | ยังไม่มี decision area ใน `[[technology-stack]]` ระบุไว้โดยตรง — คาดว่าใช้กลไกเดียวกับ NFR-06 (Cloud Functions เขียนผ่าน Firebase Admin SDK เท่านั้น ลง `auditLogRecords`) เพิ่ม field ระบุว่าเป็นการเข้าถึงโดย Admin (ดู "ประเด็นรอตัดสินใจ") — **ข้อยกเว้นเดียวกับ NFR-06 (FR-18, เพิ่ม 2026-09-27):** เมื่อ Admin กดปุ่มสรุปสถิติ HbA1c ก็ไม่มี audit log ฝั่งเซิร์ฟเวอร์เช่นกัน (ไม่ผ่าน Cloud Functions) — ผู้ใช้รับทราบและยืนยันให้ดำเนินการต่อแล้ว (ดู decision area 23 ใน [[technology-stack]]) |
+| NFR-21 | PDPA / Data Minimization for External AI Service — ห้ามส่งชื่อ/ข้อมูลระบุตัวตนของผู้ป่วยให้บริการ AI ภายนอก ส่งได้เฉพาะเลข HN ที่พิมพ์และผลการค้นหาแบบไม่ระบุตัวตน (เพิ่ม 2026-09-26, ขยายเพิ่ม 2026-09-27 ครอบคลุม FR-18 — ส่งได้เฉพาะตัวเลขสรุปที่คำนวณแล้ว ห้ามส่ง HN/ชื่อ/วันที่จริง/ค่า HbA1c ใดๆ) | Client + External AI Service | Client ต้องสร้าง prompt จากข้อมูลไม่ระบุตัวตนเท่านั้น (FR-17: เลข HN ที่พิมพ์ + สถานะ/จำนวนผลลัพธ์: พบ/ไม่พบ/HN ไม่ครบ 7 หลัก; FR-18: เฉพาะจำนวน visit + ระยะห่างเป็นวันที่คำนวณแล้ว) ก่อนเรียก External AI Service ทุกครั้ง ห้ามส่งชื่อผู้ป่วยหรือ field ระบุตัวตนอื่นใดเข้าไปใน prompt เด็ดขาด — **ไม่มีชั้นตรวจสอบฝั่งเซิร์ฟเวอร์คอยกรองซ้ำ** ต่างจาก NFR-03/NFR-06 ที่ Cloud Functions เป็นจุดบังคับใช้กลาง | **Firebase AI Logic (Gemini Developer API backend)** เรียกตรงจาก Client ผ่าน `firebase/ai` SDK — **ไม่มี Cloud Function ตัวกลาง** ในรอบนี้ (โปรเจกต์ยังไม่อยู่แพ็กเกจ Blaze) จึงบังคับ NFR-21 ได้เฉพาะที่ชั้น prompt construction ฝั่ง Client เท่านั้น — เป็นความเสี่ยงเชิงสถาปัตยกรรมที่ผู้ใช้รับทราบและยืนยันให้ดำเนินการต่อแล้ว (ดู [[technology-stack#20. AI ช่วยอธิบายผลการค้นหาผู้ป่วยด้วย HN (FR-17, NFR-21) — Firebase AI Logic (Gemini Developer API) เรียกตรงจาก Client|decision area 20]], [[technology-stack#23. FR-18 — สรุปจำนวนครั้งตรวจ HbA1c/ระยะห่างระหว่างการตรวจในปีงบประมาณ + บันทึกผลลง Firestore (Client-side compute + Firebase AI Logic เขียนสรุป + เขียน Firestore ตรงจาก Client — ชั่วคราวจนกว่าจะอยู่ Blaze)|decision area 23]] และหัวข้อ [[#บริการ AI ภายนอก (External AI Service)]] ด้านบน) |
 
 หมายเหตุ: ตารางนี้ map เฉพาะรหัส **NFR** ไปยัง component ตามชื่อหัวข้อ (ยึดรูปแบบเดิมของเอกสาร) FR-06
-(ค้นหาด้วย HN 7 หลัก พร้อม validation ทั้งจังหวะ debounce และจังหวะกดค้นหา — แก้ไข 2026-09-26) และ FR-17
-(AI ช่วยอธิบายผลการค้นหา) จึงไม่มีแถวแยกของตัวเอง แต่ถูกครอบคลุมแล้วใน (1) แถว NFR-02/NFR-21 ด้านบน
+(ค้นหาด้วย HN 7 หลัก พร้อม validation ทั้งจังหวะ debounce และจังหวะกดค้นหา — แก้ไข 2026-09-26), FR-17
+(AI ช่วยอธิบายผลการค้นหา) และ FR-18 (AI สรุปสถิติการตรวจ HbA1c รายปีงบประมาณ — เพิ่ม 2026-09-27) จึงไม่มี
+แถวแยกของตัวเอง แต่ FR-18 ถูกครอบคลุมแล้วในแถว NFR-06/NFR-20/NFR-21 ด้านบน (ส่วนที่ขยายเพิ่ม
+2026-09-27) และในหัวข้อ Client, ที่เก็บข้อมูลหลัก (Primary Data Store) และบริการ AI ภายนอก (External AI
+Service) ด้านบนซึ่งอธิบายกลไกจริงตาม decision area 23 ไว้ครบแล้ว ส่วน FR-06/FR-17 ถูกครอบคลุมแล้วใน
+(1) แถว NFR-02/NFR-21 ด้านบน
 ในส่วนที่เกี่ยวกับการตรวจสอบสิทธิ์ระดับรายผู้ป่วยของผลการค้นหาและการจำกัดข้อมูลที่ส่งให้ AI ตามลำดับ และ
 (2) หัวข้อ "ขอบเขตความรับผิดชอบของแต่ละ Component" ของ Client, Backend Service (Data Aggregation) และ
 บริการ AI ภายนอก (External AI Service) ด้านบน ซึ่งอธิบายรายละเอียด validation logic ของ FR-06 และ flow
@@ -1493,6 +1672,28 @@ Logic/Gemini Developer API เรียกตรงจาก Client, App Check r
 - **ความขัดแย้งของ App Check กับ dev-only test page** — หน้า `/dev/ai-test` ที่เรียก OpenRouter ตรง
   เป็น dev-only ไม่ใช่ส่วนหนึ่งของ stack จริง ไม่ควรนำไปใช้เป็นต้นแบบของ production (เช่นเดียวกับ
   ข้อจำกัดของ Firestore demo ที่ระบุใน `CLAUDE.md`)
+
+**ฟีเจอร์ที่ 3 (FR-18 — AI สรุปสถิติการตรวจ HbA1c รายปีงบประมาณ) — ปิดแล้วในรอบ 2026-09-27:**
+`[[technology-stack]]` เพิ่ม decision area 23 ปิดกลไกทางเทคนิคของ FR-18 ครบแล้ว (คำนวณ visit/ระยะห่างวัน
+ในโค้ด Client ทั้งหมด, อ่าน `labResults`/เขียน `hba1cVisitSummaries` ตรงจาก Client, reuse Firebase AI
+Logic/App Check/model constant เดิมจาก decision area 20-22 — ดูหัวข้อ Client,
+[[#ที่เก็บข้อมูลหลัก (Primary Data Store)]] และ [[#บริการ AI ภายนอก (External AI Service)]] ด้านบน)
+รายการที่**ยังคงเหลือเป็นความเสี่ยง/mitigation ที่ต้องทำจริงก่อนใช้งานกับข้อมูลผู้ป่วยจริง** (ผู้ใช้รับทราบ
+และยืนยันให้ดำเนินการต่อด้วยกลไกพื้นฐานในรอบ MVP นี้แล้วทุกข้อ — **สำคัญ/เร่งด่วนกว่ารายการเดียวกันของ
+FR-17** เพราะ FR-18 อ่านค่าผลตรวจ lab รายบุคคลของผู้ป่วยจริงโดยตรง ไม่ใช่แค่ HN ที่พิมพ์):
+
+- **ย้าย FR-18 ไปเป็น Cloud Function callable (`computeHba1cVisitSummary`) เมื่อโปรเจกต์อยู่แพ็กเกจ
+  Blaze** — ปิดช่องว่าง NFR-06/NFR-20 ที่ปัจจุบันไม่มี audit log ฝั่งเซิร์ฟเวอร์สำหรับการอ่าน
+  `labResults` ผ่านเส้นทางนี้เลย (target design เต็มอยู่ใน decision area 23 ของ technology-stack แล้ว)
+- **Composite index ใหม่สำหรับ query `labResults` ของ FR-18** — query ปัจจุบันมีเงื่อนไข equality
+  มากกว่า 2 composite index ที่ [[db-spec]] ระบุไว้เดิมรองรับอยู่ (เช่น
+  `(patientId ASC, testType ASC, dataSource ASC, testedAt ASC)`) ต้องเพิ่มใน
+  `firestore.indexes.json` ในรอบ `sync-api-db`/`sync-detailed-design` ถัดไป
+- **Validation ตัวเลขที่ Client คำนวณก่อนเขียนลง `hba1cVisitSummaries`** — ปัจจุบันไม่มีการตรวจสอบฝั่ง
+  เซิร์ฟเวอร์ว่าตัวเลขที่ Client คำนวณถูกต้องก่อนบันทึก ควรเพิ่มเมื่อย้ายไปตาม target design ข้างต้น
+- **Security Rules ของ `hba1cVisitSummaries` ปัจจุบันเปิดกว้างชั่วคราว** เพราะ `firestore.rules` ที่
+  root เป็นกฎเปิดกว้างตาม `CLAUDE.md` — กฎที่ตั้งใจไว้จริงคือ `allow read, write: if false` เหมือน
+  collection ข้อมูลผู้ป่วยอื่น (บังคับใช้ผ่าน Cloud Function เท่านั้นตาม target design)
 
 `[[technology-stack]]` มีเนื้อหาแล้วและตัดสินใจ decision area ส่วนใหญ่ที่เคยค้างไว้ในหัวข้อนี้ไปแล้ว
 (เทคโนโลยี/framework ของ Client และ Backend Service, database engine ของ Primary Data Store,

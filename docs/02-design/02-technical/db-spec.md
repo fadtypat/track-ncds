@@ -14,6 +14,22 @@ NFR-09–NFR-16),
 รหัสผ่านด้วยอีเมล, FR-07–FR-10, NFR-17–NFR-18) และ
 [[20260924-01-admin-role-account-management]] (ฟีเจอร์ที่ 7 — Admin, FR-11–FR-15, NFR-19–NFR-20)
 
+**อัปเดต 2026-09-28 (รอบ sync-api-db — เรียกจาก `/audit-pipeline`) — เพิ่ม entity ใหม่รองรับ FR-18 (AI
+สรุปจำนวนครั้ง/ระยะห่างการตรวจ HbA1c รายปีงบประมาณ) สอดคล้องกับ [[architecture]] ที่ sync วันนี้และ
+[[ACL]] (อัปเดต 2026-09-27):**
+
+- **เพิ่ม entity ใหม่ [[#สรุปการตรวจ HbA1c รายปีงบประมาณ (Hba1cVisitSummary)|สรุปการตรวจ HbA1c รายปี
+  งบประมาณ (Hba1cVisitSummary)]]** — เก็บตัวเลขที่ [[api-spec#Operation 18 — สรุปจำนวนครั้งตรวจ HbA1c และระยะห่างระหว่างการตรวจในปีงบประมาณ (คำนวณโดยระบบ + AI เขียนสรุป)|Operation 18 ใน api-spec]]
+  คำนวณแล้ว + ข้อความสรุปจากบริการ AI ภายนอก collection `hba1cVisitSummaries/{patientId}_{fiscalYear}`
+  (composite document ID) — ต่างจาก Operation 17/NFR-21 (ไม่มี entity ใหม่) เพราะ FR-18 ต้องการเก็บผล
+  สรุปไว้เป็นหลักฐาน/อ้างอิงย้อนหลังต่อผู้ป่วยต่อปีงบประมาณ
+- **ความสัมพันธ์ใหม่:** ผู้ป่วย (Patient) 1:N สรุปการตรวจ HbA1c รายปีงบประมาณ (Hba1cVisitSummary)
+- **Security Rules Verification (NFR-14):** เพิ่มแถวใหม่สำหรับ `hba1cVisitSummaries` — ปัจจุบันเปิดกว้าง
+  ชั่วคราว (เขียน/อ่านตรงจาก Client) ต่างจาก target design ที่ควรเป็น `allow read, write: if false`
+  เหมือน collection ข้อมูลผู้ป่วยอื่น (ดูรายละเอียดที่หัวข้อ Security Rules Verification ด้านล่าง)
+
+field ของ [[api-spec]] ถูกปรับปรุงให้ตรงกันในรอบเดียวกันนี้แล้ว
+
 **อัปเดต 2026-09-25 (รอบ sync-api-db — เรียกจาก `/audit-pipeline`) — ยกเลิกกลไก PatientAssignment
 ทั้งระบบ สอดคล้องกับ [[architecture]] ที่ sync วันนี้:** แพทย์/พยาบาล/Admin ทุกคนเห็นและเข้าถึงผู้ป่วย
 **ทุกราย**ในระบบเหมือนกันหลังเข้าสู่ระบบ ไม่มีการตรวจสอบระดับรายผู้ป่วยอีกต่อไป — การเปลี่ยนแปลงหลัก:
@@ -138,6 +154,7 @@ subcollection ตามความเหมาะสม)** ไม่ใช่�
 | ผู้ป่วย (Patient) | ผู้ป่วย NCD รายบุคคลที่ถูกดูประวัติ/ผลตรวจ/ผลวิเคราะห์ความเสี่ยง — แพทย์/พยาบาล/Admin ทุกคนเห็นและเข้าถึงได้ทุกราย เหมือนกัน (แก้ไข 2026-09-25 ยกเลิกกลไก PatientAssignment ทั้งหมด) — attribute `เลขประจำตัวผู้ป่วย` (HN) ยังใช้เป็นค่าประกอบ input ของ Operation 17 (AI ช่วยอธิบายผลการค้นหา) ด้วย (เพิ่ม 2026-09-26 — ไม่มี attribute ใหม่) | [[backlog#สูง (MVP)\|FR-01]], [[backlog#สูง (MVP)\|FR-02]], [[backlog#สูง (MVP)\|FR-03]], [[backlog#สูง (MVP)\|FR-05]], [[backlog#สูง (MVP)\|FR-06]], [[backlog#สูง (MVP)\|FR-15]], [[backlog#กลาง\|FR-17]] |
 | ประวัติการวินิจฉัยโรค NCD (NcdDiagnosis) | บันทึกการวินิจฉัยโรค NCD แต่ละครั้งของผู้ป่วย | [[backlog#สูง (MVP)\|FR-01]] |
 | ผลตรวจ lab (LabResult) | ผลตรวจ lab มาตรฐานแต่ละครั้งของผู้ป่วย | [[backlog#สูง (MVP)\|FR-02]] |
+| สรุปการตรวจ HbA1c รายปีงบประมาณ (Hba1cVisitSummary) | ผลสรุปจำนวนครั้งตรวจ HbA1c และระยะห่างระหว่างการตรวจ (เป็นวัน) ของผู้ป่วยหนึ่งรายต่อปีงบประมาณราชการไทยหนึ่งปี พร้อมข้อความสรุปจากบริการ AI ภายนอก — เขียนทับด้วยข้อมูลใหม่ทุกครั้งที่กดซ้ำ ไม่เก็บประวัติ | [[backlog#กลาง\|FR-18]], [[backlog#Non-Functional Requirements\|NFR-21]] |
 | threshold มาตรฐานของโรคแทรกซ้อน (ComplicationRiskThreshold) | เกณฑ์ค่า lab มาตรฐานที่ใช้ตัดสินความเสี่ยงโรคแทรกซ้อนแต่ละชนิด | [[backlog#สูง (MVP)\|FR-03]], [[backlog#Non-Functional Requirements\|NFR-11]] |
 | ผลการประเมินความเสี่ยงโรคแทรกซ้อน (ComplicationRiskAssessment) | ผลรวมของการประเมินความเสี่ยงหนึ่งครั้งของผู้ป่วยรายหนึ่ง รวมถึงผลการยืนยัน/แก้ไข (override) โดยแพทย์/พยาบาล | [[backlog#สูง (MVP)\|FR-03]], [[backlog#สูง (MVP)\|FR-04]], [[backlog#สูง (MVP)\|FR-16]] |
 | รายละเอียดผลการประเมินต่อโรคแทรกซ้อน (RiskFinding) | ผลลัพธ์ของการประเมินหนึ่งรายการ (หนึ่งโรคแทรกซ้อน) ภายใต้การประเมินหนึ่งครั้ง | [[backlog#สูง (MVP)\|FR-03]], [[backlog#สูง (MVP)\|FR-04]], [[backlog#Non-Functional Requirements\|NFR-13]] |
@@ -316,6 +333,52 @@ subcollection ตามความเหมาะสม)** ไม่ใช่�
      Operation 2 กรณีระบุช่วงเวลา (เพิ่ม range filter บน `testedAt`)
   2. `(patientId ASC, testType ASC, testedAt DESC)` — รองรับ Operation 3 (Risk Rule Engine) ที่ต้อง
      ดึง "ค่าผลตรวจ lab ล่าสุด" **แยกตามชนิดการตรวจ** ของผู้ป่วยรายหนึ่งก่อนเทียบกับ threshold แต่ละ rule
+
+### สรุปการตรวจ HbA1c รายปีงบประมาณ (Hba1cVisitSummary)
+
+**เพิ่ม 2026-09-28** รองรับ [[backlog#กลาง|FR-18]] และส่วนขยายของ
+[[backlog#Non-Functional Requirements|NFR-21]] — ผลลัพธ์ที่คำนวณ/สรุปโดย
+[[api-spec#Operation 18 — สรุปจำนวนครั้งตรวจ HbA1c และระยะห่างระหว่างการตรวจในปีงบประมาณ (คำนวณโดยระบบ + AI เขียนสรุป)|Operation 18 ใน api-spec]]
+จากผลตรวจ [[#ผลตรวจ lab (LabResult)|LabResult]] ชนิด HbA1c ของผู้ป่วยรายหนึ่ง — หนึ่งระเบียนต่อผู้ป่วย
+หนึ่งรายต่อปีงบประมาณหนึ่งปี **เขียนทับทั้งฉบับเมื่อกดสรุปซ้ำ ไม่มี version history**
+
+| Attribute | ชนิดข้อมูลเชิงตรรกะ | จำเป็นต้องมีค่า | คำอธิบาย |
+| --- | --- | --- | --- |
+| id | ข้อความ (ตัวระบุเฉพาะ, composite: `{ผู้ป่วย_id}_{ปีงบประมาณ}`) | จำเป็น | หนึ่งระเบียนต่อผู้ป่วยต่อปีงบประมาณเท่านั้น — กดซ้ำเขียนทับระเบียนเดิม |
+| ผู้ป่วย | อ้างอิงถึง Entity ผู้ป่วย (Patient) | จำเป็น | เจ้าของผลสรุปนี้ |
+| ปีงบประมาณ | ตัวเลข (พ.ศ., นับตามปีงบประมาณราชการไทย 1 ตุลาคม–30 กันยายน) | จำเป็น | ปีงบประมาณที่สรุป — ปัจจุบันโค้ดใช้ปีงบประมาณปัจจุบันตามวันที่ของเครื่องเสมอ (ยังไม่มี selector ให้เลือกปีอื่นตามที่ [[architecture]] อธิบายไว้ — ดู "ประเด็นรอตัดสินใจ") |
+| จำนวนครั้งที่ตรวจ | ตัวเลข | จำเป็น | นับเฉพาะวันที่ตรวจในปีงบประมาณที่ระบุ — ตรวจหลายรายการในวันเดียวกันนับเป็นครั้งเดียว |
+| ระยะห่างระหว่างการตรวจแต่ละคู่ | รายการของตัวเลข (จำนวนวัน, เรียงตามลำดับวันที่ตรวจ) | จำเป็น (เป็นรายการว่างได้เมื่อจำนวนครั้งที่ตรวจ ≤ 1) | ระยะห่างเป็นวันระหว่างวันที่ตรวจแต่ละคู่ที่ติดกัน |
+| ระยะห่างต่ำสุด | ตัวเลข (จำนวนวัน) | ไม่บังคับ (ไม่มีค่าเมื่อจำนวนครั้งที่ตรวจ ≤ 1) | ค่าต่ำสุดของ "ระยะห่างระหว่างการตรวจแต่ละคู่" |
+| ระยะห่างเฉลี่ย | ตัวเลข (จำนวนวัน) | ไม่บังคับ (ไม่มีค่าเมื่อจำนวนครั้งที่ตรวจ ≤ 1) | ค่าเฉลี่ยของ "ระยะห่างระหว่างการตรวจแต่ละคู่" |
+| ระยะห่างสูงสุด | ตัวเลข (จำนวนวัน) | ไม่บังคับ (ไม่มีค่าเมื่อจำนวนครั้งที่ตรวจ ≤ 1) | ค่าสูงสุดของ "ระยะห่างระหว่างการตรวจแต่ละคู่" |
+| ข้อความสรุปจาก AI | ข้อความ | ไม่บังคับ (ไม่มีค่าเมื่อบริการ AI ล้มเหลว/timeout) | ข้อความภาษาไทยที่บริการ AI ภายนอกเขียนจากตัวเลขข้างต้นเท่านั้น (NFR-21 — ห้ามส่ง HN/ชื่อ/วันที่ตรวจจริง/ค่าผล HbA1c ให้ AI) ต้องแสดงพร้อมป้ายกำกับว่าเป็นข้อมูลประกอบ ไม่ใช่คำแนะนำทางการแพทย์ |
+| ชื่อ/รุ่นโมเดล AI ที่ใช้ | ข้อความ | จำเป็น (เมื่อมี "ข้อความสรุปจาก AI") | บันทึกไว้เพื่อ traceability กรณีโมเดลถูกเปลี่ยน/ปิดให้บริการภายหลัง |
+| เวลาที่สร้างผลสรุป | วันที่-เวลา | จำเป็น | เวลาที่ระเบียนนี้ถูกเขียน (หรือเขียนทับ) ล่าสุด |
+
+**Firestore Technical Binding:**
+
+- **Collection/Document path:** top-level collection `hba1cVisitSummaries` — document ID เป็น
+  composite `{patientId}_{fiscalYear}` (เทียบเท่ากับข้อมูลอ้างอิงจากโค้ดจริงของ
+  `web/src/labs/hba1cSummary.ts`) เพื่อให้กดซ้ำเขียนทับระเบียนเดิมของผู้ป่วย/ปีงบเดียวกันโดยอัตโนมัติ
+  ด้วย `set()`
+- **Field mapping:** `ผู้ป่วย` → `patientId` (string, reference — เก็บซ้ำในเอกสารแม้อยู่ใน document ID
+  แล้ว เพื่อให้ query ย้อนกลับตาม `patientId` ได้ในอนาคตถ้าจำเป็น), `ปีงบประมาณ` → `fiscalYear`
+  (number), `จำนวนครั้งที่ตรวจ` → `visitCount` (number), `ระยะห่างระหว่างการตรวจแต่ละคู่` →
+  `intervalsDays` (array\<number\>), `ระยะห่างต่ำสุด` → `intervalMinDays` (number, nullable),
+  `ระยะห่างเฉลี่ย` → `intervalAvgDays` (number, nullable), `ระยะห่างสูงสุด` → `intervalMaxDays`
+  (number, nullable), `ข้อความสรุปจาก AI` → `summaryText` (string, nullable), `ชื่อ/รุ่นโมเดล AI ที่ใช้`
+  → `aiModel` (string, อ่านค่าจาก constant เดียวกับ
+  [[technology-stack#22. จุดกำหนดชื่อโมเดล AI — Constant เดียวใน `web/src/ai/config.ts`|decision area 22]]),
+  `เวลาที่สร้างผลสรุป` → `createdAt` (timestamp, `serverTimestamp()`)
+- **การเข้าถึง (ชั่วคราว — ต่างจาก target design):** ตามแบบที่ออกแบบไว้ ควรเป็น
+  `allow read, write: if false` สำหรับ Client ทั้งหมด (เข้าถึงเฉพาะผ่าน Cloud Function
+  `computeHba1cVisitSummary` ในอนาคตด้วย Admin SDK เท่านั้น เหมือน [[#ผลตรวจ lab (LabResult)|LabResult]])
+  — **ปัจจุบัน Client (แพทย์/พยาบาล/admin ทุกคน) อ่าน/เขียนตรงผ่าน Firebase SDK** เพราะโปรเจกต์ยังไม่อยู่
+  แพ็กเกจ Blaze (ดู [[api-spec#Operation 18 — สรุปจำนวนครั้งตรวจ HbA1c และระยะห่างระหว่างการตรวจในปีงบประมาณ (คำนวณโดยระบบ + AI เขียนสรุป)|Technical Binding ของ Operation 18]]
+  และ "ประเด็นรอตัดสินใจ" ท้ายเอกสาร)
+- **Composite index:** ไม่ต้องมี — เข้าถึงด้วย `get()` ตรงบน document ID composite เสมอ ไม่มี query
+  แบบ `where`/`orderBy` บน collection นี้
 
 ### threshold มาตรฐานของโรคแทรกซ้อน (ComplicationRiskThreshold)
 
@@ -576,6 +639,7 @@ entity กลาง "การมอบหมายผู้ป่วยใน�
 | --- | --- | --- | --- |
 | ผู้ป่วย (Patient) | ประวัติการวินิจฉัยโรค NCD (NcdDiagnosis) | 1:N | ผู้ป่วยหนึ่งรายมีประวัติวินิจฉัยได้หลายครั้ง (FR-01) |
 | ผู้ป่วย (Patient) | ผลตรวจ lab (LabResult) | 1:N | ผู้ป่วยหนึ่งรายมีผลตรวจ lab ย้อนหลังได้หลายครั้ง (FR-02) |
+| ผู้ป่วย (Patient) | สรุปการตรวจ HbA1c รายปีงบประมาณ (Hba1cVisitSummary) | 1:N | **ใหม่ 2026-09-28** — ผู้ป่วยหนึ่งรายมีผลสรุปได้หลายปีงบประมาณ (หนึ่งระเบียนต่อปีงบประมาณ, กดซ้ำเขียนทับระเบียนของปีเดียวกัน — FR-18) |
 | ผู้ป่วย (Patient) | ผลการประเมินความเสี่ยงโรคแทรกซ้อน (ComplicationRiskAssessment) | 1:N | ผู้ป่วยหนึ่งรายถูกประเมินความเสี่ยงได้หลายครั้ง (FR-03) |
 | ผู้ใช้ (User) | ผลการประเมินความเสี่ยงโรคแทรกซ้อน (ComplicationRiskAssessment) | 1:N | ผู้ใช้หนึ่งคนร้องขอการประเมินได้หลายครั้ง (NFR-02 traceability) |
 | ผู้ใช้ (User) | ผลการประเมินความเสี่ยงโรคแทรกซ้อน (ComplicationRiskAssessment) | 1:N (optional) | **ใหม่ในรอบ sync ที่หก** — ผู้ใช้หนึ่งคน (แพทย์/พยาบาล) ยืนยัน/แก้ไข (override) ผลการประเมินได้หลายครั้ง ผ่าน field `ผู้ยืนยัน/แก้ไขผลการประเมิน` (FR-16) — เป็นความสัมพันธ์คนละบทบาทกับแถวข้างบน (ร้องขอ vs ยืนยัน/แก้ไข) |
@@ -596,6 +660,7 @@ erDiagram
     USER ||--o{ COMPLICATION_RISK_ASSESSMENT : "ยืนยัน/แก้ไขผล (FR-16)"
     PATIENT ||--o{ NCD_DIAGNOSIS : "มีประวัติวินิจฉัย"
     PATIENT ||--o{ LAB_RESULT : "มีผลตรวจ lab"
+    PATIENT ||--o{ HBA1C_VISIT_SUMMARY : "มีผลสรุปการตรวจ HbA1c (FR-18)"
     PATIENT ||--o{ COMPLICATION_RISK_ASSESSMENT : "ถูกประเมินความเสี่ยง"
     COMPLICATION_RISK_ASSESSMENT ||--o{ RISK_FINDING : "ประกอบด้วยผลย่อย"
     COMPLICATION_RISK_THRESHOLD ||--o{ RISK_FINDING : "ถูกใช้ตรวจสอบใน"
@@ -638,6 +703,19 @@ erDiagram
         string หน่วย
         datetime วันที่ตรวจ
         string แหล่งข้อมูลต้นทาง
+    }
+    HBA1C_VISIT_SUMMARY {
+        string id "composite ผู้ป่วย_id_ปีงบประมาณ"
+        string ผู้ป่วย_id
+        number ปีงบประมาณ
+        number จำนวนครั้งที่ตรวจ
+        number_array ระยะห่างระหว่างการตรวจแต่ละคู่ "เป็นวัน"
+        number ระยะห่างต่ำสุด "optional"
+        number ระยะห่างเฉลี่ย "optional"
+        number ระยะห่างสูงสุด "optional"
+        string ข้อความสรุปจากAI "optional — NFR-21"
+        string ชื่อรุ่นโมเดลAIที่ใช้
+        datetime เวลาที่สร้างผลสรุป
     }
     COMPLICATION_RISK_THRESHOLD {
         string id
@@ -715,6 +793,10 @@ patients/{patientId}                                        ← Patient (Client 
                                                                 Rules สำหรับ Operation 0 — ทุกบทบาท)
 ncdDiagnoses/{diagnosisId}                                  ← NcdDiagnosis (field patientId)
 labResults/{labResultId}                                    ← LabResult (field patientId)
+hba1cVisitSummaries/{patientId}_{fiscalYear}                ← Hba1cVisitSummary (composite document
+                                                                ID — เพิ่ม 2026-09-28, FR-18; ชั่วคราว
+                                                                Client อ่าน/เขียนตรง — ดูหัวข้อ Firestore
+                                                                Technical Binding ของ entity นี้)
 complicationRiskThresholds/{thresholdId}                    ← ComplicationRiskThreshold
 complicationRiskAssessments/{assessmentId}                  ← ComplicationRiskAssessment
 complicationRiskAssessments/{assessmentId}/riskFindings/{riskFindingId}  ← RiskFinding (subcollection)
@@ -740,6 +822,11 @@ retentionPolicies/{policyId}                                 ← RetentionPolicy
    collection ที่ `[[technology-stack#Deployment Diagram|Deployment Diagram ใน technology-stack]]`
    ระบุไว้แล้ว เพราะเป็น 1:N ตรงไปตรงมาที่ไม่มีปัญหา join/denormalization แบบ PatientAssignment/
    RiskFinding — ใช้ composite index (`patientId` + field เรียงลำดับ) แทน foreign key constraint
+4. **Hba1cVisitSummary (เพิ่ม 2026-09-28 — 1:N ธรรมดาจาก Patient เช่นกัน แต่ต่างจากข้อ 3 ข้างต้น)** →
+   ใช้ **composite document ID `{patientId}_{fiscalYear}`** แทน auto-generated id + composite index
+   เพราะรูปแบบการเข้าถึงจริงคือ "หนึ่งระเบียนต่อผู้ป่วยต่อปีงบประมาณ อ่าน/เขียนทับด้วย `get()`/`set()`
+   ตรงบน document เดียวเสมอ ไม่มี query แบบ list" (เทียบเท่ากับข้อมูลอ้างอิงจากโค้ดจริงของ
+   `web/src/labs/hba1cSummary.ts`) จึงไม่ต้องมี composite index เหมือน collection อื่น
 
 ## คุณสมบัติร่วม (Cross-cutting Property) — การเข้ารหัสข้อมูล (NFR-04)
 
@@ -747,7 +834,9 @@ retentionPolicies/{policyId}                                 ← RetentionPolicy
 encryption at rest/in transit เป็นคุณสมบัติ (property) ไม่ใช่ field/component แยก เอกสารนี้จึงไม่เพิ่ม
 attribute "เข้ารหัสหรือไม่" ในแต่ละ entity แต่ระบุเป็นข้อกำหนดร่วมแทน: ทุก entity ในเอกสารนี้ที่มีข้อมูล
 ส่วนบุคคล/ข้อมูลสุขภาพของผู้ป่วย — ผู้ป่วย (Patient),
-ประวัติการวินิจฉัยโรค NCD (NcdDiagnosis), ผลตรวจ lab (LabResult), ผลการประเมินความเสี่ยงโรคแทรกซ้อน
+ประวัติการวินิจฉัยโรค NCD (NcdDiagnosis), ผลตรวจ lab (LabResult), สรุปการตรวจ HbA1c รายปีงบประมาณ
+(Hba1cVisitSummary — เพิ่ม 2026-09-28, ได้มาจากผลตรวจ lab รายบุคคลของผู้ป่วยโดยตรง), ผลการประเมินความ
+เสี่ยงโรคแทรกซ้อน
 (ComplicationRiskAssessment), รายละเอียดผลการประเมินต่อโรคแทรกซ้อน (RiskFinding), บันทึกการเข้าถึง
 ข้อมูล (AuditLogRecord) และคำขอใช้สิทธิของเจ้าของข้อมูล (DataSubjectRequest) — ต้องถูกเข้ารหัสขณะจัดเก็บ
 (at rest) ที่ Primary Data Store/Audit Log Store เสมอ ตาม [[backlog#Non-Functional Requirements|NFR-04]]
@@ -775,6 +864,9 @@ attribute "เข้ารหัสหรือไม่" ในแต่ละ 
   `(patientId ASC, assessedAt DESC)` (รองรับ Operation 3)
 - [[#บันทึกการเข้าถึงข้อมูล (AuditLogRecord)|AuditLogRecord]] — 4 composite index (รองรับ Operation 5)
 - [[#คำขอใช้สิทธิของเจ้าของข้อมูล (DataSubjectRequest)|DataSubjectRequest]] — `(patientId ASC, requestedAt DESC)`
+- [[#สรุปการตรวจ HbA1c รายปีงบประมาณ (Hba1cVisitSummary)|Hba1cVisitSummary]] — ไม่ต้องมี composite
+  index (เพิ่ม 2026-09-28) — เข้าถึงด้วย `get()`/`set()` ตรงบน composite document ID
+  `{patientId}_{fiscalYear}` เสมอ ไม่มี query แบบ `where`/`orderBy`
 
 ตาม [[technology-stack#9. กลไกรองรับ Performance < 2 วินาที (NFR-09) — Firestore Composite Index เท่านั้น (ไม่มี caching layer เพิ่มเติม)|decision area 9 ใน technology-stack]]
 **ตัดสินใจแล้วว่าใช้ composite index ข้างต้นเป็นกลไกเดียวสำหรับ MVP นี้โดยเจตนา ไม่มี caching layer
@@ -804,6 +896,7 @@ entity ด้านบน):
 | `patients` | **แก้ไข 2026-09-25 (เดิม `allow read, write: if false;` — ย้ายกฎมาจาก `patientAssignments` ที่ถูกยกเลิก):** `allow list, get` เฉพาะเมื่อ `request.auth.token.email_verified == true` และ role/isActive ถูกต้อง (**`role` เป็น `"แพทย์"`, `"พยาบาล"` หรือ `"admin"` ก็ได้เท่ากัน — ไม่มีการจำกัดระดับรายผู้ป่วยอีกต่อไป**); `allow create, update, delete: if false` (แก้ไขข้อมูลผู้ป่วยได้เฉพาะผ่าน Operation 4 ด้วย Admin SDK เท่านั้น); ต้องมี test case เพิ่มเติม: บัญชีที่ `isActive=true`/role ถูกต้องครบแต่ `email_verified=false` ต้องถูกปฏิเสธเช่นกัน (ตาม decision area 19); บัญชีที่ `role="admin"` ต้อง `list`/`get` ได้สำเร็จเช่นเดียวกับ `"แพทย์"`/`"พยาบาล"` (ไม่ใช่ข้อยกเว้นอีกต่อไป — เป็นกฎเดียวกันสำหรับทุกบทบาท) | [[#ผู้ป่วย (Patient)\|Patient]] |
 | `ncdDiagnoses`, `labResults`, `complicationRiskThresholds`, `complicationRiskAssessments` (+ subcollection `riskFindings`), `dataSubjectRequests`, `retentionPolicies` | `allow read, write: if false;` สำหรับ Client ทั้งหมด (เข้าถึงได้เฉพาะผ่าน Cloud Functions/Admin SDK) — Admin เข้าถึงข้อมูลเหล่านี้ผ่าน Operation 1/2/3 (โค้ด Cloud Functions ตรวจสอบ `role` แทน ไม่ใช่ Security Rules ของ collection เหล่านี้ เพราะปฏิเสธ Client ทั้งหมดอยู่แล้วไม่ว่า role ใด) | แต่ละ entity ที่เกี่ยวข้องด้านบน |
 | `auditLogRecords` | `allow read, write: if false;` สำหรับ Client ทั้งหมด (บังคับ append-only/immutable) — ไม่เปลี่ยนแปลงแม้เพิ่ม attribute `isAdminAccess` (NFR-20) เพราะเขียนผ่าน Admin SDK เท่านั้นเหมือนเดิม | [[#บันทึกการเข้าถึงข้อมูล (AuditLogRecord)\|AuditLogRecord]] |
+| `hba1cVisitSummaries` | **เพิ่ม 2026-09-28 (ชั่วคราว — ต่างจาก target design):** ตามแบบควรเป็น `allow read, write: if false;` เหมือน `labResults` เพราะได้มาจากข้อมูลผลตรวจ lab รายบุคคลของผู้ป่วยโดยตรง — **ปัจจุบัน** `firestore.rules` ที่ root เป็นกฎเปิดกว้าง (`allow read, write: if request.auth != null` ทั้งฐานข้อมูล) ทำให้ Client (แพทย์/พยาบาล/admin ทุกคน) อ่าน/เขียน collection นี้ตรงได้จริงในทางเทคนิค แต่**ไม่ใช่กฎ production ที่ตั้งใจไว้** และยังไม่มี automated test เฉพาะสำหรับ collection นี้ — ต้องเพิ่มก่อนใช้งานกับข้อมูลผู้ป่วยจริง (ดู "ประเด็นรอตัดสินใจ") | [[#สรุปการตรวจ HbA1c รายปีงบประมาณ (Hba1cVisitSummary)\|Hba1cVisitSummary]] |
 
 **test case ระดับโค้ด Cloud Functions (ไม่ใช่ Security Rules แต่ยังอยู่ในขอบเขต NFR-14 เพราะเป็นการ
 บังคับสิทธิ์เข้าถึงข้อมูลผู้ป่วยเช่นกัน — แก้ไข 2026-09-25: ลบเคส "ไม่มี PatientAssignment" เพราะไม่มี
@@ -843,7 +936,40 @@ construction ในโค้ด Client เท่านั้น (ไม่มี
 Function ตัวกลาง — ดู Technical Binding ของ Operation 17 ใน [[api-spec]]) ถือเป็นความเสี่ยงที่ผู้ใช้
 รับทราบแล้ว (ดู "ประเด็นรอตัดสินใจ" ด้านล่าง และ [[architecture#บริการ AI ภายนอก (External AI Service)|architecture]])
 
+**ส่วนขยาย FR-18 (เพิ่ม 2026-09-28):**
+[[api-spec#Operation 18 — สรุปจำนวนครั้งตรวจ HbA1c และระยะห่างระหว่างการตรวจในปีงบประมาณ (คำนวณโดยระบบ + AI เขียนสรุป)|Operation 18 ใน api-spec]]
+เรียกบริการ AI ภายนอกตัวเดียวกัน (reuse stack) แต่**ต่างจาก Operation 17 ตรงที่อ่านข้อมูล
+[[#ผลตรวจ lab (LabResult)|LabResult]] รายบุคคลของผู้ป่วยจริงก่อนคำนวณ** (แม้จะไม่ส่งค่าที่อ่านได้ไปให้
+AI ก็ตาม) ข้อมูลที่ส่งให้ AI จำกัดเฉพาะ:
+
+- จำนวนครั้งที่ตรวจ HbA1c ในปีงบประมาณที่เลือก (ตัวเลข)
+- ระยะห่างเป็นวันระหว่างการตรวจแต่ละคู่ หรือค่าต่ำสุด/เฉลี่ย/สูงสุดที่คำนวณแล้ว (ตัวเลข)
+
+**ห้ามส่ง** HN, ชื่อ-นามสกุลผู้ป่วย, วันที่ตรวจจริง หรือค่าผล HbA1c ใดๆ ให้บริการ AI เด็ดขาดเช่นกัน — การ
+จำกัดนี้บังคับใช้ที่ชั้น prompt construction ในโค้ด Client เท่านั้นเหมือนกัน (Operation 18 ก็ไม่มี Cloud
+Function ตัวกลางเช่นเดียวกับ Operation 17) แต่**ผลลัพธ์ของ Operation 18 ถูกบันทึกลง Firestore จริง**
+(ต่างจาก Operation 17 ที่ไม่บันทึกที่ใดเลย) ลง
+[[#สรุปการตรวจ HbA1c รายปีงบประมาณ (Hba1cVisitSummary)|Hba1cVisitSummary]] — เป็น**ข้อยกเว้นเดียว**ใน
+หัวข้อนี้ที่บันทึกผลลัพธ์ AI ลง Firestore จริง
+
 ## ประเด็นรอตัดสินใจ
+
+**FR-18/NFR-21 (สรุปการตรวจ HbA1c รายปีงบประมาณ, entity ใหม่ Hba1cVisitSummary) — ปิดกลไกทางเทคนิคแล้ว
+ในรอบ 2026-09-27 (technology-stack decision area 23), เพิ่มเข้าเอกสารนี้ในรอบ 2026-09-28:** รายการที่
+**ยังคงเป็นความเสี่ยงที่ต้องบันทึกไว้ต่อ** (ไม่ใช่ "ยังไม่ตัดสินใจ" — ผู้ใช้รับทราบและยืนยันให้ดำเนินการ
+ต่อแล้วในรอบ MVP นี้ — ดูรายละเอียดเต็มที่ [[api-spec#ประเด็นรอตัดสินใจ|ประเด็นรอตัดสินใจใน api-spec]]):
+
+- **`hba1cVisitSummaries` อ่าน/เขียนตรงจาก Client** แม้ได้มาจากข้อมูล `labResults` รายบุคคลของผู้ป่วย
+  โดยตรง — Security Rules ปัจจุบันเปิดกว้างชั่วคราว (ไม่ใช่ `allow read, write: if false` ตาม target
+  design) และยังไม่มี automated test เฉพาะสำหรับ collection นี้ตาม NFR-14
+- **ไม่มี audit log ของการเข้าถึง `labResults` ผ่าน Operation 18** — เหมือนที่ระบุไว้ในหัวข้อคุณสมบัติ
+  ร่วม NFR-21 ด้านบน รุนแรงกว่า FR-17 เพราะแตะข้อมูลผลตรวจ lab รายบุคคลโดยตรง
+- **ไม่มีการตรวจสอบความถูกต้องของตัวเลขที่ Client คำนวณก่อนเขียนลง `hba1cVisitSummaries`** ฝั่ง
+  เซิร์ฟเวอร์ — ยอมรับความเสี่ยงนี้ชั่วคราวเช่นเดียวกับสองข้อข้างต้น จนกว่าโปรเจกต์จะย้ายไปใช้ Cloud
+  Function `computeHba1cVisitSummary` ตาม target design
+- **ปีงบประมาณเป็น "ไม่บังคับให้ผู้ใช้เลือก" ในทางปฏิบัติ** — [[architecture]] อธิบายว่าผู้ใช้เลือก
+  ปีงบประมาณได้ แต่โค้ดจริงใช้ปีงบประมาณปัจจุบันเสมอ (ดู attribute `ปีงบประมาณ` ในหัวข้อ Hba1cVisitSummary
+  ด้านบน) — ควรยืนยันกับผู้ใช้ว่าต้องการเพิ่ม selector จริงหรือปรับคำอธิบายเอกสารให้ตรงกับพฤติกรรมปัจจุบัน
 
 **FR-17/NFR-21 (AI ช่วยอธิบายผลการค้นหาด้วย HN) — ปิดกลไกทางเทคนิคแล้วในรอบ 2026-09-26:** ไม่มี entity
 ใหม่ในเอกสารนี้ (ดูหัวข้อ [[#คุณสมบัติร่วม (Cross-cutting Property) — จำกัดข้อมูลที่ส่งให้บริการ AI ภายนอก (NFR-21, เพิ่ม 2026-09-26)|คุณสมบัติร่วม NFR-21]]
