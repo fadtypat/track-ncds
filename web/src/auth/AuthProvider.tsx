@@ -12,7 +12,7 @@ export type AccountState =
   | {status: "pending-approval"; user: User}
   | {status: "active"; user: User; displayName: string; role: string};
 
-const ALLOWED_ROLES = ["แพทย์", "พยาบาล"];
+const ALLOWED_ROLES = ["แพทย์", "พยาบาล", "admin"];
 
 interface AuthContextValue {
   state: AccountState;

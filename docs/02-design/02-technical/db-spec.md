@@ -14,6 +14,45 @@ NFR-09–NFR-16),
 รหัสผ่านด้วยอีเมล, FR-07–FR-10, NFR-17–NFR-18) และ
 [[20260924-01-admin-role-account-management]] (ฟีเจอร์ที่ 7 — Admin, FR-11–FR-15, NFR-19–NFR-20)
 
+**อัปเดต 2026-09-25 (รอบ sync-api-db — เรียกจาก `/audit-pipeline`) — ยกเลิกกลไก PatientAssignment
+ทั้งระบบ สอดคล้องกับ [[architecture]] ที่ sync วันนี้:** แพทย์/พยาบาล/Admin ทุกคนเห็นและเข้าถึงผู้ป่วย
+**ทุกราย**ในระบบเหมือนกันหลังเข้าสู่ระบบ ไม่มีการตรวจสอบระดับรายผู้ป่วยอีกต่อไป — การเปลี่ยนแปลงหลัก:
+
+- **ลบ entity "การมอบหมายผู้ป่วยในความดูแล (PatientAssignment)" ออกทั้งหมด** (รวม collection
+  `patientAssignments`) — ไม่มี entity ใดใช้กรอง
+  รายชื่อ/ตรวจสิทธิ์ระดับรายผู้ป่วยอีกต่อไป (FR-14 ที่เคยจัดการ entity นี้ถูกยกเลิกทั้งหมดแล้วใน
+  [[architecture]])
+- **[[#ผู้ป่วย (Patient)|ผู้ป่วย (Patient)]]:** Operation 0 (ค้นหา/แสดงรายชื่อ — ตอนนี้ครอบคลุมทุกบทบาท
+  รวม Admin หลังรวม Operation 15 เดิมเข้าด้วยกัน) เปลี่ยนจาก query ผ่าน `patientAssignments` เป็น
+  **Client อ่าน collection `patients` โดยตรงผ่าน Firestore Security Rules** (เทียบเท่ากับข้อมูลอ้างอิง
+  จากโค้ดจริงของ `web/` ที่ query ด้วย equality บน field `hn` โดยไม่ต้องมี composite index) — ไม่มีการ
+  denormalize `patientHn`/`patientFullName` ที่ใดอีกต่อไป
+- **[[#ผู้ใช้ (User)|ผู้ใช้ (User)]]:** attribute `บทบาท` ไม่มีการอ้างอิง PatientAssignment/ข้อยกเว้น
+  NFR-19 อีกต่อไป — `"แพทย์"`/`"พยาบาล"` เข้าถึง/แก้ไขข้อมูลทางคลินิกของผู้ป่วยทุกรายในระบบเท่ากัน,
+  `"admin"` เข้าถึงข้อมูลผู้ป่วยทุกรายแบบอ่านอย่างเดียวเท่านั้น (ไม่มีสิทธิ์แก้ไขข้อมูลทางคลินิกหรือ
+  ยืนยัน/แก้ไขผลประเมินความเสี่ยงตาม FR-16)
+- **ความสัมพันธ์/ER Diagram:** ลบทุกความสัมพันธ์ที่เกี่ยวข้องกับ PatientAssignment ออก
+- **Security Rules Verification (NFR-14):** เพิ่มแถวใหม่สำหรับ `patients` (แทนที่แถว
+  `patientAssignments` เดิม) — ดูหัวข้อที่เกี่ยวข้องด้านล่าง
+
+field ของ [[api-spec]] ถูกปรับปรุงให้ตรงกันในรอบเดียวกันนี้แล้ว (ดู field ของ Operation 0/1/2/3/4/5/16
+ที่เกี่ยวข้อง)
+
+**อัปเดต 2026-09-26 (รอบ sync-api-db — เรียกจาก `/audit-pipeline`) — เพิ่ม FR-17/NFR-21 (AI ช่วยอธิบาย
+ผลการค้นหาด้วย HN) และแก้ไขจังหวะ validation ของ FR-06 สอดคล้องกับ [[architecture]]/[[feature-list]]
+ที่ sync วันนี้:**
+
+- **[[#ผู้ป่วย (Patient)|ผู้ป่วย (Patient)]]:** แก้ไขคำอธิบายของ attribute `เลขประจำตัวผู้ป่วย` ที่เคย
+  ระบุว่าตรวจสอบรูปแบบ/ความยาว "หลังผู้ใช้กดค้นหาแล้วเท่านั้น" (ล้าสมัยแล้ว) เป็นตรวจสอบทั้งตอนหยุดพิมพ์
+  (debounce) และตอนกดค้นหา (FR-06 แก้ไข 2026-09-26) พร้อมแก้ wikilink ที่อ้างชื่อหัวข้อ Operation 0 ผิด
+  (ของเดิมอ้างชื่อเก่าที่มีคำว่า "ในความดูแล" ซึ่งถูกลบไปตั้งแต่ 2026-09-25)
+- **ไม่มี entity ใหม่สำหรับ FR-17/NFR-21** — [[api-spec#Operation 17 — อธิบายผลการค้นหาผู้ป่วยด้วย HN โดยบริการ AI ภายนอก (AI-assisted Search Result Explanation)|Operation 17 ใน api-spec]]
+  ไม่อ่าน/ไม่เขียนข้อมูลใดๆ ใน Primary Data Store เลย (บริการ AI ภายนอกรับเฉพาะค่าที่ไม่ถูกเก็บถาวร —
+  HN ที่พิมพ์ + สถานะ/จำนวนผลลัพธ์ชั่วคราวเท่านั้น ไม่มีการบันทึกผลลัพธ์ AI ไว้ที่ใดเลย) เพิ่มหัวข้อ
+  คุณสมบัติร่วมใหม่ "จำกัดข้อมูลที่ส่งให้บริการ AI ภายนอก (NFR-21)" ท้ายเอกสารอธิบายเหตุผล
+
+field ของ [[api-spec]] ถูกปรับปรุงให้ตรงกันในรอบเดียวกันนี้แล้ว
+
 **อัปเดต 2026-09-24 (รอบ sync ที่หก) — เพิ่มฟีเจอร์ที่ 7 (Admin, FR-11–FR-15, NFR-19, NFR-20) และ
 FR-16 (ยืนยัน/แก้ไขผลการประเมินความเสี่ยง):** สอดคล้องกับ [[architecture]] ที่อัปเดตวันนี้ (รอบ sync ที่หก)
 สามจุดที่ spec/architecture ไม่ได้ระบุรายละเอียดเชิงโครงสร้างชัดเจน ได้ถามผู้ใช้จริงผ่าน
@@ -38,9 +77,11 @@ FR-16 (ยืนยัน/แก้ไขผลการประเมินค
    [[api-spec#Operation 13 — ระงับ/เปิดใช้งานบัญชีผู้ใช้งาน|Operation 13]])
 
 รายละเอียดเพิ่มเติม: `บทบาท` ของ [[#ผู้ใช้ (User)|User]] เพิ่มค่าที่เป็นไปได้ `"admin"` (นอกเหนือจาก
-"แพทย์"/"พยาบาล") ตาม NFR-19; ไม่มี entity ใหม่ถูกเพิ่มสำหรับฟีเจอร์ที่ 7 ทั้งหมด (FR-11–FR-14 ใช้
-entity `User`/`PatientAssignment` เดิม, FR-15 ใช้ entity `Patient`/`NcdDiagnosis`/`LabResult`/
-`ComplicationRiskAssessment`/`RiskFinding` เดิมทั้งหมดผ่านข้อยกเว้น NFR-19)
+"แพทย์"/"พยาบาล") ตาม NFR-19; ไม่มี entity ใหม่ถูกเพิ่มสำหรับฟีเจอร์ที่ 7 ทั้งหมด (FR-11–FR-13 ใช้
+entity `User` เดิม, FR-15 ใช้ entity `Patient`/`NcdDiagnosis`/`LabResult`/
+`ComplicationRiskAssessment`/`RiskFinding` เดิมทั้งหมด — **แก้ไข 2026-09-25: FR-14 ถูกยกเลิกทั้งหมด
+พร้อม entity `PatientAssignment`, และ FR-15 ไม่ใช่ "ข้อยกเว้น" NFR-19 อีกต่อไป เพราะแพทย์/พยาบาล
+เข้าถึงผู้ป่วยทุกรายเหมือนกันอยู่แล้ว**)
 
 **อัปเดต 2026-09-24 (รอบ sync ที่ห้า) — สอดคล้องกับ `[[technology-stack]]` รอบสาม (decision area
 7 แก้ไข + 13-19 ใหม่):** แก้ไขทุกจุดในหัวข้อ [[#ผู้ใช้ (User)|User]] ที่เคยอ้างอิง "เก็บ role/isActive
@@ -94,8 +135,7 @@ subcollection ตามความเหมาะสม)** ไม่ใช่�
 | Entity | คำอธิบายสั้น | รหัส FR/NFR ที่เกี่ยวข้อง |
 | --- | --- | --- |
 | ผู้ใช้ (User) | แพทย์/พยาบาลผู้ดูแลผู้ป่วย NCD หรือ Admin ที่เข้าใช้งานระบบ (รวมบัญชีที่สมัครแล้วแต่ยังรออนุมัติ) | [[backlog#สูง (MVP)\|FR-05]], [[backlog#สูง (MVP)\|FR-07]], [[backlog#สูง (MVP)\|FR-08]], [[backlog#สูง (MVP)\|FR-09]], [[backlog#สูง (MVP)\|FR-10]], [[backlog#สูง (MVP)\|FR-11]], [[backlog#สูง (MVP)\|FR-12]], [[backlog#สูง (MVP)\|FR-13]], [[backlog#Non-Functional Requirements\|NFR-02]], [[backlog#Non-Functional Requirements\|NFR-17]], [[backlog#Non-Functional Requirements\|NFR-18]], [[backlog#Non-Functional Requirements\|NFR-19]] |
-| ผู้ป่วย (Patient) | ผู้ป่วย NCD รายบุคคลที่ถูกดูประวัติ/ผลตรวจ/ผลวิเคราะห์ความเสี่ยง (แพทย์/พยาบาลเฉพาะที่อยู่ในความดูแล, Admin ดูได้ทุกราย) | [[backlog#สูง (MVP)\|FR-01]], [[backlog#สูง (MVP)\|FR-02]], [[backlog#สูง (MVP)\|FR-03]], [[backlog#สูง (MVP)\|FR-05]], [[backlog#สูง (MVP)\|FR-06]], [[backlog#สูง (MVP)\|FR-15]] |
-| การมอบหมายผู้ป่วยในความดูแล (PatientAssignment) | ความสัมพันธ์ระดับรายผู้ป่วยระหว่างแพทย์/พยาบาลผู้ดูแลกับผู้ป่วยแต่ละราย ใช้กรองรายชื่อและตรวจสิทธิ์ระดับรายผู้ป่วย จัดการโดย Admin (FR-14) | [[backlog#สูง (MVP)\|FR-05]], [[backlog#สูง (MVP)\|FR-14]], [[backlog#Non-Functional Requirements\|NFR-02]] |
+| ผู้ป่วย (Patient) | ผู้ป่วย NCD รายบุคคลที่ถูกดูประวัติ/ผลตรวจ/ผลวิเคราะห์ความเสี่ยง — แพทย์/พยาบาล/Admin ทุกคนเห็นและเข้าถึงได้ทุกราย เหมือนกัน (แก้ไข 2026-09-25 ยกเลิกกลไก PatientAssignment ทั้งหมด) — attribute `เลขประจำตัวผู้ป่วย` (HN) ยังใช้เป็นค่าประกอบ input ของ Operation 17 (AI ช่วยอธิบายผลการค้นหา) ด้วย (เพิ่ม 2026-09-26 — ไม่มี attribute ใหม่) | [[backlog#สูง (MVP)\|FR-01]], [[backlog#สูง (MVP)\|FR-02]], [[backlog#สูง (MVP)\|FR-03]], [[backlog#สูง (MVP)\|FR-05]], [[backlog#สูง (MVP)\|FR-06]], [[backlog#สูง (MVP)\|FR-15]], [[backlog#กลาง\|FR-17]] |
 | ประวัติการวินิจฉัยโรค NCD (NcdDiagnosis) | บันทึกการวินิจฉัยโรค NCD แต่ละครั้งของผู้ป่วย | [[backlog#สูง (MVP)\|FR-01]] |
 | ผลตรวจ lab (LabResult) | ผลตรวจ lab มาตรฐานแต่ละครั้งของผู้ป่วย | [[backlog#สูง (MVP)\|FR-02]] |
 | threshold มาตรฐานของโรคแทรกซ้อน (ComplicationRiskThreshold) | เกณฑ์ค่า lab มาตรฐานที่ใช้ตัดสินความเสี่ยงโรคแทรกซ้อนแต่ละชนิด | [[backlog#สูง (MVP)\|FR-03]], [[backlog#Non-Functional Requirements\|NFR-11]] |
@@ -125,7 +165,7 @@ subcollection ตามความเหมาะสม)** ไม่ใช่�
 | อีเมล | ข้อความ (รูปแบบอีเมล, ไม่ซ้ำกันทั้งระบบ) | จำเป็น | ใช้เข้าสู่ระบบ (FR-07), สมัครบัญชี (FR-08) และรับอีเมลยืนยันตัวตน/รีเซ็ตรหัสผ่าน (FR-09, FR-10) — **ใหม่จากฟีเจอร์ที่ 6** |
 | รหัสผ่านที่จัดเก็บ | ข้อความ (hashed) | จำเป็น | ต้องเป็นไปตามนโยบายรหัสผ่านขั้นต่ำก่อนจัดเก็บเสมอ (ความยาว ≥ 8 ตัวอักษร มีทั้งตัวอักษรและตัวเลข — NFR-17) — **ใหม่จากฟีเจอร์ที่ 6** |
 | สถานะการยืนยันอีเมล | จริง/เท็จ | จำเป็น | จริง = ยืนยันความเป็นเจ้าของอีเมลแล้ว (FR-09) — ค่าเริ่มต้นเป็นเท็จทันทีที่สมัครบัญชี (FR-08) จนกว่าจะเปิดลิงก์ยืนยันจากอีเมล ต้องเป็นจริงก่อนจึงจะใช้งานฟีเจอร์อื่นได้ (แม้ `สถานะการใช้งานบัญชี` และ `บทบาท` จะถูกอนุมัติแล้วก็ตาม) — **ใหม่จากฟีเจอร์ที่ 6** |
-| บทบาท | ข้อความ (ค่าที่กำหนดไว้ล่วงหน้า: "แพทย์", "พยาบาล", "admin" — **เพิ่ม `"admin"` ในรอบ sync ที่หก ตามฟีเจอร์ที่ 7**) | **ไม่บังคับ** (เปลี่ยนจาก "จำเป็น" ในรอบ sync ที่สี่) | ใช้ตัดสินสิทธิ์การเข้าถึงตาม NFR-02 — สามบทบาทนี้เท่านั้นที่มีความหมายในระบบ (`"แพทย์"`/`"พยาบาล"` เข้าถึงข้อมูลผู้ป่วยเฉพาะที่อยู่ในความดูแลตาม PatientAssignment, `"admin"` เข้าถึงข้อมูลผู้ป่วยทุกรายแบบอ่านอย่างเดียวได้โดยไม่ต้องมี PatientAssignment ตามข้อยกเว้น [[backlog#Non-Functional Requirements\|NFR-19]] แต่ไม่มีสิทธิ์ยืนยัน/แก้ไขผลประเมินความเสี่ยงตาม FR-16 และไม่มีสิทธิ์แก้ไขข้อมูลทางคลินิกใดๆ) **ไม่มีค่าโดยดีฟอลต์ทันทีที่สมัครบัญชีสำเร็จ (FR-08)** จนกว่า **Admin จะอนุมัติผ่านหน้าจอในระบบ (FR-11 — แก้ไขในรอบ sync ที่หก แทนที่กลไกเดิมที่เคยเป็นการแก้ไข Firebase Console/Firestore โดยตรง)** โดย Operation อนุมัติ (FR-11) กำหนดได้เฉพาะค่า `"แพทย์"`/`"พยาบาล"` เท่านั้น (ไม่ใช่ `"admin"` — บัญชี Admin คนแรก/bootstrap ยังคงตั้งผ่าน Firebase Console/Firestore โดยตรง อยู่นอกขอบเขต) ส่วนการเปลี่ยน role ภายหลัง (FR-12) กำหนดเป็นค่าใดในสามค่านี้ก็ได้ ยกเว้นห้าม Admin เปลี่ยน role ของ**ตนเอง**โดยเด็ดขาด (ดู [[api-spec#Operation 12 — เปลี่ยนบทบาท (Role) ของผู้ใช้งานที่มีอยู่\|Operation 12 ใน api-spec]]) — บัญชีที่ยังไม่มีบทบาทนี้จะไม่ผ่านการตรวจสอบระดับบทบาทของ [[api-spec#Operation ร่วม — ตรวจสอบสิทธิ์การเข้าถึงข้อมูลผู้ป่วย (Access Control)\|Operation ร่วม ตรวจสอบสิทธิ์การเข้าถึงข้อมูลผู้ป่วย]] โดยอัตโนมัติ (ค่าว่าง/ไม่มีค่า ไม่ใช่ค่าที่กำหนดไว้ล่วงหน้าทั้งสาม) |
+| บทบาท | ข้อความ (ค่าที่กำหนดไว้ล่วงหน้า: "แพทย์", "พยาบาล", "admin" — **เพิ่ม `"admin"` ในรอบ sync ที่หก ตามฟีเจอร์ที่ 7**) | **ไม่บังคับ** (เปลี่ยนจาก "จำเป็น" ในรอบ sync ที่สี่) | ใช้ตัดสินสิทธิ์การเข้าถึงตาม NFR-02 — สามบทบาทนี้เท่านั้นที่มีความหมายในระบบ (`"แพทย์"`/`"พยาบาล"` เข้าถึง/แก้ไขข้อมูลทางคลินิกของผู้ป่วย**ทุกราย**ในระบบเท่ากัน — **แก้ไข 2026-09-25 ยกเลิกกลไก PatientAssignment ทั้งหมด ไม่มีการจำกัดเฉพาะผู้ป่วยที่ "อยู่ในความดูแล" อีกต่อไป**, `"admin"` เข้าถึงข้อมูลผู้ป่วย**ทุกราย**เช่นเดียวกันแต่**แบบอ่านอย่างเดียวเท่านั้น** ตาม [[backlog#Non-Functional Requirements\|NFR-19]] — ไม่มีสิทธิ์ยืนยัน/แก้ไขผลประเมินความเสี่ยงตาม FR-16 และไม่มีสิทธิ์แก้ไขข้อมูลทางคลินิกใดๆ) **ไม่มีค่าโดยดีฟอลต์ทันทีที่สมัครบัญชีสำเร็จ (FR-08)** จนกว่า **Admin จะอนุมัติผ่านหน้าจอในระบบ (FR-11 — แก้ไขในรอบ sync ที่หก แทนที่กลไกเดิมที่เคยเป็นการแก้ไข Firebase Console/Firestore โดยตรง)** โดย Operation อนุมัติ (FR-11) กำหนดได้เฉพาะค่า `"แพทย์"`/`"พยาบาล"` เท่านั้น (ไม่ใช่ `"admin"` — บัญชี Admin คนแรก/bootstrap ยังคงตั้งผ่าน Firebase Console/Firestore โดยตรง อยู่นอกขอบเขต) ส่วนการเปลี่ยน role ภายหลัง (FR-12) กำหนดเป็นค่าใดในสามค่านี้ก็ได้ ยกเว้นห้าม Admin เปลี่ยน role ของ**ตนเอง**โดยเด็ดขาด (ดู [[api-spec#Operation 12 — เปลี่ยนบทบาท (Role) ของผู้ใช้งานที่มีอยู่\|Operation 12 ใน api-spec]]) — บัญชีที่ยังไม่มีบทบาทนี้จะไม่ผ่านการตรวจสอบระดับบทบาทของ [[api-spec#Operation ร่วม — ตรวจสอบสิทธิ์การเข้าถึงข้อมูลผู้ป่วย (Access Control)\|Operation ร่วม ตรวจสอบสิทธิ์การเข้าถึงข้อมูลผู้ป่วย]] โดยอัตโนมัติ (ค่าว่าง/ไม่มีค่า ไม่ใช่ค่าที่กำหนดไว้ล่วงหน้าทั้งสาม) |
 | สถานะการใช้งานบัญชี | จริง/เท็จ | จำเป็น | จริง = ใช้งานได้, เท็จ = ถูกระงับสิทธิ์ (NFR-02) — **ค่าเริ่มต้นเป็นเท็จโดยอัตโนมัติทันทีที่สมัครบัญชีสำเร็จ (FR-08)** จนกว่าผู้ดูแลระบบจะเปลี่ยนเป็นจริงพร้อมกำหนด `บทบาท` ผ่าน Firebase Console/Firestore (ยืนยันโดยผู้ใช้แล้ว) |
 
 **Firestore Technical Binding (ตาม [[technology-stack#7. Authentication/Authorization — Firebase Authentication (ไม่ใช้ Custom Claims เก็บบทบาท — แก้ไขในรอบสาม 2026-09-24)|decision area 7 ใน technology-stack]] และ [[technology-stack#18. การ Sync role/isActive ระหว่าง Firestore กับ Custom Claims (ฟีเจอร์ที่ 6) — ไม่ Sync, Firestore เป็น Source of Truth เดียว|decision area 18]] — แก้ไข 2026-09-24: ไม่ใช้ Custom Claims เก็บบทบาท/isActive อีกต่อไป):**
@@ -187,11 +227,11 @@ subcollection ตามความเหมาะสม)** ไม่ใช่�
 | Attribute | ชนิดข้อมูลเชิงตรรกะ | จำเป็นต้องมีค่า | คำอธิบาย |
 | --- | --- | --- | --- |
 | id | ข้อความ (ตัวระบุเฉพาะ) | จำเป็น | ตัวระบุผู้ป่วยที่ระบบใช้อ้างอิงภายใน อ้างอิงจากแหล่งข้อมูล HOSxP หรือข้อมูลจำลองระหว่างพัฒนา (NFR-01) |
-| เลขประจำตัวผู้ป่วย | ข้อความ (ตัวเลขล้วนเท่านั้น ความยาวคงที่ 7 หลัก — ไม่มีตัวอักษรหรือความยาวอื่น) | จำเป็น | เลขประจำตัวผู้ป่วยเชิงคลินิก (HN) ที่แพทย์/พยาบาลใช้ค้นหาผู้ป่วยเฉพาะราย — เป็นช่องทางค้นหาเฉพาะรายเดียวที่ใช้งานได้ในระบบ (FR-06, ยืนยันแล้ว 2026-09-21) ระบบตรวจสอบรูปแบบ/ความยาวนี้**หลังผู้ใช้กดค้นหาแล้วเท่านั้น** ไม่ใช่แบบ real-time ระหว่างพิมพ์ (ดู [[api-spec#Operation 0 — ค้นหา/แสดงรายชื่อผู้ป่วยในความดูแล (ค้นหาเฉพาะรายด้วยเลข HN)\|Operation 0 ใน api-spec]]) เป็นคนละ field กับ id ที่ใช้อ้างอิงภายในระบบ |
+| เลขประจำตัวผู้ป่วย | ข้อความ (ตัวเลขล้วนเท่านั้น ความยาวคงที่ 7 หลัก — ไม่มีตัวอักษรหรือความยาวอื่น) | จำเป็น | เลขประจำตัวผู้ป่วยเชิงคลินิก (HN) ที่แพทย์/พยาบาลใช้ค้นหาผู้ป่วยเฉพาะราย — เป็นช่องทางค้นหาเฉพาะรายเดียวที่ใช้งานได้ในระบบ (FR-06, ยืนยันแล้ว 2026-09-21) **แก้ไข 2026-09-26:** ระบบตรวจสอบรูปแบบ/ความยาวนี้**ทั้งตอนหยุดพิมพ์ชั่วขณะ (debounce) และตอนกดค้นหา** (แทนที่ข้อความเดิมที่ระบุว่าตรวจสอบเฉพาะหลังกดค้นหาเท่านั้น) (ดู [[api-spec#Operation 0 — ค้นหา/แสดงรายชื่อผู้ป่วยทั้งหมดในระบบ (ค้นหาเฉพาะรายด้วยเลข HN)\|Operation 0 ใน api-spec]]) เป็นคนละ field กับ id ที่ใช้อ้างอิงภายในระบบ ค่าที่ผู้ใช้พิมพ์ (ไม่ว่าจะครบรูปแบบหรือไม่) ยังถูกใช้เป็นค่าประกอบ input ของ [[api-spec#Operation 17 — อธิบายผลการค้นหาผู้ป่วยด้วย HN โดยบริการ AI ภายนอก (AI-assisted Search Result Explanation)\|Operation 17]] ด้วย (FR-17, NFR-21 — เพิ่ม 2026-09-26 ไม่ใช่ attribute ใหม่ เป็นเพียงการนำค่าเดิมไปใช้ต่อ) |
 | ชื่อ-นามสกุล | ข้อความ | จำเป็น | ใช้แสดงผลบนหน้าจอ Client เท่านั้น **ไม่ใช้เป็นเงื่อนไขค้นหาอีกต่อไป** (FR-06 ยกเลิกช่องทางค้นหาด้วยชื่อที่เคยรองรับใน FR-05 เดิม) |
 | แหล่งข้อมูลต้นทาง | ข้อความ (ค่าที่กำหนดไว้ล่วงหน้า: "HOSxP", "ข้อมูลจำลอง") | จำเป็น | ระบุว่าข้อมูลผู้ป่วยรายนี้มาจากระบบจริงหรือ mockup (NFR-01) |
 
-**Firestore Technical Binding:**
+**Firestore Technical Binding (แก้ไข 2026-09-25 — ยกเลิกกลไก PatientAssignment ทั้งหมด สอดคล้องกับ [[architecture]]):**
 
 - **Collection/Document path:** `patients/{patientId}` (top-level collection ตามที่
   `[[technology-stack#Deployment Diagram|Deployment Diagram ใน technology-stack]]` ระบุชื่อ collection
@@ -199,91 +239,25 @@ subcollection ตามความเหมาะสม)** ไม่ใช่�
   อาจต้องแก้ไขได้ในอนาคตตามคำขอสิทธิ NFR-07 ส่วน document ID เปลี่ยนไม่ได้)
 - **Field mapping:** `เลขประจำตัวผู้ป่วย` → `hn` (string, exact 7 ตัวเลข), `ชื่อ-นามสกุล` →
   `fullName` (string), `แหล่งข้อมูลต้นทาง` → `dataSource` (string, ค่าที่กำหนดไว้ล่วงหน้า)
-- **Composite index:** ไม่ต้องมี index บน `patients` โดยตรงสำหรับ Operation 0 อีกต่อไป เพราะ
-  Operation 0 (ทั้งค้นหาด้วย HN และแสดงรายชื่อทั้งหมด) ถูกออกแบบใหม่ให้ query จาก collection
-  `patientAssignments` แทน (ดูหัวข้อถัดไป) — `patients` ยังคงเป็น**แหล่งความจริงหลัก (source of
-  truth)** ของ `hn`/`fullName`/`dataSource` ที่ Cloud Functions (Operation 1-3) อ่านโดยตรงผ่าน
-  Admin SDK เสมอเมื่อรู้ `patientId` แล้ว — field `hn`/`fullName` ที่ปรากฏซ้ำใน `patientAssignments`
-  เป็นสำเนา denormalized สำหรับการแสดงรายชื่อเท่านั้น (ดูเหตุผลและกฎ sync ที่หัวข้อ PatientAssignment)
-  — **ใหม่ในรอบ sync ที่หก:** ต้องมี single-field index `(hn ASC)` (Firestore สร้างอัตโนมัติ) เพื่อ
-  รองรับ [[api-spec#Operation 15 — ค้นหา/แสดงรายชื่อผู้ป่วยทั้งหมดในระบบ (สำหรับ Admin)|Operation 15]]
-  ที่ Admin ค้นหาผู้ป่วยด้วย HN โดยตรงบน `patients` (ไม่ผ่าน `patientAssignments` เพราะ Admin ไม่มี
-  ระเบียนในนั้น)
-
-### การมอบหมายผู้ป่วยในความดูแล (PatientAssignment)
-
-รองรับ [[backlog#สูง (MVP)|FR-05]] และ [[backlog#Non-Functional Requirements|NFR-02]] ฉบับขยายความ
-— บันทึกความสัมพันธ์ระดับรายผู้ป่วยระหว่างแพทย์/พยาบาลผู้ดูแลกับผู้ป่วยแต่ละราย ("อยู่ในความดูแล"
-ตามที่ตีความไว้ใน
-[[20260917-01-patient-ncd-history-lab-complication-risk#สมมติฐาน (Assumptions) — โปรดตรวจทานอีกครั้ง|หัวข้อสมมติฐานของ spec]])
-ใช้เป็นเงื่อนไขกรองรายชื่อผู้ป่วยใน operation ค้นหา/แสดงรายชื่อ (FR-05) และเป็นเงื่อนไขตรวจสอบสิทธิ์
-ระดับรายผู้ป่วยก่อนเข้าถึงข้อมูลรายบุคคลใดๆ (NFR-02)
-
-| Attribute | ชนิดข้อมูลเชิงตรรกะ | จำเป็นต้องมีค่า | คำอธิบาย |
-| --- | --- | --- | --- |
-| id | ข้อความ (ตัวระบุเฉพาะ) | จำเป็น | ตัวระบุระเบียนการมอบหมาย |
-| ผู้ใช้ | อ้างอิงถึง Entity ผู้ใช้ (User) | จำเป็น | แพทย์/พยาบาลที่ได้รับมอบหมายให้ดูแลผู้ป่วยรายนี้ |
-| ผู้ป่วย | อ้างอิงถึง Entity ผู้ป่วย (Patient) | จำเป็น | ผู้ป่วยที่ถูกมอบหมาย — ผู้ป่วยหนึ่งรายมอบหมายให้ผู้ใช้มากกว่าหนึ่งคนได้ (ดูหัวข้อความสัมพันธ์) |
-| วันที่เริ่มมอบหมาย | วันที่-เวลา | ไม่บังคับ | บันทึกไว้เพื่อ traceability เท่านั้น ยังไม่มีกฎทางธุรกิจที่ใช้ค่านี้ในการกรอง/ตัดสินสิทธิ์โดยตรงในชั้นนี้ |
-
-**Firestore Technical Binding (สำคัญ — จุดที่ปรับโครงสร้างจาก N:M relational เป็น document-oriented ตาม [[technology-stack#4. Database Engine ของ Primary Data Store — Cloud Firestore (Native mode)|decision area 4 ใน technology-stack]]):**
-
-- **Collection/Document path:** top-level collection `patientAssignments` — **document ID เป็น
-  composite key รูปแบบ `{userId}_{patientId}`** (ไม่ใช่ auto-generated id) ตามแนวทางที่
-  `[[technology-stack]]` แนะนำไว้ เพื่อให้ทั้ง Security Rules และ Cloud Functions ตรวจสอบสิทธิ์ระดับ
-  รายผู้ป่วยได้ด้วย `exists(/databases/$(database)/documents/patientAssignments/$(request.auth.uid + '_' + patientId))`
-  แบบ O(1) โดยไม่ต้อง query แบบ collection scan/collection group เลย
-- **Field mapping:** `ผู้ใช้` → `userId` (string, เท่ากับ Firebase Auth UID = document ID ของ
-  `users/{userId}`), `ผู้ป่วย` → `patientId` (string, เท่ากับ document ID ของ `patients/{patientId}`),
-  `วันที่เริ่มมอบหมาย` → `assignedAt` (timestamp)
-- **Field เพิ่มเติมที่ denormalize จาก Patient (ไม่มีใน logical model ด้านบน เพราะเป็นการปรับเชิง
-  เทคนิคล้วนๆ ไม่ใช่ business attribute ใหม่):** `patientHn` (string, คัดลอกจาก `Patient.hn`),
-  `patientFullName` (string, คัดลอกจาก `Patient.fullName`)
-  - **เหตุผล:** `[[technology-stack#3. สถาปัตยกรรม Backend Service — Firebase-native (ไม่มี Backend Service แยกแบบดั้งเดิม)|decision area 3]]`
-    กำหนดให้ Operation 0 เป็น Client อ่าน Firestore ตรงผ่าน Security Rules **โดยไม่ผ่าน Cloud
-    Functions** — ถ้า `patientAssignments` เก็บเฉพาะ `userId`/`patientId` (ตาม logical model เดิม)
-    Client จะต้อง query `patientAssignments` ก่อนแล้วค่อย query/`get()` เอกสาร `patients` แต่ละใบ
-    ตามรายการ `patientId` ที่ได้ ซึ่ง (1) เพิ่มจำนวน round-trip และ read cost โดยไม่จำเป็นสำหรับ
-    การแสดงผลแค่ HN+ชื่อ และ (2) ทำให้ Security Rules ของ `patients` ต้องเปิดให้ query แบบ list ได้
-    กว้างขึ้นเพื่อรองรับ Client อ่านหลายเอกสารพร้อมกัน เพิ่มพื้นที่เสี่ยงด้าน NFR-02 โดยไม่จำเป็น —
-    การ denormalize `patientHn`/`patientFullName` ลงในเอกสาร `patientAssignments` โดยตรงทำให้
-    Operation 0 (ทั้งกรณีค้นหาด้วย HN และแสดงรายชื่อทั้งหมด) เป็น**query เดียวจบ**บน collection เดียว
-    สอดคล้องกับหลัก document-oriented design ของ Firestore
-  - **Trade-off ที่ต้องยอมรับ (data consistency):** เมื่อ `Patient.hn` หรือ `Patient.fullName`
-    เปลี่ยนแปลง (เช่น แก้ไขตามคำขอสิทธิ Operation 4 กรณี "ขอแก้ไข") **ต้องอัปเดตสำเนาใน
-    `patientAssignments` ทุกระเบียนที่เชื่อมโยงกับผู้ป่วยรายนั้นพร้อมกันเสมอ** (Cloud Functions ใช้
-    Firestore batch write หรือ transaction ครอบคลุมทั้ง `patients/{patientId}` และทุกเอกสารใน
-    `patientAssignments` ที่มี `patientId` นี้ — ต้อง query หาเอกสารเหล่านั้นก่อนด้วย composite index
-    บน `patientId`) นี่คือหน้าที่ของ operation ที่แก้ไขข้อมูลผู้ป่วย (Operation 4 กรณี "ขอแก้ไข")
-    ต้องเพิ่มขั้นตอนนี้เข้าไปด้วยเสมอ — ดูหมายเหตุเพิ่มเติมใน [[api-spec#Operation 4 — ยื่นและดำเนินการคำขอใช้สิทธิของเจ้าของข้อมูล (Data Subject Rights Request)|Operation 4 ใน api-spec]]
-- **Composite index ที่ต้องสร้างล่วงหน้าใน `firestore.indexes.json`:**
-  1. `(userId ASC, patientHn ASC)` — รองรับ Operation 0 กรณีค้นหาด้วย HN: `where('userId','==',uid).where('patientHn','==',enteredHn)`
-  2. `(userId ASC, patientFullName ASC)` — รองรับ Operation 0 กรณีแสดงรายชื่อทั้งหมดเรียงตามชื่อ:
-     `where('userId','==',uid).orderBy('patientFullName')`
-  3. `(patientId ASC)` — เป็น single-field index (Firestore สร้างอัตโนมัติ) ใช้ตอน Cloud Functions
-     ต้องหาทุกระเบียน assignment ของผู้ป่วยรายหนึ่งเพื่ออัปเดต denormalized field ตอนแก้ไขข้อมูล
-     ผู้ป่วย (ดู trade-off ด้านบน)
-- **Firestore Security Rules (Operation 0 — ตาม [[technology-stack#3. สถาปัตยกรรม Backend Service — Firebase-native (ไม่มี Backend Service แยกแบบดั้งเดิม)|decision area 3]] และ [[technology-stack#19. การตรวจสอบ `emailVerified` ซ้ำฝั่ง Backend (FR-09, ฟีเจอร์ที่ 6) — ตรวจทั้ง Cloud Functions และ Security Rules|decision area 19 — เพิ่มเงื่อนไข `email_verified` ในรอบ 2026-09-24]]):**
-  `allow list, get: if request.auth != null && request.auth.token.email_verified == true && resource.data.userId == request.auth.uid && get(/databases/$(database)/documents/users/$(request.auth.uid)).data.role in ['แพทย์','พยาบาล'] && get(/databases/$(database)/documents/users/$(request.auth.uid)).data.isActive == true;`
-  `allow create, update, delete: if false;` (Client — รวมถึง Admin — ไม่มีสิทธิ์เขียน
-  `patientAssignments` โดยตรงเลยไม่ว่ากรณีใด) — เงื่อนไข `request.auth.token.email_verified == true`
-  เป็นการเพิ่มใหม่ในรอบ 2026-09-24 เพื่อปิดช่องว่างที่ Client ถูกดัดแปลง/บั๊กข้ามการตรวจสอบ
-  `emailVerified` เองแล้วเรียก Operation 0 ตรง (อ่านค่าจาก Firebase ID token ที่ verify อยู่แล้ว ไม่ต้อง
-  เพิ่ม Firestore read)
-- **การสร้าง/ลบระเบียนจริง (แก้ไข 2026-09-24 — ปิดประเด็นรอตัดสินใจเดิม):** เดิมเอกสารนี้ระบุว่า "ยังไม่มี
-  operation สำหรับสร้าง/แก้ไข/ยกเลิก PatientAssignment เพราะกลไก/ผู้กำหนดการมอบหมายยังไม่ถูกยืนยัน" —
-  ตาม [[20260924-01-admin-role-account-management#ความต้องการเชิงฟังก์ชัน (Functional Requirements)|FR-14]]
-  ปิดประเด็นนี้แล้ว: **Admin เป็นผู้กำหนดการมอบหมาย/ยกเลิกการมอบหมายผู้ป่วยให้แพทย์/พยาบาลโดยตรงผ่าน
-  หน้าจอในระบบ** เขียน (create)/ลบ (delete) เอกสาร `patientAssignments/{userId}_{patientId}` ผ่าน
-  **Firebase Admin SDK เท่านั้น** (bypass Security Rules ข้างต้น) ดู
-  [[api-spec#Operation 14 — จัดการการมอบหมายผู้ป่วย (Patient Assignment)|Operation 14 ใน api-spec]] —
-  รูปแบบยังคงเป็น **existence-based** เหมือนเดิม (มีระเบียน = อยู่ในความดูแล, ไม่มีระเบียน = ไม่อยู่ใน
-  ความดูแล ไม่มีสถานะ active/inactive แยกต่างหาก) "ยกเลิกการมอบหมาย" ตาม FR-14 หมายถึงการ**ลบ**เอกสารนี้
-  ทิ้งโดยตรง ไม่ใช่การเปลี่ยนสถานะ
-
-**หมายเหตุ:** การมีระเบียน PatientAssignment เชื่อมโยงผู้ใช้กับผู้ป่วยรายใด เท่ากับผู้ป่วยรายนั้น
-"อยู่ในความดูแล" ของผู้ใช้คนนั้น (แบบ existence-based) — กลไก/ผู้กำหนดการมอบหมายถูกยืนยันแล้วว่าคือ Admin
-ผ่าน FR-14 (ดูด้านบน) จึงปิดประเด็นรอตัดสินใจเดิมส่วนนี้แล้ว
+- **การเข้าถึง (แก้ไข 2026-09-25):** [[api-spec#Operation 0 — ค้นหา/แสดงรายชื่อผู้ป่วยทั้งหมดในระบบ (ค้นหาเฉพาะรายด้วยเลข HN)|Operation 0]]
+  (ครอบคลุมทุกบทบาท — แพทย์/พยาบาล/Admin — หลังรวม Operation 15 เดิมเข้าด้วยกัน เพราะไม่มีข้อยกเว้น
+  ระดับรายผู้ป่วยให้ต้องแยกเส้นทางอีกต่อไป) เป็น**Client อ่าน collection `patients` โดยตรงผ่าน
+  Firestore Security Rules** (ไม่ผ่าน Cloud Functions เช่นเดิมตาม decision area 3 ใน
+  `[[technology-stack]]`) — ไม่มีการ denormalize field ใดๆ ไปยัง collection อื่นอีกต่อไป (เดิมเคย
+  denormalize ไปยัง `patientAssignments` ที่ถูกยกเลิกแล้ว) ส่วน Operation 1-4 (Cloud Functions) ยังคง
+  อ่าน `patients` ผ่าน Admin SDK โดยตรงเมื่อรู้ `patientId` แล้วเช่นเดิม
+- **Composite index:** **ไม่จำเป็น** — Operation 0 กรณีค้นหาด้วย HN ใช้ query แบบ equality เดี่ยว
+  `where('hn','==',enteredHn)` (single-field index ที่ Firestore สร้างอัตโนมัติเพียงพอ ตรงกับข้อมูล
+  อ้างอิงจากโค้ดจริงของ `web/` ที่ query ลักษณะนี้อยู่แล้ว) กรณีแสดงรายชื่อทั้งหมด (ไม่ระบุ HN) อ่านทั้ง
+  collection โดยตรง (อาจเพิ่ม `orderBy('fullName')` ในอนาคตซึ่งเป็น single-field index อัตโนมัติเช่นกัน
+  ไม่ต้องประกาศ composite index ล่วงหน้า)
+- **Firestore Security Rules (ตาม [[technology-stack#3. สถาปัตยกรรม Backend Service — Firebase-native (ไม่มี Backend Service แยกแบบดั้งเดิม)|decision area 3]] และ [[technology-stack#19. การตรวจสอบ `emailVerified` ซ้ำฝั่ง Backend (FR-09, ฟีเจอร์ที่ 6) — ตรวจทั้ง Cloud Functions และ Security Rules|decision area 19]] — แก้ไข 2026-09-25 ย้ายมาจาก `patientAssignments` เดิม):**
+  `allow list, get: if request.auth != null && request.auth.token.email_verified == true && get(/databases/$(database)/documents/users/$(request.auth.uid)).data.role in ['แพทย์','พยาบาล','admin'] && get(/databases/$(database)/documents/users/$(request.auth.uid)).data.isActive == true;`
+  `allow create, update, delete: if false;` (Client — รวมถึง Admin — ไม่มีสิทธิ์เขียน `patients`
+  โดยตรงเลยไม่ว่ากรณีใด แก้ไขข้อมูลผู้ป่วยได้เฉพาะผ่าน [[api-spec#Operation 4 — ยื่นและดำเนินการคำขอใช้สิทธิของเจ้าของข้อมูล (Data Subject Rights Request)|Operation 4]]
+  ด้วย Admin SDK เท่านั้น) — **เพิ่ม `"admin"` เข้าเงื่อนไข `role in [...]` ในรอบนี้** (เดิมมีเฉพาะ
+  `"แพทย์"`/`"พยาบาล"` ตอนที่ยังผูกกับ `patientAssignments` เพราะ Admin ไม่มีระเบียนในนั้น — ตอนนี้ไม่มี
+  collection กลางแล้วจึงเปิดให้ Admin อ่าน `patients` ตรงแบบเดียวกัน)
 
 ### ประวัติการวินิจฉัยโรค NCD (NcdDiagnosis)
 
@@ -398,7 +372,7 @@ attribute ใหม่ด้านล่าง)
 | พบความเสี่ยงหรือไม่ | จริง/เท็จ | จำเป็น | **ผลลัพธ์ที่ระบบประเมินอัตโนมัติ (immutable)** — จริง = พบความเสี่ยงอย่างน้อยหนึ่งโรคแทรกซ้อน (แสดง flag ตาม FR-04), เท็จ = ไม่พบความเสี่ยงเพิ่มเติม — **ค่านี้ต้องไม่ถูกเขียนทับเมื่อมีการยืนยัน/แก้ไข (FR-16) เพื่อคง traceability ของผลอัตโนมัติดั้งเดิมไว้เสมอ (ตาม NFR-06) — ดู attribute ใหม่ด้านล่างสำหรับผลหลังยืนยัน/แก้ไข** |
 | สถานะการยืนยัน/แก้ไข | ข้อความ (ค่าที่กำหนดไว้ล่วงหน้า: "ยังไม่ดำเนินการ", "ยืนยันผลเดิม", "แก้ไขแล้ว") | จำเป็น (ดีฟอลต์ "ยังไม่ดำเนินการ") | **ใหม่ในรอบ sync ที่หก (FR-16)** — ระบุว่าแพทย์/พยาบาลผู้ดูแลผู้ป่วยรายนี้ได้ยืนยัน/แก้ไขผลการประเมินนี้แล้วหรือไม่ (ยืนยันโดยผู้ใช้ให้ mutate in place ลงใน entity นี้โดยตรง แทนการสร้าง entity ประวัติแยก) |
 | พบความเสี่ยงหรือไม่ (หลังยืนยัน/แก้ไข) | จริง/เท็จ | ไม่บังคับ (มีค่าเมื่อ `สถานะการยืนยัน/แก้ไข` ไม่ใช่ "ยังไม่ดำเนินการ") | **ใหม่ในรอบ sync ที่หก (FR-16)** — ค่าที่ Client แสดงเป็นผลลัพธ์ล่าสุดหลังแพทย์/พยาบาลยืนยัน/แก้ไข (เมื่อ "ยืนยันผลเดิม" ค่านี้เท่ากับ `พบความเสี่ยงหรือไม่` ที่ระบบประเมินอัตโนมัติเสมอ; เมื่อ "แก้ไขแล้ว" ค่านี้คือผลที่แพทย์/พยาบาลกำหนดใหม่ ซึ่งอาจต่างจากผลอัตโนมัติ) |
-| ผู้ยืนยัน/แก้ไขผลการประเมิน | อ้างอิงถึง Entity ผู้ใช้ (User) | ไม่บังคับ (มีค่าเมื่อ `สถานะการยืนยัน/แก้ไข` ไม่ใช่ "ยังไม่ดำเนินการ") | **ใหม่ในรอบ sync ที่หก (FR-16)** — แพทย์/พยาบาลผู้ดูแลผู้ป่วยรายนี้ที่ดำเนินการยืนยัน/แก้ไข (ต้องเป็นผู้ใช้ที่มี PatientAssignment เชื่อมโยงกับผู้ป่วยรายนี้ตาม NFR-02 — ไม่ใช่ Admin เพราะ FR-16 ไม่ใช่สิทธิ์ของ Admin) |
+| ผู้ยืนยัน/แก้ไขผลการประเมิน | อ้างอิงถึง Entity ผู้ใช้ (User) | ไม่บังคับ (มีค่าเมื่อ `สถานะการยืนยัน/แก้ไข` ไม่ใช่ "ยังไม่ดำเนินการ") | **ใหม่ในรอบ sync ที่หก (FR-16)** — แพทย์/พยาบาลที่ดำเนินการยืนยัน/แก้ไข (ผู้ป่วยรายใดก็ได้ในระบบ — แก้ไข 2026-09-25 ยกเลิกกลไก PatientAssignment ทั้งหมด ไม่จำกัดเฉพาะผู้ป่วยที่เคย "อยู่ในความดูแล" อีกต่อไป — ไม่ใช่ Admin เพราะ FR-16 ไม่ใช่สิทธิ์ของ Admin) |
 | วันที่-เวลาที่ยืนยัน/แก้ไข | วันที่-เวลา | ไม่บังคับ (มีค่าเมื่อ `สถานะการยืนยัน/แก้ไข` ไม่ใช่ "ยังไม่ดำเนินการ") | **ใหม่ในรอบ sync ที่หก (FR-16)** |
 | เหตุผลการแก้ไข | ข้อความ | ไม่บังคับ (**บังคับกรอกเมื่อ `สถานะการยืนยัน/แก้ไข` = "แก้ไขแล้ว"** — เป็น business rule ที่ตรวจสอบใน [[api-spec]] ไม่ใช่ attribute-level constraint) | **ใหม่ในรอบ sync ที่หก (FR-16)** — ไม่บังคับกรอกกรณี "ยืนยันผลเดิม" |
 
@@ -496,7 +470,7 @@ Primary Data Store ในระดับ logical
 | การดำเนินการ | ข้อความ (ค่าที่กำหนดไว้ล่วงหน้า: "ค้นหา", "ดูข้อมูลผู้ป่วย", "แก้ไขข้อมูลตามคำขอสิทธิ", "ลบข้อมูลตามคำขอสิทธิ", "สกัดข้อมูลตามคำขอสิทธิ", "คัดค้านการประมวลผลตามคำขอสิทธิ") | จำเป็น | ระบุว่าผ่านการดำเนินการใด ตามที่ NFR-06 กำหนด — สอดคล้องกับหมวดที่ระบุใน [[architecture#บริการฝั่งเซิร์ฟเวอร์ (Backend Service)\|architecture]] ("ค้นหา/ดู/แก้ไข/สกัดข้อมูลตามคำขอสิทธิ") ขยายเพิ่ม "ลบ" และ "คัดค้านการประมวลผล" ให้ครบตามสิทธิ 5 ประเภทใน NFR-07 ("ดูข้อมูลผู้ป่วย" ครอบคลุมทั้งประวัติวินิจฉัย/ผลตรวจ lab/ผลวิเคราะห์ความเสี่ยงในการเข้าถึงหนึ่งครั้ง เพราะระบบบันทึก audit log ครั้งเดียวต่อการเลือกผู้ป่วยหนึ่งราย ตาม [[architecture#Data Flow Diagram — Journey หลัก\|sequence diagram ของ architecture]]) |
 | วันที่-เวลาที่เข้าถึง | วันที่-เวลา | จำเป็น | ใช้สืบค้น audit trail (NFR-08) |
 | คำขอสิทธิที่เกี่ยวข้อง | อ้างอิงถึง Entity คำขอใช้สิทธิของเจ้าของข้อมูล (DataSubjectRequest) | ไม่บังคับ | มีค่าเฉพาะเมื่อการดำเนินการเกิดจากคำขอสิทธิของเจ้าของข้อมูล (NFR-07) ไม่ใช่การเข้าถึงข้อมูลปกติตามฟีเจอร์ที่ 1-3 |
-| เข้าถึงในฐานะ Admin หรือไม่ | จริง/เท็จ | ไม่บังคับ (ดีฟอลต์เท็จ) | **ใหม่ในรอบ sync ที่หก (NFR-20)** — ยืนยันแล้วโดยผู้ใช้ให้ใช้ `AuditLogRecord` เดียวกับ NFR-06 เพิ่ม attribute นี้แทนการแยก collection ใหม่ — จริง = ระเบียนนี้เกิดจากการที่ Admin เข้าถึงข้อมูลผู้ป่วยผ่านข้อยกเว้น NFR-19 (ไม่มี PatientAssignment เป็นของตนเอง — FR-15), เท็จ/ไม่มีค่า = การเข้าถึงปกติของแพทย์/พยาบาลตาม NFR-06 เดิม |
+| เข้าถึงในฐานะ Admin หรือไม่ | จริง/เท็จ | ไม่บังคับ (ดีฟอลต์เท็จ) | **ใหม่ในรอบ sync ที่หก (NFR-20)** — ยืนยันแล้วโดยผู้ใช้ให้ใช้ `AuditLogRecord` เดียวกับ NFR-06 เพิ่ม attribute นี้แทนการแยก collection ใหม่ — จริง = ระเบียนนี้เกิดจากการที่ Admin เข้าถึงข้อมูลผู้ป่วยผ่าน Operation 1/2/3 (FR-15 — แก้ไข 2026-09-25: ไม่ใช่ "ข้อยกเว้น" NFR-19 อีกต่อไป เพราะแพทย์/พยาบาลเข้าถึงผู้ป่วยทุกรายเหมือนกันอยู่แล้ว แต่ยังคงต้องบันทึก flag นี้แยกไว้เพื่อ NFR-20), เท็จ/ไม่มีค่า = การเข้าถึงปกติของแพทย์/พยาบาลตาม NFR-06 เดิม |
 
 **หมายเหตุ:** ระเบียนใน entity นี้ต้องคงสภาพเดิมตลอดระยะเวลาที่ต้องเก็บรักษาไว้เพื่อการตรวจสอบ
 (append-only/immutable ในเชิงหลักการ — ไม่มี operation ใดในเอกสารนี้/[[api-spec]] ที่แก้ไขหรือลบ
@@ -593,10 +567,13 @@ Primary Data Store ในระดับ logical
 
 ## ความสัมพันธ์ (Relationships)
 
+**หมายเหตุ (แก้ไข 2026-09-25):** ความสัมพันธ์ N:M ระหว่างผู้ใช้ (User) กับผู้ป่วย (Patient) ที่เคยผ่าน
+entity กลาง "การมอบหมายผู้ป่วยในความดูแล (PatientAssignment)" ถูก**ลบออกทั้งหมด** (FR-14 ยกเลิกแล้ว —
+ดู [[architecture]]) ผู้ใช้ทุกคน (แพทย์/พยาบาล/Admin) เข้าถึงผู้ป่วยทุกรายในระบบได้เหมือนกันโดยไม่ต้องมี
+ความสัมพันธ์ระดับรายผู้ป่วยใดๆ อีกต่อไป
+
 | จาก Entity | ไป Entity | Cardinality | คำอธิบาย |
 | --- | --- | --- | --- |
-| ผู้ใช้ (User) | การมอบหมายผู้ป่วยในความดูแล (PatientAssignment) | 1:N | ผู้ใช้หนึ่งคนดูแลผู้ป่วยได้หลายราย (FR-05) |
-| ผู้ป่วย (Patient) | การมอบหมายผู้ป่วยในความดูแล (PatientAssignment) | 1:N | ผู้ป่วยหนึ่งรายอาจถูกมอบหมายให้ผู้ดูแลได้มากกว่าหนึ่งคน (FR-05) — ทั้งสองแถวนี้รวมกันแทน ความสัมพันธ์ N:M ระหว่างผู้ใช้กับผู้ป่วยผ่าน PatientAssignment |
 | ผู้ป่วย (Patient) | ประวัติการวินิจฉัยโรค NCD (NcdDiagnosis) | 1:N | ผู้ป่วยหนึ่งรายมีประวัติวินิจฉัยได้หลายครั้ง (FR-01) |
 | ผู้ป่วย (Patient) | ผลตรวจ lab (LabResult) | 1:N | ผู้ป่วยหนึ่งรายมีผลตรวจ lab ย้อนหลังได้หลายครั้ง (FR-02) |
 | ผู้ป่วย (Patient) | ผลการประเมินความเสี่ยงโรคแทรกซ้อน (ComplicationRiskAssessment) | 1:N | ผู้ป่วยหนึ่งรายถูกประเมินความเสี่ยงได้หลายครั้ง (FR-03) |
@@ -617,8 +594,6 @@ Primary Data Store ในระดับ logical
 erDiagram
     USER ||--o{ COMPLICATION_RISK_ASSESSMENT : "ร้องขอ"
     USER ||--o{ COMPLICATION_RISK_ASSESSMENT : "ยืนยัน/แก้ไขผล (FR-16)"
-    USER ||--o{ PATIENT_ASSIGNMENT : "ได้รับมอบหมายดูแล"
-    PATIENT ||--o{ PATIENT_ASSIGNMENT : "ถูกมอบหมายให้ดูแลโดย"
     PATIENT ||--o{ NCD_DIAGNOSIS : "มีประวัติวินิจฉัย"
     PATIENT ||--o{ LAB_RESULT : "มีผลตรวจ lab"
     PATIENT ||--o{ COMPLICATION_RISK_ASSESSMENT : "ถูกประเมินความเสี่ยง"
@@ -645,12 +620,6 @@ erDiagram
         string เลขประจำตัวผู้ป่วย "ตัวเลขล้วน ความยาวคงที่ 7 หลัก (FR-06)"
         string ชื่อ_นามสกุล
         string แหล่งข้อมูลต้นทาง
-    }
-    PATIENT_ASSIGNMENT {
-        string id
-        string ผู้ใช้_id
-        string ผู้ป่วย_id
-        datetime วันที่เริ่มมอบหมาย
     }
     NCD_DIAGNOSIS {
         string id
@@ -730,9 +699,9 @@ erDiagram
 ```
 
 **หมายเหตุสำคัญ:** ER Diagram ข้างต้นคือแหล่งความจริงของ**โครงสร้างเชิง logical** (ความสัมพันธ์/
-cardinality) เท่านั้น — ยังคงแสดง PatientAssignment เป็นตาราง N:M กลาง และ RiskFinding อ้างอิง 3
-entity แบบ relational ตามเจตนาดั้งเดิม ส่วนโครงสร้างจริงที่ implement บน Cloud Firestore (ซึ่ง
-denormalize บางจุดตามที่อธิบายไว้ในแต่ละ entity ด้านบน) ดูหัวข้อถัดไป
+cardinality) เท่านั้น — ยังคงแสดง RiskFinding อ้างอิง 3 entity แบบ relational ตามเจตนาดั้งเดิม (ไม่มี
+PatientAssignment อีกต่อไป — ลบออกทั้งหมดตั้งแต่ 2026-09-25) ส่วนโครงสร้างจริงที่ implement บน Cloud
+Firestore (ซึ่ง denormalize บางจุดตามที่อธิบายไว้ในแต่ละ entity ด้านบน) ดูหัวข้อถัดไป
 
 ## โครงสร้างเอกสารจริงใน Cloud Firestore (Firestore Document Structure)
 
@@ -742,9 +711,8 @@ Binding" ของแต่ละ entity ด้านบน) ตาม
 
 ```
 users/{userId}                                              ← User (document ID = Firebase Auth UID)
-patients/{patientId}                                        ← Patient
-patientAssignments/{userId}_{patientId}                     ← PatientAssignment (composite ID,
-                                                                denormalize patientHn/patientFullName)
+patients/{patientId}                                        ← Patient (Client อ่านตรงผ่าน Security
+                                                                Rules สำหรับ Operation 0 — ทุกบทบาท)
 ncdDiagnoses/{diagnosisId}                                  ← NcdDiagnosis (field patientId)
 labResults/{labResultId}                                    ← LabResult (field patientId)
 complicationRiskThresholds/{thresholdId}                    ← ComplicationRiskThreshold
@@ -758,11 +726,11 @@ retentionPolicies/{policyId}                                 ← RetentionPolicy
 
 **สรุปจุดที่ปรับโครงสร้างจาก relational ER model เดิม (ไม่ใช่แค่แปะ Firestore type):**
 
-1. **PatientAssignment (เดิม N:M ผ่านตารางกลาง)** → top-level collection พร้อม composite document
-   ID `{userId}_{patientId}` และ denormalize `patientHn`/`patientFullName` เข้าไปในเอกสารโดยตรง
-   เพื่อให้ Operation 0 เป็น query เดียวจบจาก Client ผ่าน Security Rules ได้ (ไม่ต้อง join กับ
-   `patients`) แลกกับภาระ sync ข้อมูลซ้ำเมื่อ Patient.hn/fullName เปลี่ยน (ดูรายละเอียดที่หัวข้อ
-   PatientAssignment ด้านบน)
+1. **PatientAssignment (เดิม N:M ผ่านตารางกลาง — ลบออกทั้งหมดตั้งแต่ 2026-09-25)** ~~เดิมเคยเป็น
+   top-level collection พร้อม composite document ID `{userId}_{patientId}` denormalize
+   `patientHn`/`patientFullName`~~ — **ยกเลิกทั้งหมดตาม [[architecture]]** (FR-14 ถูกยกเลิก) Operation 0
+   เปลี่ยนเป็น Client อ่าน `patients` โดยตรงผ่าน Security Rules แทน (ดูหัวข้อ Firestore Technical
+   Binding ของ Patient ด้านบน) ไม่มีการ denormalize field ใดๆ ข้ามระหว่าง collection อีกต่อไป
 2. **RiskFinding (เดิมอ้างอิง 3 entity: ComplicationRiskAssessment, ComplicationRiskThreshold,
    LabResult)** → เปลี่ยนเป็น subcollection ของ ComplicationRiskAssessment (ความสัมพันธ์หลักที่ใช้
    query จริง) ส่วนอีกสอง reference (threshold/labResult) คงเป็น field อ้างอิงธรรมดาเพราะใช้เพื่อ
@@ -778,7 +746,7 @@ retentionPolicies/{policyId}                                 ← RetentionPolicy
 ตามที่ [[architecture#Cross-cutting: การคุ้มครองข้อมูลส่วนบุคคล (PDPA)|architecture]] กำหนดไว้ว่า
 encryption at rest/in transit เป็นคุณสมบัติ (property) ไม่ใช่ field/component แยก เอกสารนี้จึงไม่เพิ่ม
 attribute "เข้ารหัสหรือไม่" ในแต่ละ entity แต่ระบุเป็นข้อกำหนดร่วมแทน: ทุก entity ในเอกสารนี้ที่มีข้อมูล
-ส่วนบุคคล/ข้อมูลสุขภาพของผู้ป่วย — ผู้ป่วย (Patient), การมอบหมายผู้ป่วยในความดูแล (PatientAssignment),
+ส่วนบุคคล/ข้อมูลสุขภาพของผู้ป่วย — ผู้ป่วย (Patient),
 ประวัติการวินิจฉัยโรค NCD (NcdDiagnosis), ผลตรวจ lab (LabResult), ผลการประเมินความเสี่ยงโรคแทรกซ้อน
 (ComplicationRiskAssessment), รายละเอียดผลการประเมินต่อโรคแทรกซ้อน (RiskFinding), บันทึกการเข้าถึง
 ข้อมูล (AuditLogRecord) และคำขอใช้สิทธิของเจ้าของข้อมูล (DataSubjectRequest) — ต้องถูกเข้ารหัสขณะจัดเก็บ
@@ -794,10 +762,9 @@ attribute "เข้ารหัสหรือไม่" ในแต่ละ 
 "Firestore Technical Binding" ของแต่ละ entity ด้านบนคือกลไกหลักระดับข้อมูลที่รองรับข้อกำหนดนี้ สรุป
 รวมทุก entity ที่มี composite index เพื่อการ query ที่รวดเร็ว:
 
-- [[#การมอบหมายผู้ป่วยในความดูแล (PatientAssignment)|PatientAssignment]] — `(userId ASC, patientHn ASC)`,
-  `(userId ASC, patientFullName ASC)`, `(patientId ASC)` (รองรับ Operation 0)
-- [[#ผู้ป่วย (Patient)|Patient]] — `(hn ASC)` (**ใหม่ในรอบ sync ที่หก** — รองรับ Operation 15 ที่ Admin
-  ค้นหาผู้ป่วยด้วย HN โดยตรงบน `patients`)
+- [[#ผู้ป่วย (Patient)|Patient]] — ไม่ต้องมี composite index (แก้ไข 2026-09-25 — ยกเลิก
+  PatientAssignment ทั้งหมด) equality query เดี่ยวบน `hn` ใช้ single-field index ที่ Firestore สร้าง
+  อัตโนมัติ รองรับ Operation 0 ที่ครอบคลุมทุกบทบาทแล้ว (รวม Admin หลังรวม Operation 15 เดิมเข้าด้วยกัน)
 - [[#ประวัติการวินิจฉัยโรค NCD (NcdDiagnosis)|NcdDiagnosis]] — `(patientId ASC, diagnosedAt DESC)`
   (รองรับ Operation 1)
 - [[#ผลตรวจ lab (LabResult)|LabResult]] — `(patientId ASC, testedAt DESC)`,
@@ -822,28 +789,32 @@ managed caching layer แยก (ดู "ประเด็นรอตัดส
 รองรับ [[backlog#Non-Functional Requirements|NFR-14]] — Firestore Security Rules ที่ควบคุมสิทธิ์การ
 เข้าถึงทุก collection ในเอกสารนี้ต้องมี automated test (ผ่าน Firebase Emulator Suite ตาม
 [[technology-stack#7. Authentication/Authorization — Firebase Authentication (ไม่ใช้ Custom Claims เก็บบทบาท — แก้ไขในรอบสาม 2026-09-24)|decision area 7 ใน technology-stack]])
-ครอบคลุมอย่างน้อย: (ก) ผู้ใช้ไม่มี assignment ใดเลย, (ข) ผู้ใช้มี assignment บางส่วน, (ค) บัญชีถูกระงับ
-(`isActive=false`), (ง) บัญชียังไม่ยืนยันอีเมล (`email_verified=false` — เพิ่มใหม่ 2026-09-24 ตาม
-[[technology-stack#19. การตรวจสอบ `emailVerified` ซ้ำฝั่ง Backend (FR-09, ฟีเจอร์ที่ 6) — ตรวจทั้ง Cloud Functions และ Security Rules|decision area 19]]) — ก่อน deploy ใช้งานกับข้อมูลผู้ป่วยจริงเสมอ
+ครอบคลุมอย่างน้อย: (ก) บทบาทไม่ถูกต้อง/ไม่มี role, (ข) บทบาทถูกต้องครบทุกค่าที่กำหนดไว้ล่วงหน้า
+(`"แพทย์"`/`"พยาบาล"`/`"admin"`), (ค) บัญชีถูกระงับ (`isActive=false`), (ง) บัญชียังไม่ยืนยันอีเมล
+(`email_verified=false` — เพิ่มใหม่ 2026-09-24 ตาม
+[[technology-stack#19. การตรวจสอบ `emailVerified` ซ้ำฝั่ง Backend (FR-09, ฟีเจอร์ที่ 6) — ตรวจทั้ง Cloud Functions และ Security Rules|decision area 19]]) — ก่อน deploy ใช้งานกับข้อมูลผู้ป่วยจริงเสมอ **(แก้ไข
+2026-09-25: เคสเดิม "(ก) ผู้ใช้ไม่มี assignment ใดเลย/(ข) ผู้ใช้มี assignment บางส่วน" ถูกลบออก เพราะ
+ไม่มีกลไก PatientAssignment ให้ทดสอบอีกต่อไป — แทนที่ด้วยการทดสอบค่า `role` ที่ถูกต้องครบทุกค่าแทน)**
 สรุป Security Rules ที่ต้องอยู่ในชุดทดสอบนี้ (อ้างอิงจากหัวข้อ "Firestore Technical Binding" ของแต่ละ
 entity ด้านบน):
 
 | Collection | กฎที่ต้องทดสอบ | รองรับ |
 | --- | --- | --- |
-| `users` | อ่านได้เฉพาะเอกสารของตนเอง (ใช้เป็นแหล่งตรวจ role/isActive); ต้องมี test case เพิ่มเติมสำหรับฟีเจอร์ที่ 6: บัญชีที่เพิ่งสมัคร (ไม่มี `role`, `isActive=false`) ต้องไม่ผ่านการตรวจสอบระดับบทบาทของ Operation ร่วม Access Control; **เพิ่มใหม่ในรอบ sync ที่หก (ฟีเจอร์ที่ 7):** บัญชีที่ `role="admin"` ต้องอ่านเอกสารตนเองได้ตามปกติเช่นเดียวกับ `"แพทย์"`/`"พยาบาล"` (ไม่มีสิทธิ์พิเศษเพิ่มเติมในระดับ Security Rules ของ collection นี้เอง — สิทธิ์พิเศษของ Admin ควบคุมที่ Cloud Functions (Operation 10-16) ไม่ใช่ Security Rules) — Client (รวม Admin) ยังคง**ไม่มีสิทธิ์เขียน** `users` โดยตรงไม่ว่ากรณีใด | [[#ผู้ใช้ (User)\|User]] |
-| `patientAssignments` | `allow list, get` เฉพาะเมื่อ `resource.data.userId == request.auth.uid`, `request.auth.token.email_verified == true` และ role/isActive ถูกต้อง (**เฉพาะ `role` เป็น `"แพทย์"`/`"พยาบาล"` เท่านั้น — `"admin"` ไม่เข้าเงื่อนไขนี้ เพราะ Admin ไม่ใช้ Operation 0 ในการดูรายชื่อผู้ป่วย ดู Operation 15 แทน**); `allow create, update, delete: if false` (**รวมถึง Admin — การมอบหมาย/ยกเลิกมอบหมายผู้ป่วยของ Admin ตาม FR-14 เขียนผ่าน Cloud Function ด้วย Admin SDK เท่านั้น ไม่ผ่าน Security Rules**); ต้องมี test case เพิ่มเติม: บัญชีที่ `isActive=true`/role ถูกต้องครบแต่ `email_verified=false` ต้องถูกปฏิเสธเช่นกัน (เพิ่มใหม่ 2026-09-24 ตาม decision area 19); **เพิ่มใหม่ในรอบ sync ที่หก:** บัญชีที่ `role="admin"` ต้องไม่สามารถ `list`/`get` เอกสารของผู้อื่นใน collection นี้ได้เช่นกัน (เงื่อนไข `resource.data.userId == request.auth.uid` ปฏิเสธอยู่แล้วโดยไม่ต้องเพิ่มเงื่อนไขพิเศษ เพราะ Admin ไม่มีระเบียนของตนเองใน `patientAssignments`) | [[#การมอบหมายผู้ป่วยในความดูแล (PatientAssignment)\|PatientAssignment]] |
-| `patients`, `ncdDiagnoses`, `labResults`, `complicationRiskThresholds`, `complicationRiskAssessments` (+ subcollection `riskFindings`), `dataSubjectRequests`, `retentionPolicies` | `allow read, write: if false;` สำหรับ Client ทั้งหมด (เข้าถึงได้เฉพาะผ่าน Cloud Functions/Admin SDK) — **ไม่ต้องแก้ไข rule สำหรับฟีเจอร์ที่ 7: ข้อยกเว้น NFR-19 ของ Admin ถูกบังคับใช้ในโค้ด Cloud Functions (Operation 1-3, 15, 16) ไม่ใช่ Security Rules เพราะ collection เหล่านี้ปฏิเสธ Client ทั้งหมดอยู่แล้วไม่ว่า role ใด** | แต่ละ entity ที่เกี่ยวข้องด้านบน |
+| `users` | อ่านได้เฉพาะเอกสารของตนเอง (ใช้เป็นแหล่งตรวจ role/isActive); ต้องมี test case เพิ่มเติมสำหรับฟีเจอร์ที่ 6: บัญชีที่เพิ่งสมัคร (ไม่มี `role`, `isActive=false`) ต้องไม่ผ่านการตรวจสอบระดับบทบาทของ Operation ร่วม Access Control; บัญชีที่ `role="admin"` ต้องอ่านเอกสารตนเองได้ตามปกติเช่นเดียวกับ `"แพทย์"`/`"พยาบาล"` (ไม่มีสิทธิ์พิเศษเพิ่มเติมในระดับ Security Rules ของ collection นี้เอง — สิทธิ์พิเศษของ Admin ควบคุมที่ Cloud Functions (Operation 10-13) ไม่ใช่ Security Rules) — Client (รวม Admin) ยังคง**ไม่มีสิทธิ์เขียน** `users` โดยตรงไม่ว่ากรณีใด | [[#ผู้ใช้ (User)\|User]] |
+| `patients` | **แก้ไข 2026-09-25 (เดิม `allow read, write: if false;` — ย้ายกฎมาจาก `patientAssignments` ที่ถูกยกเลิก):** `allow list, get` เฉพาะเมื่อ `request.auth.token.email_verified == true` และ role/isActive ถูกต้อง (**`role` เป็น `"แพทย์"`, `"พยาบาล"` หรือ `"admin"` ก็ได้เท่ากัน — ไม่มีการจำกัดระดับรายผู้ป่วยอีกต่อไป**); `allow create, update, delete: if false` (แก้ไขข้อมูลผู้ป่วยได้เฉพาะผ่าน Operation 4 ด้วย Admin SDK เท่านั้น); ต้องมี test case เพิ่มเติม: บัญชีที่ `isActive=true`/role ถูกต้องครบแต่ `email_verified=false` ต้องถูกปฏิเสธเช่นกัน (ตาม decision area 19); บัญชีที่ `role="admin"` ต้อง `list`/`get` ได้สำเร็จเช่นเดียวกับ `"แพทย์"`/`"พยาบาล"` (ไม่ใช่ข้อยกเว้นอีกต่อไป — เป็นกฎเดียวกันสำหรับทุกบทบาท) | [[#ผู้ป่วย (Patient)\|Patient]] |
+| `ncdDiagnoses`, `labResults`, `complicationRiskThresholds`, `complicationRiskAssessments` (+ subcollection `riskFindings`), `dataSubjectRequests`, `retentionPolicies` | `allow read, write: if false;` สำหรับ Client ทั้งหมด (เข้าถึงได้เฉพาะผ่าน Cloud Functions/Admin SDK) — Admin เข้าถึงข้อมูลเหล่านี้ผ่าน Operation 1/2/3 (โค้ด Cloud Functions ตรวจสอบ `role` แทน ไม่ใช่ Security Rules ของ collection เหล่านี้ เพราะปฏิเสธ Client ทั้งหมดอยู่แล้วไม่ว่า role ใด) | แต่ละ entity ที่เกี่ยวข้องด้านบน |
 | `auditLogRecords` | `allow read, write: if false;` สำหรับ Client ทั้งหมด (บังคับ append-only/immutable) — ไม่เปลี่ยนแปลงแม้เพิ่ม attribute `isAdminAccess` (NFR-20) เพราะเขียนผ่าน Admin SDK เท่านั้นเหมือนเดิม | [[#บันทึกการเข้าถึงข้อมูล (AuditLogRecord)\|AuditLogRecord]] |
 
-**เพิ่มใหม่ในรอบ sync ที่หก — test case ระดับโค้ด Cloud Functions (ไม่ใช่ Security Rules แต่ยังอยู่ในขอบเขต
-NFR-14 เพราะเป็นการบังคับสิทธิ์เข้าถึงข้อมูลผู้ป่วยเช่นกัน):**
+**test case ระดับโค้ด Cloud Functions (ไม่ใช่ Security Rules แต่ยังอยู่ในขอบเขต NFR-14 เพราะเป็นการ
+บังคับสิทธิ์เข้าถึงข้อมูลผู้ป่วยเช่นกัน — แก้ไข 2026-09-25: ลบเคส "ไม่มี PatientAssignment" เพราะไม่มี
+กลไกนี้ให้ทดสอบอีกต่อไป, ลบ Operation 15 ที่ถูกรวมเข้ากับ Operation 0 แล้ว):**
 
-- Admin (`role="admin"`, `isActive=true`, `email_verified=true`) ที่**ไม่มี** PatientAssignment ใดๆ
-  เลย ต้องเรียก Operation 1/2/3/15/16 (อ่านข้อมูลผู้ป่วยรายใดก็ได้) **สำเร็จ** — ต่างจากแพทย์/พยาบาลที่
-  ต้องถูกปฏิเสธในกรณีเดียวกัน (NFR-19)
+- Admin (`role="admin"`, `isActive=true`, `email_verified=true`) ต้องเรียก Operation 1/2/3 (อ่านข้อมูล
+  ผู้ป่วยรายใดก็ได้ในระบบ) **สำเร็จ** เช่นเดียวกับแพทย์/พยาบาล (NFR-19 — ไม่ใช่ข้อยกเว้นอีกต่อไป
+  เพราะทุกบทบาทเข้าถึงผู้ป่วยทุกรายเหมือนกัน)
 - Admin ต้องถูก**ปฏิเสธ**เมื่อพยายามเรียก Operation 16 (FR-16 — ยืนยัน/แก้ไขผลประเมินความเสี่ยง) หรือ
   operation ใดๆ ที่แก้ไขข้อมูลทางคลินิก (ไม่ใช่สิทธิ์ของ Admin)
-- Admin ต้องถูก**ปฏิเสธ**เมื่อ Operation 1/2/3/15/16 ไม่สามารถบันทึก audit log (`isAdminAccess=true`)
+- Admin ต้องถูก**ปฏิเสธ**เมื่อ Operation 1/2/3 ไม่สามารถบันทึก audit log (`isAdminAccess=true`)
   ได้สำเร็จก่อนคืนข้อมูล (fail-safe ตาม NFR-20)
 - Admin ต้องถูก**ปฏิเสธ**เมื่อเรียก Operation 12/13 (เปลี่ยน role/isActive) โดยระบุ target userId เป็น
   ของตนเอง (ป้องกัน lockout — ยืนยันโดยผู้ใช้)
@@ -851,22 +822,57 @@ NFR-14 เพราะเป็นการบังคับสิทธิ์�
 ควรรันชุดทดสอบนี้เป็นส่วนหนึ่งของ CI/CD pipeline ก่อน deploy ทุกครั้งตามที่
 [[architecture#ตาราง Mapping NFR ไปยัง Component|ตาราง Mapping NFR ใน architecture]] ระบุไว้
 
+## คุณสมบัติร่วม (Cross-cutting Property) — จำกัดข้อมูลที่ส่งให้บริการ AI ภายนอก (NFR-21, เพิ่ม 2026-09-26)
+
+รองรับ [[backlog#Non-Functional Requirements|NFR-21]] และ [[backlog#กลาง|FR-17]] —
+[[api-spec#Operation 17 — อธิบายผลการค้นหาผู้ป่วยด้วย HN โดยบริการ AI ภายนอก (AI-assisted Search Result Explanation)|Operation 17 ใน api-spec]]
+เรียก [[architecture#บริการ AI ภายนอก (External AI Service)|บริการ AI ภายนอก (External AI Service)]]
+ตรงจาก Client ซึ่งเป็นผู้ประมวลผลข้อมูลภายนอก (third-party data processor) — **ไม่มี entity ใหม่ใน
+เอกสารนี้สำหรับความสามารถนี้** เพราะไม่มีการอ่าน/เขียนข้อมูลจาก Primary Data Store โดยตรงเลย ข้อมูลที่
+ส่งออกไปนอกระบบจำกัดเฉพาะ 3 ค่าชั่วคราวที่ไม่ถูกเก็บถาวรที่ใดเลย (ไม่ใช่ Firestore, ไม่ใช่ audit log):
+
+- เลข HN ที่ผู้ใช้พิมพ์ในช่องค้นหา (ค่าเดียวกับที่ใช้เทียบกับ
+  [[#ผู้ป่วย (Patient)|Patient.เลขประจำตัวผู้ป่วย]] ใน Operation 0 — แต่ในกรณีที่ HN ไม่ครบ 7 หลักหรือ
+  ไม่พบผู้ป่วย ค่าที่ส่งไปยัง AI ก็ยังคงเป็นแค่ข้อความที่ผู้ใช้พิมพ์ ไม่ผูกกับ document ใดใน `patients`)
+- สถานะผลการค้นหาแบบไม่ระบุตัวตน (`"invalid-hn"` \| `"not-found"` \| `"found"`)
+- จำนวนผู้ป่วยที่พบ (ตัวเลข) — เฉพาะกรณี `"found"`
+
+**ห้ามส่ง** `ชื่อ-นามสกุล`, `id` (Patient.id) หรือ attribute อื่นใดของ
+[[#ผู้ป่วย (Patient)|Patient]] ให้บริการ AI ภายนอกเด็ดขาด — การจำกัดนี้บังคับใช้ที่ชั้น prompt
+construction ในโค้ด Client เท่านั้น (ไม่มีชั้นตรวจสอบซ้ำฝั่งเซิร์ฟเวอร์ เพราะ Operation 17 ไม่มี Cloud
+Function ตัวกลาง — ดู Technical Binding ของ Operation 17 ใน [[api-spec]]) ถือเป็นความเสี่ยงที่ผู้ใช้
+รับทราบแล้ว (ดู "ประเด็นรอตัดสินใจ" ด้านล่าง และ [[architecture#บริการ AI ภายนอก (External AI Service)|architecture]])
+
 ## ประเด็นรอตัดสินใจ
 
-**ฟีเจอร์ที่ 7 (Admin) และ FR-16 — ปิดแล้วในรอบ sync ที่หก (2026-09-24):** สามจุดที่เคยเป็นประเด็น
-รอตัดสินใจ (โครงสร้างข้อมูล FR-16, โครงสร้าง audit log NFR-20, กลไก/ผู้กำหนดการมอบหมายผู้ป่วย
-PatientAssignment) ได้รับคำตอบยืนยันจากผู้ใช้แล้วผ่าน `NEEDS_USER_INPUT` และถูกนำไปปรับปรุงในเอกสารนี้
-ครบแล้ว (ดูหัวข้อ [[#ผลการประเมินความเสี่ยงโรคแทรกซ้อน (ComplicationRiskAssessment)|ComplicationRiskAssessment]],
-[[#บันทึกการเข้าถึงข้อมูล (AuditLogRecord)|AuditLogRecord]] และ
-[[#การมอบหมายผู้ป่วยในความดูแล (PatientAssignment)|PatientAssignment]] ด้านบน) — รายการที่**ยังคงเหลือ
-เป็นความเสี่ยง/ข้อควรทราบต่อ** (ไม่ใช่ "ยังไม่ตัดสินใจ"):
+**FR-17/NFR-21 (AI ช่วยอธิบายผลการค้นหาด้วย HN) — ปิดกลไกทางเทคนิคแล้วในรอบ 2026-09-26:** ไม่มี entity
+ใหม่ในเอกสารนี้ (ดูหัวข้อ [[#คุณสมบัติร่วม (Cross-cutting Property) — จำกัดข้อมูลที่ส่งให้บริการ AI ภายนอก (NFR-21, เพิ่ม 2026-09-26)|คุณสมบัติร่วม NFR-21]]
+ด้านบน) รายการที่**ยังคงเป็นความเสี่ยงที่ต้องบันทึกไว้ต่อ** (ไม่ใช่ "ยังไม่ตัดสินใจ" — ผู้ใช้รับทราบและ
+ยืนยันให้ดำเนินการต่อแล้วในรอบ MVP นี้):
+
+- **NFR-21 บังคับได้เฉพาะฝั่ง Client เท่านั้น** — ไม่มี Cloud Function ตัวกลางคอยตรวจสอบ/กรอง prompt
+  ก่อนส่งข้อมูลออกนอกระบบจริง (ดูรายละเอียดเต็มที่ [[api-spec#ประเด็นรอตัดสินใจ|ประเด็นรอตัดสินใจใน api-spec]]
+  และ [[architecture#บริการ AI ภายนอก (External AI Service)|architecture]])
+- **ไม่มี audit log ของการเรียกบริการ AI ภายนอกเลยในรอบนี้** — ต่างจาก NFR-06 ที่มี
+  [[#บันทึกการเข้าถึงข้อมูล (AuditLogRecord)|AuditLogRecord]] แบบ fail-safe ครอบคลุมทุก operation ที่
+  เข้าถึงข้อมูลผู้ป่วยจริง (Operation 1-4, 16) — Operation 17 ไม่มีร่องรอยการเรียกเก็บไว้ในระบบเลย
+
+**ฟีเจอร์ที่ 7 (Admin) และ FR-16 — ปิดแล้วในรอบ sync ที่หก (2026-09-24):** สองจุดที่เคยเป็นประเด็น
+รอตัดสินใจ (โครงสร้างข้อมูล FR-16, โครงสร้าง audit log NFR-20) ได้รับคำตอบยืนยันจากผู้ใช้แล้วผ่าน
+`NEEDS_USER_INPUT` และถูกนำไปปรับปรุงในเอกสารนี้ครบแล้ว (ดูหัวข้อ
+[[#ผลการประเมินความเสี่ยงโรคแทรกซ้อน (ComplicationRiskAssessment)|ComplicationRiskAssessment]] และ
+[[#บันทึกการเข้าถึงข้อมูล (AuditLogRecord)|AuditLogRecord]] ด้านบน) — **จุดที่สาม (กลไก/ผู้กำหนดการ
+มอบหมายผู้ป่วย PatientAssignment) ไม่เกี่ยวข้องอีกต่อไป เพราะ FR-14/PatientAssignment ถูกยกเลิกทั้งหมด
+ตั้งแต่ 2026-09-25** (ดู [[architecture]]) — รายการที่**ยังคงเหลือเป็นความเสี่ยง/ข้อควรทราบต่อ**
+(ไม่ใช่ "ยังไม่ตัดสินใจ"):
 
 - **ค่าประเมินอัตโนมัติดั้งเดิมของ ComplicationRiskAssessment (`พบความเสี่ยงหรือไม่`) ต้องไม่ถูกเขียนทับ
   เด็ดขาด** — เป็นวินัยของโค้ด Cloud Function (Operation 16) ไม่มีกลไกทางเทคนิคระดับ Firestore ที่บังคับ
   ความ immutable นี้โดยอัตโนมัติ (Firestore ไม่มี field-level immutability) ควรพิจารณาเพิ่ม unit test
   เฉพาะสำหรับพฤติกรรมนี้ในรอบ `sync-test-plan` ถัดไป
-- **จำนวน/การแบ่ง Cloud Function สำหรับ Operation 10-16** (Admin + FR-16) — ยังไม่ตัดสินใจว่าจะรวมเป็น
-  callable function เดียวหรือแยกฟังก์ชันตาม operation (ดู "ประเด็นรอตัดสินใจ" ใน [[api-spec]])
+- **จำนวน/การแบ่ง Cloud Function สำหรับ Operation 10-13 และ 16** (Admin + FR-16 — Operation 14/15
+  ถูกลบแล้วตั้งแต่ 2026-09-25) — ยังไม่ตัดสินใจว่าจะรวมเป็น callable function เดียวหรือแยกฟังก์ชันตาม
+  operation (ดู "ประเด็นรอตัดสินใจ" ใน [[api-spec]])
 
 - ค่าตัวเลขจริงของ threshold แต่ละรายการใน ComplicationRiskThreshold และการจับคู่โรคหลัก →
   โรคแทรกซ้อน ยังไม่ถูกยืนยันจากแพทย์ผู้เชี่ยวชาญ (ดู

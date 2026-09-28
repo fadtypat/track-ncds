@@ -28,7 +28,6 @@
         <a href="admin-dashboard.html">Admin: หน้าหลัก</a>
         <a href="admin-account-approval.html">Admin: อนุมัติบัญชี</a>
         <a href="admin-user-directory.html">Admin: จัดการผู้ใช้งาน</a>
-        <a href="admin-patient-assignment.html">Admin: มอบหมายผู้ป่วย</a>
         <a href="admin-patient-directory.html">Admin: ผู้ป่วยทุกราย</a>
         <a href="admin-patient-detail-readonly.html">Admin: ดูประวัติ (read-only)</a>
       </div>
@@ -36,7 +35,9 @@
     <div class="proto-bar-codes">
       <span class="proto-code">FR-05</span>
       <span class="proto-code">FR-06</span>
+      <span class="proto-code">FR-17</span>
       <span class="proto-code">NFR-02</span>
+      <span class="proto-code">NFR-21</span>
     </div>
   </div>
 </nav>
@@ -52,18 +53,19 @@
         <a class="btn btn-secondary btn-sm" href="login.html#logged-out">ออกจากระบบ</a>
       </div>
     </div>
-    <h1 class="type-page-title">ผู้ป่วย NCD ในความดูแลของฉัน</h1>
+    <h1 class="type-page-title">ผู้ป่วย NCD ทั้งหมดในระบบ</h1>
     <p class="type-body" style="max-width:640px;">
-      รายชื่อนี้แสดงเฉพาะผู้ป่วยที่ถูก assign ให้อยู่ในความดูแลของท่านเท่านั้น (NFR-02) — ค้นหาด้วยเลข
-      ประจำตัวผู้ป่วย (HN) ตัวเลขล้วน 7 หลักเท่านั้น (ไม่รองรับการค้นหาด้วยชื่ออีกต่อไป, FR-06) หรือเลื่อนดู
-      รายการทั้งหมดได้โดยไม่ต้องค้นหาก่อน (FR-05) — หน้านี้เป็นจุดเริ่ม routine หลังผ่าน journey
+      แพทย์/พยาบาล/Admin ทุกคนที่ผ่านเงื่อนไขพื้นฐาน (token ถูกต้อง, email_verified = true, role ที่ระบบ
+      อนุญาต, isActive = true) เห็นรายชื่อผู้ป่วยชุดเดียวกันนี้ (NFR-02) — ค้นหาด้วยเลขประจำตัวผู้ป่วย (HN)
+      ตัวเลขล้วน 7 หลักเท่านั้น (ไม่รองรับการค้นหาด้วยชื่ออีกต่อไป, FR-06) หรือเลื่อนดูรายการทั้งหมดได้โดย
+      ไม่ต้องค้นหาก่อน (FR-05) — หน้านี้เป็นจุดเริ่ม routine หลังผ่าน journey
       "สมัครบัญชี เข้าสู่ระบบ และจัดการรหัสผ่านด้วยอีเมล" (FR-07–FR-10) สำเร็จแล้วเท่านั้น
     </p>
   </header>
 
   <section class="stat-grid">
     <div class="stat-tile sky">
-      <span class="stat-label">ผู้ป่วย NCDS ในความดูแลทั้งหมด</span>
+      <span class="stat-label">ผู้ป่วย NCD ทั้งหมดในระบบ</span>
       <span class="stat-value">4 คน</span>
     </div>
     <div class="stat-tile rose">
@@ -78,11 +80,12 @@
 
   <section class="section-card">
     <div class="section-head">
-      <h2 class="type-section-title">ค้นหาด้วยเลข HN (FR-06)</h2>
+      <h2 class="type-section-title">ค้นหาด้วยเลข HN (FR-06, FR-17)</h2>
       <span class="type-caption">
-        กรอกเลขประจำตัวผู้ป่วย (HN) ตัวเลขล้วน 7 หลัก แล้วกดปุ่ม "ค้นหา" — ระบบตรวจสอบความถูกต้องหลังกด
-        ค้นหาเท่านั้น ไม่ใช่แบบ real-time ระหว่างพิมพ์ ไม่บังคับต้องค้นหาก่อน เลื่อนดูรายชื่อทั้งหมดด้านล่าง
-        ได้ทันที (FR-05)
+        กรอกเลขประจำตัวผู้ป่วย (HN) ตัวเลขล้วน 7 หลัก — ระบบค้นหาและแสดงผลลัพธ์ (แจ้ง HN ไม่ครบ 7 หลัก /
+        ไม่พบผู้ป่วย / พบผู้ป่วย) ทั้งตอนหยุดพิมพ์ชั่วขณะ (debounce ~500ms) และตอนกดปุ่ม "ค้นหา" — กล่อง
+        คำอธิบายจาก AI แสดงเฉพาะตอนกดปุ่ม "ค้นหา" เท่านั้น (ไม่แสดงตอนหยุดพิมพ์ เพื่อประหยัด quota) ไม่บังคับ
+        ต้องค้นหาก่อน เลื่อนดูรายชื่อทั้งหมดด้านล่างได้ทันที (FR-05)
       </span>
     </div>
 
@@ -95,14 +98,22 @@
         <button type="submit" class="btn btn-primary">ค้นหา</button>
       </div>
       <span class="type-caption">รองรับเฉพาะตัวเลขล้วน 7 หลักเท่านั้น (ไม่รองรับการค้นหาด้วยชื่ออีกต่อไป)</span>
+      <label class="checkbox-row" style="margin-top:var(--space-2);">
+        <input type="checkbox" id="ai-unavailable-toggle">
+        <span class="type-body" style="color:inherit;">
+          จำลอง: บริการ AI ภายนอกไม่พร้อมใช้งาน (สำหรับสาธิต prototype เท่านั้น — ผลการค้นหาปกติยังคงใช้งาน
+          ได้ตามเดิม ไม่ถูกบล็อกจากความล้มเหลวของ AI)
+        </span>
+      </label>
     </form>
 
     <div id="hn-search-result" hidden></div>
+    <div id="hn-ai-explain" hidden></div>
   </section>
 
   <section class="stack" style="gap:12px;">
     <div class="flex-between">
-      <h2 class="type-section-title">รายชื่อผู้ป่วยทั้งหมดในความดูแล (4 คน)</h2>
+      <h2 class="type-section-title">รายชื่อผู้ป่วย NCD ทุกรายในระบบ (4 คน)</h2>
     </div>
 
     <div class="patient-grid">
@@ -188,7 +199,7 @@
 
 <script>
 (function () {
-  // Mock ผู้ป่วยในความดูแล — ใช้ค่า HN 7 หลัก (ไม่มี "HN-" prefix) ตรงกับ FR-06
+  // Mock ผู้ป่วย NCD ทั้งหมดในระบบ — ใช้ค่า HN 7 หลัก (ไม่มี "HN-" prefix) ตรงกับ FR-06
   // การ์ดแสดงผลด้านบนใช้รูปแบบ "HN-xxxxxxx" เป็น label เพื่ออ่านง่าย แต่ค่าที่ใช้ค้นหาจริงคือเลขล้วน 7 หลัก
   var patients = [
     { hn: "6500123", name: "นายสมชาย ใจกล้า", meta: "ชาย · 58 ปี", risk: "veryhigh", riskLabel: "เสี่ยง สูงมาก",
@@ -208,6 +219,9 @@
   var form = document.getElementById("hn-search-form");
   var input = document.getElementById("patient-search");
   var resultBox = document.getElementById("hn-search-result");
+  var aiBox = document.getElementById("hn-ai-explain");
+  var aiUnavailableToggle = document.getElementById("ai-unavailable-toggle");
+  var debounceTimer = null;
 
   function escapeHtml(str) {
     return String(str).replace(/[&<>"']/g, function (c) {
@@ -221,6 +235,83 @@
       '<div class="callout note" role="alert" style="margin-top:var(--space-2);">' +
         '<span class="callout-title">ผลการค้นหา</span>' +
         '<p class="type-body" style="color:inherit;">' + escapeHtml(message) + "</p>" +
+      "</div>";
+  }
+
+  function hideAiBox() {
+    aiBox.hidden = true;
+    aiBox.innerHTML = "";
+  }
+
+  function clearResult() {
+    resultBox.hidden = true;
+    resultBox.innerHTML = "";
+    hideAiBox();
+  }
+
+  // FR-06: ตรวจสอบรูปแบบ HN + ค้นหาผู้ป่วยเกิดขึ้นทั้งตอนหยุดพิมพ์ (debounce) และตอนกดปุ่มค้นหา ใช้ฟังก์ชัน
+  // เดียวกัน (performSearch) เพื่อให้ผลลัพธ์ 3 กรณี (HN ไม่ครบ 7 หลัก/ไม่พบผู้ป่วย/พบผู้ป่วย) ตรงกันทั้งสอง
+  // จังหวะ ต่างกันแค่กล่อง AI (FR-17) ที่แสดงเฉพาะตอนกดปุ่มค้นหาเท่านั้น
+  function performSearch(value) {
+    if (!/^\d{7}$/.test(value)) {
+      renderNote("กรุณากรอกเลข HN ให้ครบ 7 หลัก (ตัวเลขล้วนเท่านั้น) แล้วลองค้นหาอีกครั้ง");
+      return { caseType: "incomplete", hn: value, count: 0 };
+    }
+    var found = null;
+    for (var i = 0; i < patients.length; i++) {
+      if (patients[i].hn === value) { found = patients[i]; break; }
+    }
+    if (!found) {
+      renderNote("ไม่พบผู้ป่วยที่ตรงกับเลข HN " + value + " กรุณาตรวจสอบเลขแล้วค้นหาใหม่");
+      return { caseType: "not-found", hn: value, count: 0 };
+    }
+    renderFound(found);
+    return { caseType: "found", hn: value, count: 1 };
+  }
+
+  // FR-06: ตอนหยุดพิมพ์ชั่วขณะ (debounce ~500ms) ค้นหาแบบเดียวกับตอนกดปุ่มค้นหา (แสดง #hn-search-result
+  // ครบทั้ง 3 กรณี) แต่**ไม่**เรียก renderAiExplanation (FR-17 สงวนไว้เฉพาะตอนกดปุ่มค้นหาเพื่อประหยัด quota
+  // ตาม user-journey) และซ่อนกล่อง AI เดิมทันทีที่พิมพ์เปลี่ยน เพื่อไม่ให้ข้อความ AI ค้างเก่าค้างอยู่ผิดบริบท
+  input.addEventListener("input", function () {
+    clearTimeout(debounceTimer);
+    hideAiBox();
+    var currentValue = input.value.trim();
+    if (currentValue.length === 0) {
+      clearResult();
+      return;
+    }
+    debounceTimer = setTimeout(function () {
+      performSearch(input.value.trim());
+      hideAiBox();
+    }, 500);
+  });
+
+  // FR-17/NFR-21: คำอธิบายจาก AI แสดงเฉพาะตอนกดปุ่มค้นหาเท่านั้น ข้อมูลที่ "ส่งให้ AI" จำกัดเฉพาะเลข HN
+  // ที่พิมพ์และสถานะ/จำนวนผลลัพธ์แบบไม่ระบุตัวตน (ไม่ส่งชื่อผู้ป่วยหรือข้อมูลระบุตัวตนใดๆ) — ถ้าบริการ AI
+  // ใช้งานไม่ได้ (จำลองด้วย checkbox ด้านบน) ผลการค้นหาปกติยังคงใช้งานได้ตามปกติ ไม่ถูกบล็อก
+  function renderAiExplanation(caseType, hn, count) {
+    aiBox.hidden = false;
+    if (aiUnavailableToggle.checked) {
+      aiBox.innerHTML =
+        '<div class="callout note" role="status">' +
+          '<span class="callout-title">AI ไม่พร้อมใช้งาน</span>' +
+          '<p class="type-body" style="color:inherit; margin:0;">บริการ AI ภายนอกไม่พร้อมใช้งานขณะนี้ — ผลการค้นหาด้านบนยังคงใช้ได้ตามปกติ (ไม่ถูกบล็อกจากความล้มเหลวของ AI)</p>' +
+        "</div>";
+      return;
+    }
+    var message;
+    if (caseType === "incomplete") {
+      message = "หมายเลขที่กรอกยังไม่ครบ 7 หลัก กรุณากรอกให้ครบแล้วลองค้นหาอีกครั้ง";
+    } else if (caseType === "not-found") {
+      message = "ระบบไม่พบข้อมูลผู้ป่วยหมายเลข HN " + escapeHtml(hn) + " กรุณาตรวจสอบเลขอีกครั้งหรือค้นหาด้วยเลขอื่น";
+    } else {
+      message = "ระบบพบข้อมูลผู้ป่วยหมายเลข HN " + escapeHtml(hn) + " จำนวน " + count + " ราย กรุณาตรวจสอบรายละเอียดหรือคลิกเลือกรายชื่อเพื่อดำเนินการต่อ";
+    }
+    aiBox.innerHTML =
+      '<div class="callout info" role="status">' +
+        '<span class="callout-title">คำอธิบายจาก AI</span>' +
+        '<p class="type-body" style="color:inherit; margin:0;">' + message + "</p>" +
+        '<span class="type-caption">ข้อความจาก AI ใช้ประกอบเท่านั้น ไม่ใช่คำแนะนำทางการแพทย์ (FR-17) · ข้อมูลที่ส่งให้ AI จำกัดเฉพาะเลข HN ที่พิมพ์และสถานะ/จำนวนผลลัพธ์แบบไม่ระบุตัวตน ไม่ส่งชื่อผู้ป่วยหรือข้อมูลระบุตัวตนใดๆ (NFR-21)</span>' +
       "</div>";
   }
 
@@ -248,20 +339,10 @@
 
   form.addEventListener("submit", function (e) {
     e.preventDefault();
+    clearTimeout(debounceTimer);
     var value = input.value.trim();
-    if (!/^\d{7}$/.test(value)) {
-      renderNote("กรุณากรอกเลข HN ให้ครบ 7 หลัก (ตัวเลขล้วนเท่านั้น) แล้วลองค้นหาอีกครั้ง");
-      return;
-    }
-    var found = null;
-    for (var i = 0; i < patients.length; i++) {
-      if (patients[i].hn === value) { found = patients[i]; break; }
-    }
-    if (!found) {
-      renderNote("ไม่พบผู้ป่วยที่ตรงกับเลข HN " + value + " ในความดูแลของท่าน กรุณาตรวจสอบเลขแล้วค้นหาใหม่");
-      return;
-    }
-    renderFound(found);
+    var result = performSearch(value);
+    renderAiExplanation(result.caseType, result.hn, result.count);
   });
 })();
 </script>

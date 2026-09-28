@@ -13,10 +13,14 @@
 [[db-spec#บันทึกการเข้าถึงข้อมูล (AuditLogRecord)|AuditLogRecord]] ใน [[db-spec]]
 
 **Precondition:** ฟีเจอร์นี้เริ่มทำงานได้ก็ต่อเมื่อผ่านฟีเจอร์
-[[feature-list#3. ค้นหา/เลือกผู้ป่วยในความดูแล|3. ค้นหา/เลือกผู้ป่วยในความดูแล]] มาก่อนเสมอ (เลือก
+[[feature-list#3. ค้นหา/เลือกผู้ป่วย|3. ค้นหา/เลือกผู้ป่วย]] มาก่อนเสมอ (เลือก
 ผู้ป่วยรายบุคคลแล้ว) — ดูรายละเอียดการตรวจสอบสิทธิ์ระดับบทบาทและการเลือกผู้ป่วยที่
-[[patient-search-selection]] เอกสารนี้กล่าวถึงเฉพาะขั้นตอนการตรวจสอบสิทธิ์ระดับรายผู้ป่วย
-(patient-level) ที่ต้องทำซ้ำก่อนเข้าถึงข้อมูลรายบุคคลของ Operation 1/2 เท่านั้น
+[[patient-search-selection]] **แก้ไข 2026-09-25 (ยกเลิกกลไก PatientAssignment ทั้งหมด):** เดิม
+เอกสารนี้เคยกล่าวถึงเฉพาะขั้นตอนการตรวจสอบสิทธิ์ระดับรายผู้ป่วย (patient-level) ที่ต้องทำซ้ำก่อนเข้าถึง
+ข้อมูลรายบุคคลของ Operation 1/2 — ขั้นตอนนี้**ถูกยกเลิกทั้งหมดแล้ว** ไม่มีการตรวจสอบระดับรายผู้ป่วยอีก
+ต่อไปไม่ว่าบทบาทใด (แพทย์/พยาบาล/Admin เข้าถึงผู้ป่วยทุกรายในระบบเหมือนกันหลังผ่านการตรวจสอบระดับบทบาท)
+เอกสารนี้จึงเหลือเพียงขั้นตอนตรวจสอบสิทธิ์ระดับบทบาท + `email_verified` (เหมือนกับ [[patient-search-selection]])
+และการบันทึก Audit Log ก่อนอ่านข้อมูลรายบุคคลของ Operation 1/2
 
 **อัปเดต 2026-09-22 — เสริมรายละเอียดการ implement จริง:** `[[technology-stack]]` มีเนื้อหาแล้ว
 Sequence Diagram ด้านล่างยังคงโครงสร้างเชิง logical เดิมไว้ครบทุกจุดและ**ยังคงถูกต้องตามความเป็นจริง
@@ -31,14 +35,16 @@ Sequence Diagram ด้านล่างยังคงโครงสร้า
 ยังไม่มี `role` ไม่ผ่านการตรวจสอบนี้อยู่แล้วโดยอัตโนมัติ) ดูรายละเอียดที่
 [[user-authentication-email-password]] ซึ่งเป็น precondition ก่อนฟีเจอร์นี้ทั้งหมด
 
-**อัปเดต 2026-09-24 — ฟีเจอร์ที่ 7 (Admin, FR-15, NFR-19): เพิ่มข้อยกเว้นสำหรับ Operation 1/2:**
-[[api-spec]] เพิ่ม Admin เป็นผู้เรียก Operation 1 (ประวัติวินิจฉัย) และ Operation 2 (ผลตรวจ lab) ได้
-เพิ่มเติมจากแพทย์/พยาบาล — **อ่านอย่างเดียว ข้ามการตรวจสอบระดับรายผู้ป่วย (patient-level)** ตามข้อยกเว้น
-NFR-19 เมื่อผู้เรียกมี `role = "admin"` เท่านั้น (ยังคงต้องผ่านการตรวจสอบระดับบทบาท + `email_verified`
-เหมือนเดิม) sequence diagram ด้านล่างยังคงแสดง actor หลักเป็นแพทย์/พยาบาลตาม journey หลัก — ดู sequence
-diagram ฉบับเต็มฝั่ง Admin (รวมการเรียก Operation 15 ก่อนเสมอ และการตั้ง `isAdminAccess = true` ใน
-Audit Log) ที่
-[[admin-role-account-management#Sequence Diagram 4 — Admin ดูข้อมูลผู้ป่วยทุกรายแบบอ่านอย่างเดียว (Operation 15 + Operation 1/2/3 ผ่านข้อยกเว้น NFR-19)|admin-role-account-management]]
+**อัปเดต 2026-09-24 (แก้ไข 2026-09-25) — ฟีเจอร์ที่ 7 (Admin, FR-15, NFR-19):** [[api-spec]] เพิ่ม
+Admin เป็นผู้เรียก Operation 1 (ประวัติวินิจฉัย) และ Operation 2 (ผลตรวจ lab) ได้เพิ่มเติมจากแพทย์/
+พยาบาล — **อ่านอย่างเดียว** ต้องบันทึก Audit Log พร้อม `เข้าถึงในฐานะ Admin หรือไม่ = จริง` เสมอ (NFR-20)
+**แก้ไข 2026-09-25:** เดิมข้อนี้เคยอธิบายเป็น "ข้อยกเว้น NFR-19 ที่ข้ามการตรวจสอบระดับรายผู้ป่วย" — หลัง
+ยกเลิกกลไก PatientAssignment ทั้งหมด **ไม่มีการตรวจสอบระดับรายผู้ป่วยเหลือให้ข้ามอีกต่อไป** (แพทย์/
+พยาบาลก็เข้าถึงผู้ป่วยทุกรายเหมือนกันอยู่แล้ว) Admin จึงผ่านการตรวจสอบระดับบทบาท + `email_verified`
+แบบเดียวกันทุกประการ ต่างกันเพียงสิทธิ์อ่านอย่างเดียวและ flag `isAdminAccess = true` ใน Audit Log เท่านั้น
+sequence diagram ด้านล่างยังคงแสดง actor หลักเป็นแพทย์/พยาบาลตาม journey หลัก — ดู sequence diagram
+ฉบับเต็มฝั่ง Admin (รวมการเรียก Operation 0 ก่อนเสมอ และการตั้ง `isAdminAccess = true` ใน Audit Log) ที่
+[[admin-role-account-management#Sequence Diagram 3 — Admin ดูข้อมูลผู้ป่วยทุกรายแบบอ่านอย่างเดียว (Operation 0 + Operation 1/2/3)|admin-role-account-management]]
 แทนการวาดซ้ำที่นี่
 
 **อัปเดต 2026-09-22 (รอบสอง) — ตรวจสอบความสอดคล้องกับฟีเจอร์ที่ 5 (NFR-09–NFR-16):** ดูหัวข้อใหม่
@@ -64,10 +70,10 @@ sequenceDiagram
     Note over User,Store: สืบเนื่องจาก [[patient-search-selection]] — ผู้ใช้เลือกผู้ป่วยรายบุคคลแล้ว
 
     Client->>Backend: ส่งคำขอดูประวัติการวินิจฉัย (Operation 1) พร้อมรหัสผู้ป่วย + auth context
-    Backend->>Backend: [Access Control] ตรวจสอบสิทธิ์ระดับบทบาท + ระดับรายผู้ป่วย + email_verified (NFR-02, NFR-03, FR-09 — เพิ่มเงื่อนไข email_verified ในรอบ 2026-09-24 ตาม decision area 19)
-    Backend->>Store: อ่าน User, PatientAssignment (ตรวจสอบสิทธิ์)
+    Backend->>Backend: [Access Control] ตรวจสอบสิทธิ์ระดับบทบาท + email_verified (NFR-02, NFR-03, FR-09 — เพิ่มเงื่อนไข email_verified ในรอบ 2026-09-24 ตาม decision area 19; แก้ไข 2026-09-25: ไม่มีการตรวจสอบระดับรายผู้ป่วยอีกต่อไป)
+    Backend->>Store: อ่าน User (ตรวจสอบสิทธิ์)
     Store-->>Backend: ผลการตรวจสอบสิทธิ์
-    alt ไม่ผ่านสิทธิ์ (บทบาทไม่ถูกต้อง หรือไม่มี PatientAssignment กับผู้ป่วยรายนี้)
+    alt ไม่ผ่านสิทธิ์ (บทบาทไม่ถูกต้อง หรือบัญชีถูกระงับ)
         Backend-->>Client: ปฏิเสธการเข้าถึงข้อมูลผู้ป่วยรายนี้ (NFR-02, FR-05)
         Client-->>User: แสดงข้อความไม่มีสิทธิ์เข้าถึงข้อมูลผู้ป่วยรายนี้
     else ผ่านสิทธิ์
@@ -89,7 +95,7 @@ sequenceDiagram
                 Client-->>User: แสดงประวัติการวินิจฉัยเรียงตามช่วงเวลา
                 User->>Client: ขอดูผลตรวจ lab ย้อนหลัง (ระบุช่วงเวลา — ไม่บังคับ) (FR-02)
                 Client->>Backend: ส่งคำขอ Operation 2 พร้อมรหัสผู้ป่วย + ช่วงเวลา (ถ้ามี)
-                Backend->>Backend: ตรวจสอบสิทธิ์ระดับรายผู้ป่วยซ้ำสำหรับคำขอนี้ (NFR-02)
+                Backend->>Backend: ตรวจสอบสิทธิ์ระดับบทบาทซ้ำสำหรับคำขอนี้ (NFR-02 — ไม่มีระดับรายผู้ป่วยให้ตรวจสอบอีกต่อไป)
                 Note over Backend,AuditStore: ไม่ต้องบันทึก Audit Log ซ้ำสำหรับ Operation 2 — เป็นการเข้าถึงข้อมูล<br/>ผู้ป่วยรายเดียวกันต่อเนื่องจาก Operation 1 ในคำขอ/เซสชันเดียวกัน ตามที่<br/>[[db-spec#บันทึกการเข้าถึงข้อมูล (AuditLogRecord)|db-spec กำหนดไว้ว่าบันทึกครั้งเดียวต่อการเลือกผู้ป่วยหนึ่งราย]]
                 alt ช่วงเวลาที่ระบุไม่ถูกต้อง (วันที่เริ่มต้นอยู่หลังวันที่สิ้นสุด)
                     Backend-->>Client: แจ้งว่า input ไม่ถูกต้อง
@@ -109,7 +115,7 @@ sequenceDiagram
 
 | ลำดับ | Operation | Entity ที่กระทบ | การกระทำ | หมายเหตุ |
 | --- | --- | --- | --- | --- |
-| 1 | [[api-spec#Operation ร่วม — ตรวจสอบสิทธิ์การเข้าถึงข้อมูลผู้ป่วย (Access Control)\|Operation ร่วม (role-level + patient-level)]] | [[db-spec#ผู้ใช้ (User)\|User]], [[db-spec#การมอบหมายผู้ป่วยในความดูแล (PatientAssignment)\|PatientAssignment]] | อ่าน | precondition ของทั้ง Operation 1 และ Operation 2 เสมอ — ต้องทำก่อนเข้าถึง Patient/NcdDiagnosis/LabResult ทุกครั้ง; เมื่อผู้เรียกเป็น Admin ข้ามการตรวจสอบระดับรายผู้ป่วยตามข้อยกเว้น NFR-19 (FR-15 — ดู [[admin-role-account-management]]) |
+| 1 | [[api-spec#Operation ร่วม — ตรวจสอบสิทธิ์การเข้าถึงข้อมูลผู้ป่วย (Access Control)\|Operation ร่วม (role-level เท่านั้น)]] | [[db-spec#ผู้ใช้ (User)\|User]] | อ่าน | precondition ของทั้ง Operation 1 และ Operation 2 เสมอ — ต้องทำก่อนเข้าถึง Patient/NcdDiagnosis/LabResult ทุกครั้ง; **แก้ไข 2026-09-25:** ไม่มีการตรวจสอบระดับรายผู้ป่วยอีกต่อไป (ยกเลิกกลไก PatientAssignment ทั้งหมด) — Admin เข้าถึงผู้ป่วยทุกรายเหมือนแพทย์/พยาบาล ต่างกันเพียงสิทธิ์อ่านอย่างเดียว (FR-15 — ดู [[admin-role-account-management]]) |
 | 2 | [[api-spec#Operation ร่วม — บันทึกร่องรอยการเข้าถึงข้อมูลผู้ป่วย (Audit Logging)\|Operation ร่วม — Audit Logging]] | [[db-spec#บันทึกการเข้าถึงข้อมูล (AuditLogRecord)\|AuditLogRecord]] | สร้าง | ต้องสำเร็จก่อนอ่าน Patient/NcdDiagnosis/LabResult ใดๆ เสมอ (fail-safe, NFR-06); บันทึกครั้งเดียวครอบคลุมทั้ง Operation 1 และ Operation 2 ในคำขอ/เซสชันเดียวกัน (ดู [[pdpa-data-protection-compliance]]) |
 | 3 | [[api-spec#Operation 1 — ดึงประวัติการวินิจฉัยโรค NCD ของผู้ป่วย\|Operation 1]] | [[db-spec#ผู้ป่วย (Patient)\|Patient]] | อ่าน | ตรวจสอบว่าผู้ป่วยตามรหัสมีอยู่จริง ก่อนอ่าน NcdDiagnosis |
 | 4 | [[api-spec#Operation 1 — ดึงประวัติการวินิจฉัยโรค NCD ของผู้ป่วย\|Operation 1]] | [[db-spec#ประวัติการวินิจฉัยโรค NCD (NcdDiagnosis)\|NcdDiagnosis]] | อ่าน | เฉพาะรหัส ICD-10 ในขอบเขต (E10–E14, I10–I14, J44) เรียงตามวันที่วินิจฉัย |
@@ -166,7 +172,7 @@ sequenceDiagram
 
 | Edge Case | วิธีจัดการ | อ้างอิง |
 | --- | --- | --- |
-| ไม่มีสิทธิ์เข้าถึง (บทบาทไม่ถูกต้อง หรือผู้ป่วยรายนี้ไม่ได้อยู่ในความดูแลของผู้ใช้ตาม PatientAssignment หรือ `email_verified` เป็นเท็จ) | ปฏิเสธการเข้าถึงข้อมูลผู้ป่วยรายนี้ทั้ง Operation 1 และ Operation 2 ก่อนอ่าน Patient/NcdDiagnosis/LabResult ใดๆ — เงื่อนไข `email_verified` เพิ่มใหม่ 2026-09-24 ตาม decision area 19 (ตรวจใน shared helper module เดียวกันกับ role/isActive) | [[backlog#Non-Functional Requirements\|NFR-02]], [[backlog#สูง (MVP)\|FR-05]], [[backlog#สูง (MVP)\|FR-09]] |
+| ไม่มีสิทธิ์เข้าถึง (บทบาทไม่ถูกต้อง หรือบัญชีถูกระงับ หรือ `email_verified` เป็นเท็จ — **แก้ไข 2026-09-25:** ไม่มีเงื่อนไข "ผู้ป่วยรายนี้ไม่ได้อยู่ในความดูแล" อีกต่อไป) | ปฏิเสธการเข้าถึงข้อมูลผู้ป่วยรายนี้ทั้ง Operation 1 และ Operation 2 ก่อนอ่าน Patient/NcdDiagnosis/LabResult ใดๆ — เงื่อนไข `email_verified` เพิ่มใหม่ 2026-09-24 ตาม decision area 19 (ตรวจใน shared helper module เดียวกันกับ role/isActive) | [[backlog#Non-Functional Requirements\|NFR-02]], [[backlog#สูง (MVP)\|FR-05]], [[backlog#สูง (MVP)\|FR-09]] |
 | ผู้ใช้ถูก auto-logout เนื่องจากไม่มีการใช้งาน (inactivity) เกิน 30 นาที (NFR-12) แล้วส่งคำขอ Operation 1/2 โดยไม่มี auth context ที่ถูกต้องแนบมา | ปฏิเสธการเข้าถึงที่ step ตรวจสอบสิทธิ์เช่นเดียวกับกรณีไม่มีสิทธิ์เข้าถึงข้างต้น — Client นำผู้ใช้กลับไปหน้าจอเข้าสู่ระบบใหม่ | [[backlog#Non-Functional Requirements\|NFR-12]] |
 | บันทึก Audit Log ไม่สำเร็จ | ยกเลิกการดำเนินการทั้งหมด (ไม่อ่าน Patient/NcdDiagnosis/LabResult) แจ้งข้อผิดพลาดแก่ผู้ใช้ (fail-safe) | [[backlog#Non-Functional Requirements\|NFR-06]], [[api-spec#Operation ร่วม — บันทึกร่องรอยการเข้าถึงข้อมูลผู้ป่วย (Audit Logging)\|Operation ร่วม — Audit Logging]] |
 | ไม่พบผู้ป่วยตามรหัสที่ระบุ | แจ้งว่าไม่พบผู้ป่วย ทั้งสอง operation หยุดก่อนอ่าน NcdDiagnosis/LabResult | [[db-spec#ผู้ป่วย (Patient)\|Patient]] |
@@ -174,7 +180,7 @@ sequenceDiagram
 | ช่วงเวลาที่ระบุไม่ถูกต้อง (วันที่เริ่มต้นอยู่หลังวันที่สิ้นสุด) | แจ้งว่า input ไม่ถูกต้อง — ไม่เรียก Store จนกว่าจะแก้ไขช่วงเวลา | [[api-spec#Operation 2 — ดึงผลตรวจ lab ย้อนหลังของผู้ป่วย\|Operation 2]] |
 | ไม่พบผลตรวจ lab ในช่วงเวลาที่ระบุ | คืนรายการว่าง ไม่ถือเป็น error — Client แสดงข้อความว่าไม่มีผลตรวจในช่วงเวลานี้ | [[api-spec#Operation 2 — ดึงผลตรวจ lab ย้อนหลังของผู้ป่วย\|Operation 2]] |
 | ผู้ใช้ออกจากหน้าจอนี้เพื่อเลือกผู้ป่วยรายอื่น หรือออกจากระบบ (logout)/session สิ้นสุด | Client ล้างประวัติวินิจฉัย/ผล lab ของผู้ป่วยรายเดิมที่เคยแสดงไว้ทันที ไม่เก็บ/cache ไว้เกินความจำเป็น (NFR-02) | [[architecture#ตาราง Mapping NFR ไปยัง Component\|architecture — ตาราง Mapping NFR แถว NFR-02]] |
-| Admin เรียก Operation 1/2 ของผู้ป่วยที่ตนไม่มี PatientAssignment | อนุญาต (ข้อยกเว้น NFR-19, FR-15) — ข้ามการตรวจสอบระดับรายผู้ป่วย แต่ยังคงต้องบันทึก Audit Log สำเร็จก่อนเสมอ (`isAdminAccess = true`, fail-safe ตาม NFR-20) | [[backlog#สูง (MVP)\|FR-15]], [[backlog#Non-Functional Requirements\|NFR-19]], [[backlog#Non-Functional Requirements\|NFR-20]] |
+| Admin เรียก Operation 1/2 ของผู้ป่วยรายใดก็ได้ในระบบ | อนุญาต (FR-15, NFR-19) — เหมือนแพทย์/พยาบาลทุกประการ (ไม่มีการตรวจสอบระดับรายผู้ป่วยอีกต่อไป) แต่ยังคงต้องบันทึก Audit Log สำเร็จก่อนเสมอ (`isAdminAccess = true`, fail-safe ตาม NFR-20) และมีสิทธิ์อ่านอย่างเดียวเท่านั้น | [[backlog#สูง (MVP)\|FR-15]], [[backlog#Non-Functional Requirements\|NFR-19]], [[backlog#Non-Functional Requirements\|NFR-20]] |
 
 ## หมายเหตุการ Implement (จาก technology-stack)
 
@@ -188,13 +194,12 @@ sequenceDiagram
   [[api-spec#Operation 2 — ดึงผลตรวจ lab ย้อนหลังของผู้ป่วย|Technical Binding ของ Operation 2 ใน api-spec]]
 - **การตรวจสอบสิทธิ์ (ลำดับ 1 ในตารางด้านบน):** implement เป็น shared helper module ภายในโค้ด Cloud
   Functions เรียกจากทั้งสอง callable function ก่อนดำเนินการเสมอ — ตรวจบทบาท/สถานะบัญชีจาก
-  `users/{uid}` (ไม่มี custom claims บทบาท/isActive ให้อ่านจาก token อีกต่อไป — decision area 18)
-  และตรวจ patient-level ผ่าน `exists()` บน `patientAssignments/{uid}_{patientId}`
-  ด้วย Admin SDK (ไม่ใช่ Firestore Security Rules — ต่างจาก Operation 0) — **เพิ่มการตรวจสอบ
-  `decodedToken.email_verified` ในโมดูลเดียวกันตั้งแต่ 2026-09-24 (decision area 19, FR-09)** — **เพิ่ม
-  ข้อยกเว้น NFR-19 ในรอบเดียวกัน:** ข้าม `exists()` check บน `patientAssignments/{uid}_{patientId}`
-  เมื่อ `role === 'admin'` เท่านั้น (FR-15) — ตั้ง `isAdminAccess = true` ตอนเขียน `auditLogRecords`
-  ในกรณีนี้ (NFR-20)
+  `users/{uid}` (ไม่มี custom claims บทบาท/isActive ให้อ่านจาก token อีกต่อไป — decision area 18) —
+  **แก้ไข 2026-09-25:** ไม่มีการตรวจสอบ patient-level ผ่าน `exists()` บน `patientAssignments` อีกต่อไป
+  (collection นี้ถูกลบทั้งหมด) — **เพิ่มการตรวจสอบ `decodedToken.email_verified` ในโมดูลเดียวกันตั้งแต่
+  2026-09-24 (decision area 19, FR-09)** — เมื่อ `role === 'admin'` ผ่านการตรวจสอบเดียวกันนี้เหมือนกับ
+  แพทย์/พยาบาลทุกประการ (FR-15) ตั้ง `isAdminAccess = true` ตอนเขียน `auditLogRecords` เฉพาะกรณีนี้เท่านั้น
+  (NFR-20)
 - **Audit Logging (ลำดับ 2):** เขียนลง `auditLogRecords` ผ่าน Admin SDK เท่านั้นภายใน callable
   function เดียวกัน ก่อนอ่าน `ncdDiagnoses`/`labResults` เสมอ (fail-safe) ตาม
   [[api-spec#Operation ร่วม — บันทึกร่องรอยการเข้าถึงข้อมูลผู้ป่วย (Audit Logging)|Technical Binding ของ Operation ร่วม Audit Logging]]

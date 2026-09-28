@@ -14,18 +14,20 @@
 [[db-spec#รายละเอียดผลการประเมินต่อโรคแทรกซ้อน (RiskFinding)|RiskFinding]] และ
 [[db-spec#บันทึกการเข้าถึงข้อมูล (AuditLogRecord)|AuditLogRecord]] ใน [[db-spec]]
 
-**อัปเดต 2026-09-24 — เพิ่ม FR-16 (ยืนยัน/แก้ไขผลการประเมินความเสี่ยง) และข้อยกเว้น Admin (NFR-19):**
-`[[api-spec]]`/`[[db-spec]]` รอบ sync ที่หกเพิ่ม Operation 16 (`confirmOrOverrideRiskAssessment`) ให้
-แพทย์/พยาบาลผู้ดูแลผู้ป่วยรายนั้นยืนยัน/แก้ไขผลการประเมินอัตโนมัติของ Operation 3 ได้ (**ไม่ใช่สิทธิ์ของ
-Admin**) และเพิ่ม `"admin"` เป็นผู้เรียก Operation 3 ได้เพิ่มเติมแบบอ่านอย่างเดียวผ่านข้อยกเว้น NFR-19
-(ข้าม patient-level check — ดู
-[[admin-role-account-management#Sequence Diagram 4 — Admin ดูข้อมูลผู้ป่วยทุกรายแบบอ่านอย่างเดียว (Operation 15 + Operation 1/2/3 ผ่านข้อยกเว้น NFR-19)|admin-role-account-management]]
+**อัปเดต 2026-09-24 (แก้ไข 2026-09-25) — เพิ่ม FR-16 (ยืนยัน/แก้ไขผลการประเมินความเสี่ยง) และ Admin
+เรียก Operation 3 ได้เพิ่มเติม (NFR-19):** `[[api-spec]]`/`[[db-spec]]` รอบ sync ที่หกเพิ่ม Operation 16
+(`confirmOrOverrideRiskAssessment`) ให้แพทย์/พยาบาลผู้ดูแลผู้ป่วยรายนั้นยืนยัน/แก้ไขผลการประเมินอัตโนมัติ
+ของ Operation 3 ได้ (**ไม่ใช่สิทธิ์ของ Admin**) และเพิ่ม `"admin"` เป็นผู้เรียก Operation 3 ได้เพิ่มเติม
+แบบอ่านอย่างเดียว **แก้ไข 2026-09-25:** เดิมอธิบายเป็น "ข้อยกเว้น NFR-19 ที่ข้ามการตรวจสอบระดับรายผู้ป่วย"
+— หลังยกเลิกกลไก PatientAssignment ทั้งหมด **ไม่มีการตรวจสอบระดับรายผู้ป่วยเหลือให้ข้ามอีกต่อไป** Admin
+จึงผ่านการตรวจสอบสิทธิ์แบบเดียวกับแพทย์/พยาบาลทุกประการ ต่างกันเพียงสิทธิ์อ่านอย่างเดียว (ดู
+[[admin-role-account-management#Sequence Diagram 3 — Admin ดูข้อมูลผู้ป่วยทุกรายแบบอ่านอย่างเดียว (Operation 0 + Operation 1/2/3)|admin-role-account-management]]
 สำหรับ sequence diagram ฝั่ง Admin) — เพิ่มหัวข้อ
 [[#Sequence Diagram 2 — ยืนยัน/แก้ไขผลการประเมินความเสี่ยง (Operation 16, FR-16)|Sequence Diagram 2]]
 ด้านล่าง พร้อม State Diagram ใหม่และปรับปรุงตาราง Operation ↔ Entity/Edge Case ให้ครอบคลุมทั้งสองจุด
 
 **Precondition:** ฟีเจอร์นี้เริ่มทำงานได้ก็ต่อเมื่อผ่านฟีเจอร์
-[[feature-list#3. ค้นหา/เลือกผู้ป่วยในความดูแล|3. ค้นหา/เลือกผู้ป่วยในความดูแล]] (เลือกผู้ป่วยแล้ว)
+[[feature-list#3. ค้นหา/เลือกผู้ป่วย|3. ค้นหา/เลือกผู้ป่วย]] (เลือกผู้ป่วยแล้ว)
 มาก่อนเสมอ และโดยทั่วไปเกิดต่อเนื่องจากการดูข้อมูลใน
 [[feature-list#1. ดูประวัติการวินิจฉัยและผลตรวจ lab ของผู้ป่วย NCD|1. ดูประวัติการวินิจฉัยและผลตรวจ lab ของผู้ป่วย NCD]]
 ตามลำดับใน [[user-journey]] (ไม่ใช่ precondition ทางเทคนิคที่ Operation 3 บังคับ แต่เป็นลำดับ UX ตาม
@@ -60,13 +62,13 @@ Audit** ก่อน deploy ทุกครั้ง
 
 ## Sequence Diagram 1 — วิเคราะห์และแสดงผลความเสี่ยง (Operation 3)
 
-**หมายเหตุข้อยกเว้น Admin (NFR-19 — เพิ่มใหม่ 2026-09-24):** Operation 3 เรียกได้โดย Admin ด้วย
-เช่นกัน (อ่านอย่างเดียว ข้ามการตรวจสอบระดับรายผู้ป่วยตามข้อยกเว้น NFR-19) แต่ actor หลักของ diagram
-ด้านล่างยังคงเป็นแพทย์/พยาบาลตาม journey หลัก — ดู sequence diagram ฝั่ง Admin ที่
-[[admin-role-account-management#Sequence Diagram 4 — Admin ดูข้อมูลผู้ป่วยทุกรายแบบอ่านอย่างเดียว (Operation 15 + Operation 1/2/3 ผ่านข้อยกเว้น NFR-19)|admin-role-account-management]]
-แทนการวาดซ้ำที่นี่ (ขั้นตอน [Access Control] ด้านล่างข้ามการตรวจสอบระดับรายผู้ป่วยเมื่อผู้เรียกเป็น
-Admin เท่านั้น ส่วนอื่นของ diagram นี้เหมือนกันทุกประการ) — Admin **ไม่มีสิทธิ์** เรียก Operation 16
-(Sequence Diagram 2 ด้านล่าง) ต่อจากนี้
+**หมายเหตุ Admin (NFR-19 — เพิ่มใหม่ 2026-09-24, แก้ไข 2026-09-25):** Operation 3 เรียกได้โดย Admin
+ด้วยเช่นกัน (อ่านอย่างเดียว) ผ่านการตรวจสอบสิทธิ์แบบเดียวกับแพทย์/พยาบาลทุกประการ (**แก้ไข 2026-09-25:**
+ไม่มีการตรวจสอบระดับรายผู้ป่วยให้ข้ามอีกต่อไป หลังยกเลิกกลไก PatientAssignment ทั้งหมด) แต่ actor หลักของ
+diagram ด้านล่างยังคงเป็นแพทย์/พยาบาลตาม journey หลัก — ดู sequence diagram ฝั่ง Admin ที่
+[[admin-role-account-management#Sequence Diagram 3 — Admin ดูข้อมูลผู้ป่วยทุกรายแบบอ่านอย่างเดียว (Operation 0 + Operation 1/2/3)|admin-role-account-management]]
+แทนการวาดซ้ำที่นี่ (ส่วนอื่นของ diagram นี้เหมือนกันทุกประการไม่ว่าผู้เรียกจะเป็นแพทย์/พยาบาลหรือ Admin) —
+Admin **ไม่มีสิทธิ์** เรียก Operation 16 (Sequence Diagram 2 ด้านล่าง) ต่อจากนี้
 
 ```mermaid
 sequenceDiagram
@@ -79,8 +81,8 @@ sequenceDiagram
     Note over User,Store: สืบเนื่องจาก [[patient-search-selection]] — ผู้ใช้เลือกผู้ป่วยรายบุคคลแล้ว
 
     Client->>Backend: ส่งคำขอวิเคราะห์ความเสี่ยงโรคแทรกซ้อน (Operation 3) พร้อมรหัสผู้ป่วย + auth context
-    Backend->>Backend: [Access Control] ตรวจสอบสิทธิ์ระดับบทบาท + ระดับรายผู้ป่วย + email_verified (NFR-02, NFR-03, FR-09 — เพิ่มเงื่อนไข email_verified ในรอบ 2026-09-24 ตาม decision area 19)
-    Backend->>Store: อ่าน User, PatientAssignment (ตรวจสอบสิทธิ์)
+    Backend->>Backend: [Access Control] ตรวจสอบสิทธิ์ระดับบทบาท + email_verified (NFR-02, NFR-03, FR-09 — เพิ่มเงื่อนไข email_verified ในรอบ 2026-09-24 ตาม decision area 19; แก้ไข 2026-09-25: ไม่มีการตรวจสอบระดับรายผู้ป่วยอีกต่อไป)
+    Backend->>Store: อ่าน User (ตรวจสอบสิทธิ์)
     Store-->>Backend: ผลการตรวจสอบสิทธิ์
     alt ไม่ผ่านสิทธิ์
         Backend-->>Client: ปฏิเสธการเข้าถึงข้อมูลผู้ป่วยรายนี้ (NFR-02, FR-05)
@@ -133,8 +135,8 @@ sequenceDiagram
 
 สืบเนื่องจาก Sequence Diagram 1 ด้านบน — ผู้ใช้ดูผลการประเมินความเสี่ยงแล้วเลือกยืนยัน/แก้ไข ตามที่
 [[api-spec#Operation 16 — ยืนยัน/แก้ไขผลการประเมินความเสี่ยงโรคแทรกซ้อน (Override Risk Assessment)|Operation 16 ใน api-spec]]
-กำหนด **ไม่ใช่สิทธิ์ของ Admin** (ปฏิเสธเสมอถ้าผู้เรียกมี `role = "admin"` แม้จะผ่านข้อยกเว้น NFR-19 ของ
-Operation 3 มาก่อนก็ตาม) และเรียกได้เพียง**ครั้งเดียว**ต่อ ComplicationRiskAssessment หนึ่งรายการ (mutate
+กำหนด **ไม่ใช่สิทธิ์ของ Admin** (ปฏิเสธเสมอถ้าผู้เรียกมี `role = "admin"` แม้จะเรียก Operation 3 สำเร็จ
+มาก่อนก็ตาม) และเรียกได้เพียง**ครั้งเดียว**ต่อ ComplicationRiskAssessment หนึ่งรายการ (mutate
 in place — ดู [[db-spec#ผลการประเมินความเสี่ยงโรคแทรกซ้อน (ComplicationRiskAssessment)|db-spec]]):
 
 ```mermaid
@@ -149,13 +151,13 @@ sequenceDiagram
 
     User->>Client: เลือก "ยืนยันผลเดิม" หรือ "แก้ไข" (ระบุผลใหม่ + เหตุผลถ้าแก้ไข) (FR-16)
     Client->>Backend: ส่งคำขอ Operation 16 พร้อมรหัสการประเมิน, การดำเนินการ, ผลที่แก้ไข/เหตุผล (ถ้ามี), auth context
-    Backend->>Backend: [Access Control] ตรวจสอบสิทธิ์ระดับบทบาท + ระดับรายผู้ป่วย + email_verified (NFR-02, FR-09)
-    Backend->>Store: อ่าน User, PatientAssignment (ตรวจสอบสิทธิ์)
+    Backend->>Backend: [Access Control] ตรวจสอบสิทธิ์ระดับบทบาท + email_verified (NFR-02, FR-09 — แก้ไข 2026-09-25: ไม่มีการตรวจสอบระดับรายผู้ป่วยอีกต่อไป)
+    Backend->>Store: อ่าน User (ตรวจสอบสิทธิ์)
     Store-->>Backend: ผลการตรวจสอบสิทธิ์
     alt ผู้เรียกมี role = "admin" หรือไม่ผ่านสิทธิ์อื่นใด
         Backend-->>Client: ปฏิเสธการเข้าถึง (NFR-02, FR-16 — ไม่ใช่สิทธิ์ของ Admin)
         Client-->>User: แสดงข้อความไม่มีสิทธิ์ดำเนินการนี้
-    else ผ่านสิทธิ์ (แพทย์/พยาบาลที่มี PatientAssignment กับผู้ป่วยเจ้าของการประเมินนี้)
+    else ผ่านสิทธิ์ (แพทย์/พยาบาล — เข้าถึงผู้ป่วยรายใดก็ได้ในระบบ)
         Backend->>Store: อ่าน ComplicationRiskAssessment ตามรหัสที่ระบุ
         Store-->>Backend: ผลลัพธ์ (พบ/ไม่พบ, สถานะการยืนยัน/แก้ไขปัจจุบัน)
         alt ไม่พบการประเมินตามรหัสที่ระบุ
@@ -194,8 +196,8 @@ sequenceDiagram
 
 | ลำดับ | Operation | Entity ที่กระทบ | การกระทำ | หมายเหตุ |
 | --- | --- | --- | --- | --- |
-| 1 | [[api-spec#Operation ร่วม — ตรวจสอบสิทธิ์การเข้าถึงข้อมูลผู้ป่วย (Access Control)\|Operation ร่วม (role-level + patient-level)]] | [[db-spec#ผู้ใช้ (User)\|User]], [[db-spec#การมอบหมายผู้ป่วยในความดูแล (PatientAssignment)\|PatientAssignment]] | อ่าน | precondition ของ Operation 3 เสมอ — เมื่อผู้เรียกเป็น Admin ข้ามการตรวจสอบระดับรายผู้ป่วยตาม NFR-19 (ดู [[admin-role-account-management]]) |
-| 8 | [[api-spec#Operation ร่วม — ตรวจสอบสิทธิ์การเข้าถึงข้อมูลผู้ป่วย (Access Control)\|Operation ร่วม (role-level + patient-level, ปฏิเสธ Admin เสมอ)]] | [[db-spec#ผู้ใช้ (User)\|User]], [[db-spec#การมอบหมายผู้ป่วยในความดูแล (PatientAssignment)\|PatientAssignment]] | อ่าน | precondition ของ Operation 16 เสมอ — **ไม่มีข้อยกเว้นให้ Admin** ต่างจาก Operation 3 |
+| 1 | [[api-spec#Operation ร่วม — ตรวจสอบสิทธิ์การเข้าถึงข้อมูลผู้ป่วย (Access Control)\|Operation ร่วม (role-level เท่านั้น)]] | [[db-spec#ผู้ใช้ (User)\|User]] | อ่าน | precondition ของ Operation 3 เสมอ — Admin ผ่านการตรวจสอบเดียวกันนี้ (ไม่มีการตรวจสอบระดับรายผู้ป่วยอีกต่อไป — ยกเลิก PatientAssignment 2026-09-25) ต่างกันเพียงสิทธิ์อ่านอย่างเดียว (ดู [[admin-role-account-management]]) |
+| 8 | [[api-spec#Operation ร่วม — ตรวจสอบสิทธิ์การเข้าถึงข้อมูลผู้ป่วย (Access Control)\|Operation ร่วม (role-level เท่านั้น, ปฏิเสธ Admin เสมอ)]] | [[db-spec#ผู้ใช้ (User)\|User]] | อ่าน | precondition ของ Operation 16 เสมอ — ปฏิเสธผู้เรียกที่มี `role = "admin"` เสมอ (ไม่ใช่สิทธิ์ของ Admin) ต่างจาก Operation 3 |
 | 9 | [[api-spec#Operation ร่วม — บันทึกร่องรอยการเข้าถึงข้อมูลผู้ป่วย (Audit Logging)\|Operation ร่วม — Audit Logging]] | [[db-spec#บันทึกการเข้าถึงข้อมูล (AuditLogRecord)\|AuditLogRecord]] | สร้าง | ก่อนเขียนผลยืนยัน/แก้ไขของ Operation 16 เสมอ (fail-safe, NFR-06) |
 | 10 | [[api-spec#Operation 16 — ยืนยัน/แก้ไขผลการประเมินความเสี่ยงโรคแทรกซ้อน (Override Risk Assessment)\|Operation 16]] | [[db-spec#ผลการประเมินความเสี่ยงโรคแทรกซ้อน (ComplicationRiskAssessment)\|ComplicationRiskAssessment]] | อ่าน แล้ว แก้ไข (mutate in place) | อ่านก่อนเพื่อตรวจสอบสถานะปัจจุบัน (ต้องเป็น "ยังไม่ดำเนินการ") แล้วแก้ไข attribute `สถานะการยืนยัน/แก้ไข`, `พบความเสี่ยงหรือไม่ (หลังยืนยัน/แก้ไข)`, `ผู้ยืนยัน/แก้ไขผลการประเมิน`, `วันที่-เวลาที่ยืนยัน/แก้ไข`, `เหตุผลการแก้ไข` เท่านั้น — **ไม่แตะ attribute `พบความเสี่ยงหรือไม่` เดิมเด็ดขาด** (immutable ตาม NFR-06) |
 | 2 | [[api-spec#Operation ร่วม — บันทึกร่องรอยการเข้าถึงข้อมูลผู้ป่วย (Audit Logging)\|Operation ร่วม — Audit Logging]] | [[db-spec#บันทึกการเข้าถึงข้อมูล (AuditLogRecord)\|AuditLogRecord]] | สร้าง (ถ้ายังไม่เคยบันทึกในคำขอ/เซสชันนี้) | ปกติบันทึกไปแล้วในขั้นตอนแรกของ [[patient-ncd-diagnosis-lab-history]] (ครั้งเดียวต่อการเลือกผู้ป่วยหนึ่งราย); ต้องสำเร็จก่อนอ่าน Patient/LabResult/ComplicationRiskThreshold เสมอถ้ายังไม่เคยบันทึก (fail-safe, NFR-06) — ดู [[pdpa-data-protection-compliance]] |
@@ -344,7 +346,7 @@ Client แสดงเป็นข้อมูลสุขภาพที่ล�
 
 | Edge Case | วิธีจัดการ | อ้างอิง |
 | --- | --- | --- |
-| ไม่มีสิทธิ์เข้าถึง (บทบาทไม่ถูกต้อง หรือผู้ป่วยรายนี้ไม่ได้อยู่ในความดูแลของผู้ใช้ตาม PatientAssignment หรือ `email_verified` เป็นเท็จ) | ปฏิเสธการเข้าถึงข้อมูลผู้ป่วยรายนี้ ก่อนอ่าน LabResult/ComplicationRiskThreshold ใดๆ — เงื่อนไข `email_verified` เพิ่มใหม่ 2026-09-24 ตาม decision area 19 | [[backlog#Non-Functional Requirements\|NFR-02]], [[backlog#สูง (MVP)\|FR-05]], [[backlog#สูง (MVP)\|FR-09]] |
+| ไม่มีสิทธิ์เข้าถึง (บทบาทไม่ถูกต้อง หรือบัญชีถูกระงับ — **แก้ไข 2026-09-25:** ไม่มีเงื่อนไข "ผู้ป่วยรายนี้ไม่ได้อยู่ในความดูแล" อีกต่อไป — หรือ `email_verified` เป็นเท็จ) | ปฏิเสธการเข้าถึงข้อมูลผู้ป่วยรายนี้ ก่อนอ่าน LabResult/ComplicationRiskThreshold ใดๆ — เงื่อนไข `email_verified` เพิ่มใหม่ 2026-09-24 ตาม decision area 19 | [[backlog#Non-Functional Requirements\|NFR-02]], [[backlog#สูง (MVP)\|FR-05]], [[backlog#สูง (MVP)\|FR-09]] |
 | ผู้ใช้ถูก auto-logout เนื่องจากไม่มีการใช้งาน (inactivity) เกิน 30 นาที (NFR-12) แล้วส่งคำขอ Operation 3 โดยไม่มี auth context ที่ถูกต้องแนบมา | ปฏิเสธการเข้าถึงที่ step ตรวจสอบสิทธิ์เช่นเดียวกับกรณีไม่มีสิทธิ์เข้าถึงข้างต้น — Client นำผู้ใช้กลับไปหน้าจอเข้าสู่ระบบใหม่ | [[backlog#Non-Functional Requirements\|NFR-12]] |
 | threshold/rule ที่ใช้ในการประเมินยังไม่ผ่านการยืนยันจากแพทย์ผู้เชี่ยวชาญก่อน deploy (NFR-11) | ไม่ deploy โค้ด Risk Rule Engine ที่มี rule ใหม่/แก้ไข จนกว่าจะผ่านการยืนยัน — เป็นกระบวนการเชิงองค์กร (approval gate) นอกขอบเขตของ sequence diagram/edge case ที่ระบบต้อง implement เป็น behavior ขณะรันจริง | [[backlog#Non-Functional Requirements\|NFR-11]] |
 | flag/สัญญาณเตือนความเสี่ยงแสดงด้วยสีเพียงอย่างเดียวโดยไม่มีข้อความกำกับ (ความเสี่ยงด้าน Accessibility) | ต้องไม่เกิดขึ้น — Client ต้องแสดงข้อความระดับความเสี่ยง (จาก RiskFinding.ระดับความเสี่ยงที่ประเมินได้) คู่กับสี + ไอคอน **Heroicons** เสมอตาม WCAG 2.1 AA (NFR-13) ตรวจสอบด้วย **Lighthouse Accessibility Audit** ก่อน deploy ทุกครั้ง (เป็นส่วนหนึ่งของการรีวิว UI ตาม [[DESIGN]]) | [[backlog#Non-Functional Requirements\|NFR-13]], [[technology-stack#11. Design Token/Icon Library สำหรับ Accessibility (NFR-13) — WCAG 2.1 Level AA + Heroicons + Lighthouse\|technology-stack decision area 11]] |
@@ -354,7 +356,7 @@ Client แสดงเป็นข้อมูลสุขภาพที่ล�
 | ไม่พบความเสี่ยงเลยแม้มีข้อมูลเพียงพอ | บันทึก RiskFinding ทุกรายการที่ประเมินได้ (เข้าเงื่อนไขหรือไม่ = เท็จทั้งหมด), ComplicationRiskAssessment.พบความเสี่ยงหรือไม่ = เท็จ, Client แสดงข้อความ "ไม่พบความเสี่ยงเพิ่มเติม" อย่างชัดเจน ไม่ใช่ error | [[user-journey]], [[api-spec#Operation 3 — วิเคราะห์และแสดงผลความเสี่ยงโรคแทรกซ้อนของผู้ป่วย\|Operation 3]] |
 | มี LabResult มากกว่า 1 ค่าสำหรับชนิดการตรวจเดียวกัน (หลายวันที่ตรวจ) | ใช้ค่า LabResult ที่มี "วันที่ตรวจ" ล่าสุดเท่านั้นในการเปรียบเทียบกับ threshold แต่ละรายการ ตามกฎ "ประมวลผลค่าผลตรวจ lab ล่าสุด" | [[api-spec#Operation 3 — วิเคราะห์และแสดงผลความเสี่ยงโรคแทรกซ้อนของผู้ป่วย\|Operation 3]] |
 | ผู้ใช้ออกจากหน้าจอนี้เพื่อเลือกผู้ป่วยรายอื่น หรือออกจากระบบ (logout)/session สิ้นสุด | Client ล้าง flag/สัญญาณเตือนและผลการประเมินความเสี่ยงของผู้ป่วยรายเดิมที่เคยแสดงไว้ทันที ไม่เก็บ/cache ไว้เกินความจำเป็น (NFR-02) | [[architecture#ตาราง Mapping NFR ไปยัง Component\|architecture — ตาราง Mapping NFR แถว NFR-02]] |
-| Admin เรียก Operation 16 (พยายามยืนยัน/แก้ไขผลประเมิน) | ปฏิเสธเสมอ — ไม่ใช่สิทธิ์ของ Admin แม้จะผ่านข้อยกเว้น NFR-19 ของ Operation 3 มาก่อนก็ตาม | [[backlog#สูง (MVP)\|FR-16]], [[backlog#Non-Functional Requirements\|NFR-19]] |
+| Admin เรียก Operation 16 (พยายามยืนยัน/แก้ไขผลประเมิน) | ปฏิเสธเสมอ — ไม่ใช่สิทธิ์ของ Admin แม้จะเรียก Operation 3 สำเร็จมาก่อนก็ตาม | [[backlog#สูง (MVP)\|FR-16]], [[backlog#Non-Functional Requirements\|NFR-19]] |
 | การดำเนินการ = "แก้ไข" แต่ไม่ระบุผลที่แก้ไข หรือไม่ระบุเหตุผล | แจ้งว่า input ไม่ถูกต้อง ไม่เขียนผลใดๆ — เหตุผลไม่บังคับเฉพาะกรณี "ยืนยันผลเดิม" | [[backlog#สูง (MVP)\|FR-16]], [[api-spec#Operation 16 — ยืนยัน/แก้ไขผลการประเมินความเสี่ยงโรคแทรกซ้อน (Override Risk Assessment)\|Operation 16]] |
 | ยืนยัน/แก้ไขผลประเมินความเสี่ยงซ้ำ (สถานะปัจจุบันไม่ใช่ "ยังไม่ดำเนินการ") | ปฏิเสธด้วย `failed-precondition` — รองรับยืนยัน/แก้ไขได้เพียงครั้งเดียวต่อการประเมินหนึ่งครั้ง (mutate in place ไม่มีประวัติหลายครั้ง) | [[backlog#สูง (MVP)\|FR-16]] |
 | บันทึก Audit Log ไม่สำเร็จ (Operation 16) | ยกเลิกการเขียนผลยืนยัน/แก้ไขทั้งหมด แจ้งข้อผิดพลาด (fail-safe) | [[backlog#Non-Functional Requirements\|NFR-06]] |
@@ -390,12 +392,12 @@ Client แสดงเป็นข้อมูลสุขภาพที่ล�
   (ขาดเหตุผล/ผลที่แก้ไข) → `invalid-argument`; ดำเนินการซ้ำ →
   `functions.https.HttpsError('failed-precondition', 'already-confirmed-or-overridden')`; บันทึก
   Audit Log ไม่สำเร็จ → `internal`
-- **ข้อยกเว้น Admin สำหรับ Operation 3 (NFR-19):** shared helper module เดียวกับที่
+- **Admin สำหรับ Operation 3 (NFR-19):** shared helper module เดียวกับที่
   [[patient-ncd-diagnosis-lab-history#หมายเหตุการ Implement (จาก technology-stack)|patient-ncd-diagnosis-lab-history]]
-  อธิบายไว้ — ข้าม `exists()` check บน `patientAssignments/{uid}_{patientId}` เมื่อ `role === 'admin'`
-  เท่านั้น และตั้ง `isAdminAccess = true` ตอนเขียน `auditLogRecords` (NFR-20) — **ไม่มีข้อยกเว้นเดียวกันนี้
-  ใน Operation 16** (helper module ปฏิเสธทันทีเมื่อ `role === 'admin'` ไม่ว่าจะมี PatientAssignment
-  หรือไม่)
+  อธิบายไว้ — ผ่านการตรวจสอบ role-level เดียวกันกับแพทย์/พยาบาลทุกประการ (ไม่มีการตรวจสอบ patient-level
+  ให้ข้ามอีกต่อไป — ยกเลิก PatientAssignment 2026-09-25) และตั้ง `isAdminAccess = true` ตอนเขียน
+  `auditLogRecords` เฉพาะเมื่อ `role === 'admin'` (NFR-20) — **Operation 16 ยังคงปฏิเสธ `role === 'admin'`
+  เสมอไม่มีข้อยกเว้น** (ไม่ใช่สิทธิ์ของ Admin)
 - **Clinical Safety Validation (NFR-11):** `[[technology-stack]]` ระบุชัดเจนว่าเป็นกระบวนการเชิง
   องค์กร (manual approval gate ก่อน deploy Cloud Function ของ Risk Rule Engine) ไม่ใช่กลไกทางเทคนิค
   ที่มีชื่อเทคโนโลยีให้ระบุ — ไม่มีรายละเอียด implement เพิ่มเติมสำหรับข้อนี้

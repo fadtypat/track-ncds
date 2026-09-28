@@ -17,7 +17,9 @@
 [[api-spec#Cross-cutting: Authentication ที่ครอบคลุมทุก Operation หลัง Login (FR-07–FR-10, NFR-17, NFR-18)|Cross-cutting Authentication ใน api-spec]])
 เอกสารนี้จึงอธิบายลำดับขั้นตอนตั้งแต่ยังไม่มีบัญชีจนถึงจุดที่ได้ auth context ที่ถูกต้องพร้อมเข้าสู่
 [[patient-search-selection#State Diagram — สถานะการตรวจสอบสิทธิ์และการเลือกผู้ป่วย|State Diagram ตรวจสอบสิทธิ์ของ patient-search-selection]]
-ต่อไป (การตรวจสอบ role/isActive/PatientAssignment หลังจากจุดนั้นไม่ได้ถูกอธิบายซ้ำในเอกสารนี้)
+ต่อไป (การตรวจสอบ role/isActive หลังจากจุดนั้นไม่ได้ถูกอธิบายซ้ำในเอกสารนี้ — **แก้ไข 2026-09-25:**
+ไม่มีการตรวจสอบระดับรายผู้ป่วยอีกต่อไปหลังยกเลิกกลไก PatientAssignment ทั้งหมด แพทย์/พยาบาล/Admin ทุกคน
+เข้าถึงผู้ป่วยทุกรายในระบบเหมือนกันหลังผ่านการตรวจสอบระดับบทบาท)
 
 **แก้ไข 2026-09-24 (รอบ sync ที่หก) — การอนุมัติบัญชีเปลี่ยนจาก Firebase Console เป็น Operation 11:**
 เดิมหัวข้อนี้เคยระบุว่า "ผู้ดูแลระบบ (system administrator) ดำเนินการอนุมัติบัญชีผ่าน Firebase
@@ -91,7 +93,7 @@ sequenceDiagram
             Client-->>User: บล็อกการเข้าถึงฟีเจอร์อื่นของระบบ แจ้งให้ยืนยันอีเมลก่อน (FR-09)
         else emailVerified = จริง
             Client-->>User: เข้าสู่ระบบสำเร็จ — เข้าสู่ journey ค้นหา/เลือกผู้ป่วยต่อไป
-            Note over Client: จากจุดนี้ทุกคำขอ Operation 0-6 ยังต้องผ่าน<br/>[[api-spec#Operation ร่วม — ตรวจสอบสิทธิ์การเข้าถึงข้อมูลผู้ป่วย (Access Control)|Operation ร่วม — ตรวจสอบสิทธิ์การเข้าถึงข้อมูลผู้ป่วย]]<br/>(role/isActive อ่านจาก Firestore users/{uid} โดยตรง + PatientAssignment) แยกต่างหากเสมอ — ดู [[patient-search-selection]]<br/>**ปิดช่องว่างแล้วตั้งแต่ 2026-09-24:** Operation ร่วมนี้ตรวจสอบ email_verified ซ้ำที่ฝั่ง<br/>Backend Service ด้วยแล้ว (Security Rules ของ Operation 0 + shared helper module ของ<br/>Cloud Functions Operation 1-6 ตาม decision area 19) — ปิดความเสี่ยงที่ Client ถูกดัดแปลง/บั๊ก<br/>ข้าม logic ตรวจสอบนี้แล้วเรียก Operation 0-6 ตรง (ดูหัวข้อ Edge Case ด้านล่าง)<br/>**ความเสี่ยงที่ยังเหลืออยู่:** Operation 7 เองยังไม่มีจุดตรวจ emailVerified/isActive ที่ระดับ<br/>การออก token (ไม่ใช้ Auth Blocking Functions ตาม decision area 16) — token ที่<br/>emailVerified=false/isActive=false ยังคงถูกออกให้ได้ตามปกติ เพียงแต่ถูกปฏิเสธที่ Operation<br/>ร่วม Access Control ก่อนเข้าถึงข้อมูลผู้ป่วยจริงเสมอ
+            Note over Client: จากจุดนี้ทุกคำขอ Operation 0-6 ยังต้องผ่าน<br/>[[api-spec#Operation ร่วม — ตรวจสอบสิทธิ์การเข้าถึงข้อมูลผู้ป่วย (Access Control)|Operation ร่วม — ตรวจสอบสิทธิ์การเข้าถึงข้อมูลผู้ป่วย]]<br/>(role/isActive อ่านจาก Firestore users/{uid} โดยตรง — ไม่มีการตรวจสอบระดับรายผู้ป่วยอีกต่อไป<br/>ตั้งแต่ยกเลิกกลไก PatientAssignment 2026-09-25) แยกต่างหากเสมอ — ดู [[patient-search-selection]]<br/>**ปิดช่องว่างแล้วตั้งแต่ 2026-09-24:** Operation ร่วมนี้ตรวจสอบ email_verified ซ้ำที่ฝั่ง<br/>Backend Service ด้วยแล้ว (Security Rules ของ Operation 0 + shared helper module ของ<br/>Cloud Functions Operation 1-6 ตาม decision area 19) — ปิดความเสี่ยงที่ Client ถูกดัดแปลง/บั๊ก<br/>ข้าม logic ตรวจสอบนี้แล้วเรียก Operation 0-6 ตรง (ดูหัวข้อ Edge Case ด้านล่าง)<br/>**ความเสี่ยงที่ยังเหลืออยู่:** Operation 7 เองยังไม่มีจุดตรวจ emailVerified/isActive ที่ระดับ<br/>การออก token (ไม่ใช้ Auth Blocking Functions ตาม decision area 16) — token ที่<br/>emailVerified=false/isActive=false ยังคงถูกออกให้ได้ตามปกติ เพียงแต่ถูกปฏิเสธที่ Operation<br/>ร่วม Access Control ก่อนเข้าถึงข้อมูลผู้ป่วยจริงเสมอ
         end
     end
 ```
@@ -167,13 +169,14 @@ stateDiagram-v2
     }
 
     สมัครบัญชีสำเร็จ --> พร้อมเข้าถึงข้อมูลผู้ป่วย : ทั้งสองเงื่อนไขในกล่องด้านบนเสร็จสมบูรณ์ (ไม่ว่าจะเกิดก่อน-หลังกันในลำดับใด)
-    พร้อมเข้าถึงข้อมูลผู้ป่วย --> [*] : ต่อด้วย Operation ร่วม Access Control (ตรวจ PatientAssignment) ใน patient-search-selection
+    พร้อมเข้าถึงข้อมูลผู้ป่วย --> [*] : ต่อด้วย Operation ร่วม Access Control (role-level เท่านั้น — ไม่มี patient-level อีกต่อไป) ใน patient-search-selection
 ```
 
-หมายเหตุ: "พร้อมเข้าถึงข้อมูลผู้ป่วย" ในที่นี้หมายถึง **ผ่านระดับบทบาท+บัญชี+อีเมลยืนยันแล้วเท่านั้น** ยัง
-ไม่รวมการตรวจสอบระดับรายผู้ป่วย (PatientAssignment) ซึ่งเป็นอีกขั้นตอนหนึ่งที่อธิบายไว้ที่
+หมายเหตุ: "พร้อมเข้าถึงข้อมูลผู้ป่วย" ในที่นี้หมายถึง **ผ่านระดับบทบาท+บัญชี+อีเมลยืนยันแล้ว** ซึ่งเพียงพอ
+ต่อการเข้าถึงข้อมูลผู้ป่วยทุกรายในระบบแล้วตาม
 [[patient-search-selection#State Diagram — สถานะการตรวจสอบสิทธิ์และการเลือกผู้ป่วย|State Diagram ของ patient-search-selection]]
-สถานะ `สถานะการใช้งานบัญชี` ยังสามารถถูก Admin ตั้งกลับเป็นเท็จได้ภายหลัง (ระงับบัญชี) ผ่าน
+(**แก้ไข 2026-09-25:** เดิมยังมีการตรวจสอบระดับรายผู้ป่วยผ่าน PatientAssignment เพิ่มเติมอีกขั้นตอนหนึ่ง
+— กลไกนี้ถูกยกเลิกทั้งหมดแล้ว ไม่มีขั้นตอนใดเหลือให้ต้องผ่านเพิ่มอีก) สถานะ `สถานะการใช้งานบัญชี` ยังสามารถถูก Admin ตั้งกลับเป็นเท็จได้ภายหลัง (ระงับบัญชี) ผ่าน
 [[api-spec#Operation 13 — ระงับ/เปิดใช้งานบัญชีผู้ใช้งาน|Operation 13]] (FR-13 — เพิ่มใหม่ 2026-09-24
 ตามฟีเจอร์ที่ 7) — ดูรายละเอียด transition นี้ที่
 [[admin-role-account-management#State Diagram — สถานะบัญชีผู้ใช้ (User) ตลอดวงจร Admin จัดการ (FR-11–FR-13)|admin-role-account-management]]
@@ -212,7 +215,7 @@ stateDiagram-v2
 | เข้าสู่ระบบสำเร็จ แต่ยังไม่ยืนยันอีเมล (`emailVerified=false`) | Client บล็อกการเข้าถึงฟีเจอร์อื่นทั้งหมด แจ้งให้ยืนยันอีเมลก่อน — เป็นหน้าที่ของ Client เท่านั้น | [[backlog#สูง (MVP)\|FR-09]] |
 | เข้าสู่ระบบสำเร็จ ยืนยันอีเมลแล้ว แต่บัญชียังไม่ผ่านการอนุมัติ (`role`=ไม่มีค่า, `isActive=false`) | ผ่าน Operation 7 ได้ปกติ แต่ถูกปฏิเสธที่ Operation ร่วม Access Control ทันทีเมื่อเรียก Operation 0-6 ใดๆ (ตรวจสอบระดับบทบาทไม่ผ่านโดยอัตโนมัติ — ไม่ต้องเพิ่มเงื่อนไขใหม่) — ต้องรอ Admin อนุมัติผ่าน Operation 11 ก่อน (FR-11) | [[api-spec#Operation ร่วม — ตรวจสอบสิทธิ์การเข้าถึงข้อมูลผู้ป่วย (Access Control)\|Operation ร่วม Access Control]], [[patient-search-selection]], [[admin-role-account-management]] |
 | Admin พยายามอนุมัติบัญชีที่เคยถูกอนุมัติแล้ว (มี `role` อยู่ก่อน) ผ่าน Operation 11 | ปฏิเสธด้วย input ไม่ถูกต้อง — ให้ใช้ Operation 12 (เปลี่ยน role) หรือ Operation 13 (ระงับ/เปิดใช้งาน) แทน | [[backlog#สูง (MVP)\|FR-11]], [[admin-role-account-management]] |
-| **Client ที่ถูกดัดแปลง/บั๊ก ข้าม logic ตรวจสอบ `emailVerified` แล้วเรียก Operation 0-6 ตรง (ทั้งที่ role/isActive/PatientAssignment ผ่านครบ)** | **ปิดช่องว่างแล้วตั้งแต่ 2026-09-24** — Operation ร่วม Access Control ตรวจสอบ `email_verified` ซ้ำที่ฝั่งเซิร์ฟเวอร์ด้วยแล้ว (Security Rules ของ Operation 0 + shared helper module ของ Cloud Functions Operation 1-6) — ไม่ใช่ช่องว่างที่ยังไม่ถูกยืนยันอีกต่อไป | [[technology-stack#19. การตรวจสอบ `emailVerified` ซ้ำฝั่ง Backend (FR-09, ฟีเจอร์ที่ 6) — ตรวจทั้ง Cloud Functions และ Security Rules\|decision area 19 ใน technology-stack]] |
+| **Client ที่ถูกดัดแปลง/บั๊ก ข้าม logic ตรวจสอบ `emailVerified` แล้วเรียก Operation 0-6 ตรง (ทั้งที่ role/isActive ผ่านครบ)** | **ปิดช่องว่างแล้วตั้งแต่ 2026-09-24** — Operation ร่วม Access Control ตรวจสอบ `email_verified` ซ้ำที่ฝั่งเซิร์ฟเวอร์ด้วยแล้ว (Security Rules ของ Operation 0 + shared helper module ของ Cloud Functions Operation 1-6) — ไม่ใช่ช่องว่างที่ยังไม่ถูกยืนยันอีกต่อไป | [[technology-stack#19. การตรวจสอบ `emailVerified` ซ้ำฝั่ง Backend (FR-09, ฟีเจอร์ที่ 6) — ตรวจทั้ง Cloud Functions และ Security Rules\|decision area 19 ใน technology-stack]] |
 | ผู้ดูแลระบบแก้ไข `role`/`isActive` ผ่าน Firestore โดยตรง | **ไม่มีปัญหา custom claims ค้างเก่าอีกต่อไป** — ตัดสินใจแล้วว่า**ไม่ sync `role`/`isActive` ไปยัง Custom Claims เลย** (decision area 18) ทุก operation อ่าน Firestore `users/{uid}` เป็น source of truth เดียวโดยตรงทุกครั้ง จึงเห็นผลการแก้ไขทันทีในคำขอถัดไป ไม่มี token/claims เก่าให้ค้าง | [[technology-stack#18. การ Sync role/isActive ระหว่าง Firestore กับ Custom Claims (ฟีเจอร์ที่ 6) — ไม่ Sync, Firestore เป็น Source of Truth เดียว\|decision area 18 ใน technology-stack]] |
 
 ## หมายเหตุการ Implement (จาก technology-stack)

@@ -58,16 +58,3 @@ export function PendingApprovalPage() {
     </AuthCard>
   );
 }
-
-// จุดเริ่มของ Phase 2 (ค้นหา/เลือกผู้ป่วย) — ตอนนี้ยืนยันแค่ว่าผ่านการยืนยันตัวตนครบแล้ว
-export function HomePage({displayName, role}: {displayName: string; role: string}) {
-  const {logout} = useAuth();
-  return (
-    <AuthCard title={`สวัสดี ${displayName}`}>
-      <Callout tone="tip" title={`เข้าสู่ระบบในบทบาท${role}`}>
-        หน้าค้นหาและรายชื่อผู้ป่วยจะเพิ่มใน Phase 2
-      </Callout>
-      <button className="btn btn-secondary" onClick={logout}>ออกจากระบบ</button>
-    </AuthCard>
-  );
-}

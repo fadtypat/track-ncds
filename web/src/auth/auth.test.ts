@@ -1,7 +1,17 @@
 import {FirebaseError} from "firebase/app";
 import {describe, expect, it} from "vitest";
 
-import {LOGIN_FAILED, TOO_MANY_ATTEMPTS, callableErrorMessage, GENERIC_ERROR, loginErrorMessage} from "./errors";
+import {
+  GENERIC_ERROR,
+  INVALID_EMAIL,
+  LOGIN_FAILED,
+  PASSWORD_POLICY_FAILED,
+  SIGN_UP_DISABLED,
+  TOO_MANY_ATTEMPTS,
+  callableErrorMessage,
+  loginErrorMessage,
+  signUpErrorMessage,
+} from "./errors";
 import {isPasswordValid, passwordRules} from "./passwordPolicy";
 
 describe("passwordRules (NFR-17, mirrors functions/src/auth/passwordPolicy.ts)", () => {
@@ -27,6 +37,17 @@ describe("loginErrorMessage (NFR-18)", () => {
 
   it("keeps rate limiting distinguishable", () => {
     expect(loginErrorMessage(new FirebaseError("auth/too-many-requests", "x"))).toBe(TOO_MANY_ATTEMPTS);
+  });
+});
+
+describe("signUpErrorMessage", () => {
+  it.each([
+    ["auth/invalid-email", INVALID_EMAIL],
+    ["auth/weak-password", PASSWORD_POLICY_FAILED],
+    ["auth/operation-not-allowed", SIGN_UP_DISABLED],
+    ["auth/internal-error", GENERIC_ERROR],
+  ])("maps %s", (code, message) => {
+    expect(signUpErrorMessage(new FirebaseError(code, "x"))).toBe(message);
   });
 });
 
