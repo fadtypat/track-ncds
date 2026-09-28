@@ -1,12 +1,15 @@
 # Detailed Design — ค้นหา/เลือกผู้ป่วย
 
 เอกสารนี้อธิบายการออกแบบระดับ component (sequence flow, state transition, edge case) ของฟีเจอร์
-[[feature-list#3. ค้นหา/เลือกผู้ป่วย|3. ค้นหา/เลือกผู้ป่วย]] (FR-05, FR-06, FR-17, NFR-02) ตาม journey
-ใน [[user-journey]] ขั้นตอนที่ 1–8 อ้างอิงสัญญาการทำงานจาก
+[[feature-list#3. ค้นหา/เลือกผู้ป่วย|3. ค้นหา/เลือกผู้ป่วย]] (FR-05, FR-06, FR-17, FR-18, NFR-02) ตาม
+journey ใน [[user-journey]] ขั้นตอนที่ 1–8 อ้างอิงสัญญาการทำงานจาก
 [[api-spec#Operation ร่วม — ตรวจสอบสิทธิ์การเข้าถึงข้อมูลผู้ป่วย (Access Control)|Operation ร่วม — ตรวจสอบสิทธิ์การเข้าถึงข้อมูลผู้ป่วย]],
-[[api-spec#Operation 0 — ค้นหา/แสดงรายชื่อผู้ป่วยทั้งหมดในระบบ (ค้นหาเฉพาะรายด้วยเลข HN)|Operation 0]]
-และ [[api-spec#Operation 17 — อธิบายผลการค้นหาผู้ป่วยด้วย HN โดยบริการ AI ภายนอก (AI-assisted Search Result Explanation)|Operation 17]]
-และโมเดลข้อมูลจาก [[db-spec#ผู้ใช้ (User)|User]] และ [[db-spec#ผู้ป่วย (Patient)|Patient]] ใน [[db-spec]]
+[[api-spec#Operation 0 — ค้นหา/แสดงรายชื่อผู้ป่วยทั้งหมดในระบบ (ค้นหาเฉพาะรายด้วยเลข HN)|Operation 0]],
+[[api-spec#Operation 17 — อธิบายผลการค้นหาผู้ป่วยด้วย HN โดยบริการ AI ภายนอก (AI-assisted Search Result Explanation)|Operation 17]]
+และ [[api-spec#Operation 18 — สรุปจำนวนครั้งตรวจ HbA1c และระยะห่างระหว่างการตรวจในปีงบประมาณ (คำนวณโดยระบบ + AI เขียนสรุป)|Operation 18]]
+และโมเดลข้อมูลจาก [[db-spec#ผู้ใช้ (User)|User]], [[db-spec#ผู้ป่วย (Patient)|Patient]],
+[[db-spec#ผลตรวจ lab (LabResult)|LabResult]] และ
+[[db-spec#สรุปการตรวจ HbA1c รายปีงบประมาณ (Hba1cVisitSummary)|Hba1cVisitSummary]] ใน [[db-spec]]
 
 **แก้ไข 2026-09-25 (รอบ audit-pipeline) — ยกเลิกกลไก PatientAssignment ทั้งหมด, รวม Operation 0/15
 เข้าด้วยกัน:** เอกสารฉบับก่อนหน้านี้ (ชื่อไฟล์เดิม "ค้นหา/เลือกผู้ป่วยในความดูแล") อธิบายว่าแพทย์/พยาบาล
@@ -24,6 +27,25 @@ validation ของ FR-06:** [[feature-list]] เพิ่ม FR-17 (กลา�
 [[api-spec#Operation 0 — ค้นหา/แสดงรายชื่อผู้ป่วยทั้งหมดในระบบ (ค้นหาเฉพาะรายด้วยเลข HN)|api-spec (แก้ไข 2026-09-26)]]
 — เพิ่ม [[#Operation 17 — อธิบายผลการค้นหาผู้ป่วยด้วย HN โดยบริการ AI ภายนอก (FR-17)|Sequence Diagram 2]]
 ใหม่ด้านล่าง และปรับปรุง Sequence Diagram หลัก/State Diagram ของเส้นทาง HN ให้ตรงกับสองจังหวะนี้
+
+**เพิ่ม 2026-09-28 (รอบ sync-detailed-design) — FR-18 (AI สรุปจำนวนครั้ง/ระยะห่างการตรวจ HbA1c รายปี
+งบประมาณ):** [[feature-list]] เพิ่ม FR-18 (กลาง) เข้าฟีเจอร์นี้เมื่อ 2026-09-27 (ปุ่มอยู่บนการ์ดผู้ป่วยใน
+หน้าจอเดียวกับ FR-05/FR-06/FR-17) และ [[api-spec]]/[[db-spec]] sync
+[[api-spec#Operation 18 — สรุปจำนวนครั้งตรวจ HbA1c และระยะห่างระหว่างการตรวจในปีงบประมาณ (คำนวณโดยระบบ + AI เขียนสรุป)|Operation 18]]
+กับ entity ใหม่ [[db-spec#สรุปการตรวจ HbA1c รายปีงบประมาณ (Hba1cVisitSummary)|Hba1cVisitSummary]] เมื่อ
+2026-09-28 แล้ว — เอกสารนี้ยังไม่เคยกล่าวถึง FR-18/Operation 18 เลยแม้แต่จุดเดียวก่อนรอบนี้ (ช่องว่างที่
+สืบเนื่องมาจากชั้นเอกสารก่อนหน้า ไม่ใช่ปัญหาที่เกิดจากไฟล์นี้เอง) จึงเพิ่ม
+[[#Operation 18 — สรุปจำนวนครั้งตรวจ HbA1c และระยะห่างระหว่างการตรวจในปีงบประมาณ (FR-18)|Sequence Diagram 3]]
+ใหม่ด้านล่าง พร้อมแถวตาราง Operation ↔ Entity, Edge Case และหมายเหตุการ Implement ที่เกี่ยวข้อง —
+**ข้อแตกต่างสำคัญจาก Operation 0/17:** Operation 18 อ่านผลตรวจ lab รายบุคคลจริงของผู้ป่วย (`labResults`)
+ตรงจาก Client โดยไม่มี Cloud Function/audit log คั่นกลาง (ขัดกับ NFR-06/NFR-20 ชั่วคราว รุนแรงกว่า
+Operation 17 ที่ไม่แตะข้อมูลผู้ป่วยรายบุคคลเลย) — ดูรายละเอียดความเสี่ยงเต็มที่
+[[technology-stack#23. FR-18 — สรุปจำนวนครั้งตรวจ HbA1c/ระยะห่างระหว่างการตรวจในปีงบประมาณ + บันทึกผลลง Firestore (Client-side compute + Firebase AI Logic เขียนสรุป + เขียน Firestore ตรงจาก Client — ชั่วคราวจนกว่าจะอยู่ Blaze)|decision area 23]]
+— **ประเด็นที่ยังไม่ถามผู้ใช้เพิ่ม:** api-spec/db-spec/technology-stack ได้บันทึกไว้ตรงกันแล้วว่าปีงบ
+ประมาณเป็น input ที่จำเป็น แต่โค้ดจริงยังไม่มี selector ให้เลือก (ใช้ปีปัจจุบันเสมอ) — เป็น known
+implementation gap ที่ตัดสินใจ/บันทึกไว้แล้วในชั้นเอกสารก่อนหน้า ไม่ใช่จุดที่ต้องเลือกพฤติกรรมใหม่ที่นี่
+จึงสะท้อนพฤติกรรมปัจจุบัน (ใช้ปีปัจจุบันเสมอ) ตรงไปตรงมาใน sequence diagram ด้านล่างพร้อมหมายเหตุกำกับ
+เช่นเดียวกับที่ [[api-spec]]/[[db-spec]] ทำไว้แล้ว
 
 ฟีเจอร์นี้เป็น **precondition แรกสุด** ของทั้งฟีเจอร์
 [[feature-list#1. ดูประวัติการวินิจฉัยและผลตรวจ lab ของผู้ป่วย NCD|1. ดูประวัติการวินิจฉัยและผลตรวจ lab ของผู้ป่วย NCD]]
@@ -188,6 +210,55 @@ sequenceDiagram
     end
 ```
 
+## Operation 18 — สรุปจำนวนครั้งตรวจ HbA1c และระยะห่างระหว่างการตรวจในปีงบประมาณ (FR-18)
+
+**เพิ่ม 2026-09-28** ปุ่มบนการ์ดผู้ป่วยแต่ละรายในหน้าจอเดียวกับ Sequence Diagram 1/2 ด้านบน (หน้ารายชื่อ/
+ผลค้นหาจาก Operation 0) ตามที่
+[[api-spec#Operation 18 — สรุปจำนวนครั้งตรวจ HbA1c และระยะห่างระหว่างการตรวจในปีงบประมาณ (คำนวณโดยระบบ + AI เขียนสรุป)|Operation 18 ใน api-spec]]
+กำหนด — **ทุกบทบาท (แพทย์/พยาบาล/Admin) กดได้เหมือนกัน** ต่างจาก Operation 16 (FR-16) เพราะเป็นการคำนวณ
+สถิติ ไม่ใช่การวินิจฉัย/ตัดสินใจทางคลินิก (ยืนยันแล้วใน [[ACL]]) ขั้นที่ 1-2 (หาวันที่ตรวจ/นับจำนวน/
+คำนวณระยะห่าง) เป็น deterministic logic ของระบบเอง ไม่ใช่ AI มีเพียงขั้นที่ 3 (เขียนสรุปภาษาไทย) เท่านั้น
+ที่เรียกบริการ AI ภายนอก:
+
+```mermaid
+sequenceDiagram
+    actor User as แพทย์/พยาบาล/Admin
+    participant Client as ฝั่งไคลเอนต์ (Client)
+    participant Store as ที่เก็บข้อมูลหลัก (Primary Data Store)
+    participant AI as บริการ AI ภายนอก (External AI Service — Firebase AI Logic)
+
+    Note over Client,Store: สืบเนื่องจาก Sequence Diagram 1 — ผู้ป่วยแสดงอยู่ในรายชื่อ/ผลค้นหาแล้ว (ยังไม่ต้องเลือกผู้ป่วยเข้าดูข้อมูลเต็ม)<br/>หมายเหตุเทคโนโลยีจริง: ไม่มี Cloud Function คั่นกลางเลยทั้ง operation นี้ (ต่างจาก Operation 1/2/3) — Client อ่าน/เขียน Firestore ตรง<br/>ชั่วคราวจนกว่าโปรเจกต์จะอยู่แพ็กเกจ Blaze (decision area 23) —**ไม่มี audit log ของการอ่าน labResults รายบุคคลผ่านเส้นทางนี้เลย**<br/>ขัดกับ NFR-06/NFR-20 ชั่วคราว รุนแรงกว่า Operation 17 เพราะแตะผลตรวจ lab รายบุคคลจริง ดูหัวข้อ Edge Case ด้านล่าง
+
+    User->>Client: กดปุ่ม "สรุปการตรวจ HbA1c" บนการ์ดผู้ป่วยรายหนึ่ง (FR-18)
+    Note over Client: ปีงบประมาณราชการไทยที่ใช้ = ปีงบประมาณปัจจุบันตามวันที่ของเครื่องเสมอ (ยังไม่มี selector ให้เลือกปีอื่น — known implementation gap ต่างจากที่ architecture อธิบายไว้ว่าผู้ใช้ "เลือก" ปีงบได้ ดู technology-stack decision area 23)
+    Client->>Store: อ่าน labResults where patientId==เลือกแล้ว, testType=='HbA1c', dataSource=='ข้อมูลจำลอง' (ไม่ผ่าน Operation 2, ไม่ผ่าน Cloud Function)
+    Store-->>Client: รายการผลตรวจ HbA1c ที่ตรงเงื่อนไข (หรือรายการว่าง)
+    Client->>Client: [ขั้นที่ 1-2 — deterministic] กรองวันที่ตรวจที่อยู่ในปีงบที่ใช้ นับจำนวนครั้ง (วันเดียวกันนับครั้งเดียว) คำนวณระยะห่างเป็นวันระหว่างการตรวจแต่ละคู่ + ต่ำสุด/เฉลี่ย/สูงสุด
+    alt จำนวนครั้งที่ตรวจ = 0 (ไม่มีผลตรวจ HbA1c ในปีงบนี้)
+        Client->>Client: เตรียมส่ง "จำนวนครั้ง = 0" ให้ AI เท่านั้น
+    else จำนวนครั้งที่ตรวจ = 1
+        Client->>Client: เตรียมส่ง "จำนวนครั้ง = 1" ให้ AI เท่านั้น (ไม่มีค่าระยะห่าง)
+    else จำนวนครั้งที่ตรวจ >= 2
+        Client->>Client: เตรียมส่งจำนวนครั้ง + ระยะห่างแต่ละคู่/ต่ำสุด/เฉลี่ย/สูงสุด ให้ AI
+    end
+    Client->>Client: [จำกัดข้อมูล NFR-21 ขยาย] ประกอบ prompt จากเฉพาะตัวเลขสรุปข้างต้นเท่านั้น — ห้ามใส่ HN/ชื่อ-นามสกุล/วันที่ตรวจจริง/ค่าผล HbA1c เด็ดขาด
+    Client->>AI: เรียก Firebase AI Logic (Gemini Developer API) ตรงจาก Client พร้อม prompt (reuse stack เดียวกับ Operation 17)
+    alt เรียกสำเร็จ
+        AI-->>Client: ข้อความสรุปเป็นภาษาไทย
+    else ล้มเหลว/timeout
+        AI-->>Client: error
+        Client->>Client: catch error ตั้งข้อความสรุป = ว่าง (ไม่บล็อกขั้นตอนถัดไป)
+    end
+    Client->>Store: set() เขียนทับ hba1cVisitSummaries/{patientId}_{fiscalYear} ทั้งฉบับ (ตัวเลขที่คำนวณ + ข้อความสรุป AI (หรือว่าง) + ชื่อ/รุ่นโมเดล AI + เวลาที่สร้าง) — ไม่มี version history
+    Store-->>Client: เขียนสำเร็จ
+    Client-->>User: แสดงตัวเลขสรุป + ข้อความจาก AI (ถ้ามี) พร้อมป้ายกำกับชัดเจนว่า "ข้อมูลประกอบ ไม่ใช่คำแนะนำทางการแพทย์" (FR-18)
+```
+
+หมายเหตุ: การกดปุ่มนี้ถือเป็นการเข้าถึงข้อมูลผลตรวจ lab รายบุคคลของผู้ป่วยตาม spec ต้นทาง (ต้องบันทึก
+audit log ตาม NFR-06/NFR-20) แต่เส้นทางจริงในรอบนี้ยังไม่มี audit log เลย — ดูหัวข้อ Edge Case ด้านล่าง
+และ [[technology-stack#23. FR-18 — สรุปจำนวนครั้งตรวจ HbA1c/ระยะห่างระหว่างการตรวจในปีงบประมาณ + บันทึกผลลง Firestore (Client-side compute + Firebase AI Logic เขียนสรุป + เขียน Firestore ตรงจาก Client — ชั่วคราวจนกว่าจะอยู่ Blaze)|target design เมื่ออยู่แพ็กเกจ Blaze]]
+สำหรับแผนแก้ไขในอนาคต (ย้ายเป็น Cloud Function `computeHba1cVisitSummary` พร้อม audit log แบบ fail-safe)
+
 ## ตาราง Operation ↔ Entity ที่กระทบ
 
 | ลำดับ | Operation | Entity ที่กระทบ | การกระทำ | หมายเหตุ |
@@ -196,6 +267,8 @@ sequenceDiagram
 | 2 | [[api-spec#Operation 0 — ค้นหา/แสดงรายชื่อผู้ป่วยทั้งหมดในระบบ (ค้นหาเฉพาะรายด้วยเลข HN)\|Operation 0]] | — (ไม่กระทบ entity ใด) | ตรวจสอบรูปแบบ | เฉพาะเมื่อระบุ HN: ตรวจสอบว่าเป็นตัวเลขล้วนครบ 7 หลักหรือไม่ ที่โค้ด Client **ทั้งตอนหยุดพิมพ์ (debounce 500ms) และตอนกดค้นหา** (แก้ไข 2026-09-26) — ถ้าไม่ครบรูปแบบ หยุดทันทีก่อนอ่าน Patient ใดๆ (FR-06) |
 | 3 | [[api-spec#Operation 0 — ค้นหา/แสดงรายชื่อผู้ป่วยทั้งหมดในระบบ (ค้นหาเฉพาะรายด้วยเลข HN)\|Operation 0]] | [[db-spec#ผู้ป่วย (Patient)\|Patient]] | อ่าน | ถ้าระบุ HN ที่ผ่านรูปแบบแล้ว: อ่านแบบ exact match กับ Patient.เลขประจำตัวผู้ป่วย ใน**ผู้ป่วยทุกรายในระบบ** (ไม่ใช่ partial match, ไม่กรองตามบทบาท/assignment — แก้ไข 2026-09-25); ถ้าไม่ระบุ HN: อ่านทั้ง collection |
 | 4 | [[api-spec#Operation 17 — อธิบายผลการค้นหาผู้ป่วยด้วย HN โดยบริการ AI ภายนอก (AI-assisted Search Result Explanation)\|Operation 17]] | — (ไม่มี entity ใดถูกอ่าน/เขียน) | — | เฉพาะจังหวะกดปุ่มค้นหา — ส่งเฉพาะ HN ที่พิมพ์ + สถานะผลลัพธ์ + จำนวนที่พบ ให้บริการ AI ภายนอก ไม่เก็บผลลัพธ์ AI ไว้ที่ใดเลย (FR-17, NFR-21) |
+| 5 | [[api-spec#Operation 18 — สรุปจำนวนครั้งตรวจ HbA1c และระยะห่างระหว่างการตรวจในปีงบประมาณ (คำนวณโดยระบบ + AI เขียนสรุป)\|Operation 18]] | [[db-spec#ผลตรวจ lab (LabResult)\|LabResult]] | อ่าน | **เพิ่ม 2026-09-28** — อ่านตรงจาก Client ด้วย equality query (`patientId`, `testType='HbA1c'`, `dataSource='ข้อมูลจำลอง'`) ไม่ผ่าน Operation 2/Cloud Function ไม่มี audit log (ขัดกับ NFR-06/NFR-20 ชั่วคราว) — ทุกบทบาทเรียกได้เหมือนกัน (FR-18) |
+| 6 | [[api-spec#Operation 18 — สรุปจำนวนครั้งตรวจ HbA1c และระยะห่างระหว่างการตรวจในปีงบประมาณ (คำนวณโดยระบบ + AI เขียนสรุป)\|Operation 18]] | [[db-spec#สรุปการตรวจ HbA1c รายปีงบประมาณ (Hba1cVisitSummary)\|Hba1cVisitSummary]] | เขียน (เขียนทับ) | **เพิ่ม 2026-09-28** — `set()` เขียนทับ `hba1cVisitSummaries/{patientId}_{fiscalYear}` ทั้งฉบับตรงจาก Client ทุกครั้งที่กดปุ่ม ไม่มี version history (FR-18) |
 
 ## ข้อกำหนด: การจำกัด/ล้างข้อมูลผู้ป่วยที่ละเอียดอ่อนฝั่ง Client (NFR-02)
 
@@ -341,6 +414,13 @@ state ทั้งหมด ไม่ใช่ entity field) "เรียกOpe
 | ผู้ใช้ออกจากหน้าจอค้นหา/รายชื่อผู้ป่วยนี้ไปยังหน้าจออื่นโดยไม่ได้เลือกผู้ป่วยรายใด | Client ล้างรายชื่อ/ผลค้นหาผู้ป่วยที่เคยแสดงไว้ทันที ไม่เก็บ/cache ไว้เกินความจำเป็น (NFR-02) | [[architecture#ตาราง Mapping NFR ไปยัง Component\|architecture — ตาราง Mapping NFR แถว NFR-02]] |
 | ผู้ใช้ค้นหา/เลือกผู้ป่วยรายใหม่แทนที่รายชื่อ/ผลค้นหาเดิม (ค้นหาซ้ำ หรือกลับมาหน้านี้เพื่อเลือกผู้ป่วยรายอื่น) | Client ล้างรายชื่อ/ผลค้นหาชุดเดิมที่ไม่เกี่ยวข้องอีกต่อไปก่อนแสดงผลลัพธ์ชุดใหม่ ไม่คงค้างข้อมูลผู้ป่วยรายเดิมไว้ (NFR-02) | [[architecture#ตาราง Mapping NFR ไปยัง Component\|architecture — ตาราง Mapping NFR แถว NFR-02]] |
 | ผู้ใช้ออกจากระบบ (logout) หรือ session สิ้นสุด | Client ล้างรายชื่อ/ผลค้นหาผู้ป่วยที่ละเอียดอ่อนทั้งหมดที่ยังแสดง/ค้างอยู่ทันที ก่อนกลับสู่หน้าจอเข้าสู่ระบบ (NFR-02) | [[architecture#ตาราง Mapping NFR ไปยัง Component\|architecture — ตาราง Mapping NFR แถว NFR-02]] |
+| ไม่มีผลตรวจ HbA1c เลยในปีงบประมาณที่ใช้ (Operation 18) | ยังคงเขียนเอกสาร Hba1cVisitSummary (จำนวนครั้งตรวจ = 0, ระยะห่าง = รายการว่าง, ข้อความสรุปจาก AI บอกว่าไม่มีข้อมูล) ปุ่มยังกดได้ตามปกติ ไม่ปิด/ซ่อนปุ่ม (FR-18) | [[backlog#กลาง\|FR-18]], [[api-spec#Operation 18 — สรุปจำนวนครั้งตรวจ HbA1c และระยะห่างระหว่างการตรวจในปีงบประมาณ (คำนวณโดยระบบ + AI เขียนสรุป)\|Operation 18]] |
+| มีผลตรวจ HbA1c เพียงครั้งเดียวในปีงบประมาณที่ใช้ (Operation 18) | จำนวนครั้งตรวจ = 1, ระยะห่างต่ำสุด/เฉลี่ย/สูงสุดเป็นค่าว่างทั้งหมด ส่งเฉพาะจำนวนครั้ง = 1 ให้ AI เพื่อให้เขียนสรุปว่ายังไม่มีข้อมูลเพียงพอประเมินความสม่ำเสมอ (FR-18) | [[backlog#กลาง\|FR-18]], [[api-spec#Operation 18 — สรุปจำนวนครั้งตรวจ HbA1c และระยะห่างระหว่างการตรวจในปีงบประมาณ (คำนวณโดยระบบ + AI เขียนสรุป)\|Operation 18]] |
+| บริการ AI ภายนอก (Operation 18) ใช้งานไม่ได้/ล้มเหลว/timeout | ยังคงบันทึกตัวเลขที่คำนวณได้จากขั้นที่ 1-2 ลง Hba1cVisitSummary ตามปกติ (ข้อความสรุปจาก AI เป็นค่าว่าง) ไม่ใช่ error ที่ต้องแจ้งเตือนผู้ใช้เป็นพิเศษ — รูปแบบเดียวกับ Operation 17 | [[backlog#กลาง\|FR-18]], [[api-spec#Operation 18 — สรุปจำนวนครั้งตรวจ HbA1c และระยะห่างระหว่างการตรวจในปีงบประมาณ (คำนวณโดยระบบ + AI เขียนสรุป)\|Operation 18]] |
+| กดปุ่มซ้ำสำหรับผู้ป่วย/ปีงบประมาณเดียวกัน (Operation 18) | เขียนทับเอกสาร Hba1cVisitSummary เดิมทั้งฉบับด้วย `set()` เสมอ ไม่มี version history (ผู้ใช้ยืนยันแล้ว) | [[backlog#กลาง\|FR-18]], [[db-spec#สรุปการตรวจ HbA1c รายปีงบประมาณ (Hba1cVisitSummary)\|Hba1cVisitSummary]] |
+| ข้อมูลที่ส่งให้บริการ AI ภายนอก (Operation 18) มี HN/ชื่อ-นามสกุล/วันที่ตรวจจริง/ค่าผล HbA1c ปะปนอยู่ (ความเสี่ยงด้าน NFR-21 ขยาย) | ต้องไม่เกิดขึ้น — จำกัดเฉพาะจำนวนครั้งตรวจและระยะห่างเป็นวัน (หรือค่าต่ำสุด/เฉลี่ย/สูงสุดที่คำนวณแล้ว) ที่ชั้น prompt construction ในโค้ด Client เท่านั้น (ไม่มีชั้นตรวจสอบซ้ำฝั่งเซิร์ฟเวอร์ — ความเสี่ยงที่ผู้ใช้รับทราบแล้ว) | [[backlog#สูง (MVP)\|NFR-21]], [[db-spec#สรุปการตรวจ HbA1c รายปีงบประมาณ (Hba1cVisitSummary)\|Hba1cVisitSummary]] |
+| Operation 18 อ่านผลตรวจ lab รายบุคคลของผู้ป่วยตรงจาก Client โดยไม่มี audit log เลย (ความเสี่ยงด้าน NFR-06/NFR-20) | ต้องไม่เกิดขึ้นในระยะยาว — เป็นช่องว่างชั่วคราวที่ยอมรับความเสี่ยงไว้แล้วระหว่างที่โปรเจกต์ยังไม่อยู่แพ็กเกจ Blaze (deploy Cloud Functions ไม่ได้) รุนแรงกว่า Operation 17 เพราะแตะผลตรวจ lab รายบุคคลจริง — target design คือย้ายเป็น Cloud Function `computeHba1cVisitSummary` พร้อม audit log แบบ fail-safe เมื่ออยู่ Blaze | [[technology-stack#23. FR-18 — สรุปจำนวนครั้งตรวจ HbA1c/ระยะห่างระหว่างการตรวจในปีงบประมาณ + บันทึกผลลง Firestore (Client-side compute + Firebase AI Logic เขียนสรุป + เขียน Firestore ตรงจาก Client — ชั่วคราวจนกว่าจะอยู่ Blaze)\|decision area 23]], [[backlog#Non-Functional Requirements\|NFR-06]], [[backlog#Non-Functional Requirements\|NFR-20]] |
+| ปีงบประมาณที่ผู้ใช้ต้องการดูไม่ใช่ปีปัจจุบัน (ต้องการ selector เลือกปีอื่น) | ยังทำไม่ได้ในรอบนี้ — ระบบใช้ปีงบประมาณปัจจุบันตามวันที่ของเครื่องเสมอ (known implementation gap ที่บันทึกไว้แล้วใน api-spec/db-spec/technology-stack ต่างจากที่ architecture อธิบายไว้ว่าผู้ใช้ "เลือก" ปีงบได้) — ไม่ใช่จุดที่ต้องเลือกพฤติกรรมใหม่ในชั้นนี้ | [[api-spec#Operation 18 — สรุปจำนวนครั้งตรวจ HbA1c และระยะห่างระหว่างการตรวจในปีงบประมาณ (คำนวณโดยระบบ + AI เขียนสรุป)\|Operation 18]], [[technology-stack#23. FR-18 — สรุปจำนวนครั้งตรวจ HbA1c/ระยะห่างระหว่างการตรวจในปีงบประมาณ + บันทึกผลลง Firestore (Client-side compute + Firebase AI Logic เขียนสรุป + เขียน Firestore ตรงจาก Client — ชั่วคราวจนกว่าจะอยู่ Blaze)\|decision area 23]] |
 
 ## หมายเหตุการ Implement (จาก technology-stack)
 
@@ -351,7 +431,8 @@ state ทั้งหมด ไม่ใช่ entity field) "เรียกOpe
 [[technology-stack#19. การตรวจสอบ `emailVerified` ซ้ำฝั่ง Backend (FR-09, ฟีเจอร์ที่ 6) — ตรวจทั้ง Cloud Functions และ Security Rules|decision area 19]],
 [[technology-stack#20. AI ช่วยอธิบายผลการค้นหาผู้ป่วยด้วย HN (FR-17, NFR-21) — Firebase AI Logic (Gemini Developer API) เรียกตรงจาก Client|decision area 20]],
 [[technology-stack#21. App Check สำหรับ Firebase AI Logic — reCAPTCHA v3 (production) + Debug Provider (local dev)|decision area 21]],
-[[technology-stack#22. จุดกำหนดชื่อโมเดล AI — Constant เดียวใน `web/src/ai/config.ts`|decision area 22]]):
+[[technology-stack#22. จุดกำหนดชื่อโมเดล AI — Constant เดียวใน `web/src/ai/config.ts`|decision area 22]],
+[[technology-stack#23. FR-18 — สรุปจำนวนครั้งตรวจ HbA1c/ระยะห่างระหว่างการตรวจในปีงบประมาณ + บันทึกผลลง Firestore (Client-side compute + Firebase AI Logic เขียนสรุป + เขียน Firestore ตรงจาก Client — ชั่วคราวจนกว่าจะอยู่ Blaze)|decision area 23]]):
 
 - **ตรวจสอบสิทธิ์ระดับบทบาท (role-level):** บังคับใช้ผ่าน **Firestore Security Rules** เท่านั้น
   ประเมิน `get(/databases/$(database)/documents/users/$(request.auth.uid)).data.role in
@@ -383,6 +464,25 @@ state ทั้งหมด ไม่ใช่ entity field) "เรียกOpe
   กรณีไม่มีสิทธิ์ระดับบทบาท Client ได้รับ `permission-denied` จาก Firestore SDK เอง (มาจาก Security
   Rules ปฏิเสธ); กรณี "HN ไม่ครบ 7 หลัก"/"ไม่พบผู้ป่วย" เป็น client-side logic ล้วน; ความล้มเหลวของ
   Operation 17 ถูก catch ที่โค้ด Client และปฏิบัติเป็น "ไม่มีคำอธิบายเพิ่มเติม" เสมอ
+- **Operation 18 (FR-18, NFR-21 ขยาย, เพิ่ม 2026-09-28):** ขั้นที่ 1-2 (หาวันที่ตรวจ/นับจำนวน visit/
+  คำนวณระยะห่างเป็นวัน) เป็น **pure function ในโค้ด Client (TypeScript)** ทั้งหมด (deterministic, unit
+  test ได้ตรงไปตรงมา — ไม่ใช่ AI) อ่าน `labResults` ตรงจาก Client ด้วย
+  `where('patientId','==',patientId)`, `where('testType','==','HbA1c')`,
+  `where('dataSource','==','ข้อมูลจำลอง')` **ไม่ผ่าน Cloud Function** — ขั้นที่ 3 (เขียนสรุปภาษาไทย)
+  reuse stack เดียวกับ Operation 17 ทั้งหมด (Firebase AI Logic/Gemini Developer API, App Check
+  reCAPTCHA v3, `GEMINI_MODEL_NAME` constant เดียวกัน) ไม่มีการตัดสินใจ AI provider/โมเดลใหม่ — เขียนผล
+  ลง `hba1cVisitSummaries/{patientId}_{fiscalYear}` ด้วย `set()` (เขียนทับทั้งฉบับ ไม่ใช่ `update()`
+  บางส่วน) ตรงจาก Client เช่นกัน (ไม่มี Admin SDK/Cloud Function คั่นกลาง) — **ขัดกับสถาปัตยกรรมที่
+  ออกแบบไว้โดยตรง** (Operation 1-6 ทั้งหมดต้องผ่าน Cloud Functions) เกิดจากข้อจำกัดเดียวกับ Operation
+  17 (โปรเจกต์ยังไม่อยู่แพ็กเกจ Blaze) แต่**รุนแรงกว่า** เพราะแตะผลตรวจ lab รายบุคคลจริงของผู้ป่วย — ไม่มี
+  audit log ของการอ่าน `labResults` ผ่านเส้นทางนี้เลย (ขัดกับ NFR-06/NFR-20 ชั่วคราว) และไม่มีการตรวจสอบ/
+  กรองฝั่งเซิร์ฟเวอร์ว่าตัวเลขที่ Client คำนวณมาถูกต้องก่อนบันทึก — ยอมรับความเสี่ยงนี้ชั่วคราวเช่นเดียวกับ
+  Operation 17 (ผู้ใช้ยืนยันแล้ว) — **target design เมื่ออยู่แพ็กเกจ Blaze:** ย้ายทั้งหมดเป็น Cloud
+  Function callable ใหม่ (เช่น `computeHba1cVisitSummary`) ที่ตรวจสิทธิ์ → บันทึก audit log แบบ
+  fail-safe ก่อนเสมอ (NFR-06/NFR-20) → อ่าน `labResults` ผ่าน Admin SDK → เรียก AI → เขียนผ่าน Admin SDK
+  เท่านั้น (ปรับ Security Rules ของ `hba1cVisitSummaries` เป็น `allow read, write: if false` เหมือน
+  collection ข้อมูลผู้ป่วยอื่น) — สิทธิ์กดปุ่ม: แพทย์/พยาบาล/admin ทุกคนเหมือนกัน ไม่ต้องเพิ่ม role check
+  ใหม่นอกเหนือจากเงื่อนไข role/isActive/email_verified มาตรฐานของ Operation 0
 - **การจำกัด/ล้างข้อมูลฝั่ง Client (หัวข้อด้านบน):** `[[technology-stack]]` ไม่ได้ระบุกลไก state
   management เฉพาะเจาะจงสำหรับความสามารถนี้ — หลักการเชิงพฤติกรรมที่ระบุไว้ในหัวข้อ "ข้อกำหนด: การจำกัด/
   ล้างข้อมูลผู้ป่วยที่ละเอียดอ่อนฝั่ง Client" ด้านบนจึงยังคงเป็นข้อกำหนดระดับพฤติกรรมที่การ implement จริง
