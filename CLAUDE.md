@@ -19,6 +19,8 @@ This file provides guidance to Claude Code (claude.ai/code) when working with co
 - เปิดดูเอกสาร/prototype ผ่าน browser: ใช้ preview config `docs-static` ใน `.claude/launch.json` (เสิร์ฟโฟลเดอร์ `docs/` ที่พอร์ต 4873 ด้วย `http-server`) — เช่น `http://localhost:4873/02-design/01-prototypes/20260922-01-firestore-demo/patient-list.html`
 - Cloud Functions (รันในโฟลเดอร์ `functions/`, Node engine ตั้งไว้ที่ 24): `npm run build` (tsc → `lib/`), `npm test` (Vitest, unit test ใน `functions/test/`), `npm run build:watch`; ต้องตั้ง `WEB_API_KEY` ใน `functions/.env` (ดู `.env.example`)
 - Web (รันในโฟลเดอร์ `web/`): `npm run dev` (ใช้ `.env.local` — ดู `.env.example`), `npm run dev:emulator` (ค่า demo ใน `.env.emulator` ต่อ Emulator Suite), `npm test` (Vitest), `npm run build`, `npm run lint` (oxlint) — preview config `web-emulator` ที่พอร์ต 5173
+- E2E (Playwright, รันใน `web/`): `npm run test:e2e` ทดสอบกับ `https://track-ncds.web.app` เป็นค่าเริ่มต้น (เปลี่ยนด้วย env `E2E_BASE_URL`), `npm run test:e2e:ui`, `npm run test:e2e:report` — ไฟล์ทดสอบอยู่ใน `web/e2e/` ตั้งชื่อ `*.e2e.ts` เพื่อไม่ให้ Vitest หยิบไปรัน; ตอนนี้มีแค่ smoke test หน้าเข้าสู่ระบบ
+- Playwright MCP ลงทะเบียนไว้ใน `.mcp.json` ที่ root (ผลลัพธ์ snapshot/screenshot ลง `.playwright-mcp/` ซึ่งอยู่ใน `.gitignore`)
 - Emulator Suite (`firebase emulators:start --project demo-track-ncds`) ต้องใช้ Java 11+ ซึ่งเครื่องนี้ยังไม่มี
 
 ## สถานะของแต่ละส่วน (ตรวจล่าสุด 2026-09-24 — ตรวจซ้ำก่อนอ้างอิงเสมอ)
@@ -30,7 +32,8 @@ This file provides guidance to Claude Code (claude.ai/code) when working with co
 | `feature-list.md` / `user-journey.md` / `DESIGN.md` | มีเนื้อหาแล้ว (7 ฟีเจอร์, 4 journey; DESIGN.md ยังไม่มีหน้าจอ auth/admin) |
 | Technical (`architecture`, `api-spec` Operation 0–16, `db-spec`, `ACL.md`, `detailed-design/` 6 ไฟล์, `nfr-review` 20/20 Addressed, `technology-stack` decision area 1–19) | มีเนื้อหาครบและผูก Firebase แล้ว |
 | Testing (`acceptance-criteria`, `test-plan`, `test-cases/` 7 ไฟล์) | มีเนื้อหาแล้ว |
-| `02-test-result/`, `04-retrospectives/`, `00-archived/` | ว่าง |
+| `02-test-result/` | รายงานผลทดสอบจาก agent `tester` — ฉบับแรก `20260928-01-patient-search-selection.md` (TC-03-06, TC-03-07 ผ่านบนเว็บจริง พร้อมภาพหลักฐาน) |
+| `04-retrospectives/`, `00-archived/` | ว่าง |
 | `01-requirements/02-plan/`, `03-task/` | `release-plan.md` 6 phase (P1 Authentication → P2 ค้นหาผู้ป่วย+data protection → P3 ประวัติ/lab → P4 ความเสี่ยง → P5 PDPA ส่วนขยาย → P6 hardening) + task 6 ไฟล์ (20260924) |
 | Prototype `20260918-01-v1` | Clickable HTML mockup มาตรฐานของ pipeline (ข้อมูล hardcode) |
 | Prototype `20260922-01-firestore-demo` | Technical spike ต่อ Firestore จริง อยู่นอก pipeline (ดูหัวข้อสถานะโปรเจกต์ด้านบน) |
@@ -113,7 +116,7 @@ docs/
       acceptance-criteria.md      Given-When-Then ต่อ FR/NFR จัดกลุ่มตาม feature-list
       test-plan.md                กลยุทธ์ทดสอบ + Risk Register (1 ไฟล์ต่อโปรเจกต์)
       test-cases/{feature-slug}.md
-    02-test-result/               ยังไม่มีเอกสาร/agent ดูแล
+    02-test-result/YYYYMMDD-NN-{feature-slug}.md  รายงานผลทดสอบ (เขียนโดย agent `tester`) + ภาพหลักฐานชื่อ `YYYYMMDD-NN-tc-xx-xx.png` วางข้างกัน
   04-retrospectives/
   05-log/{YYYYMMDD}-log.md        บันทึกสรุปงานรายวัน
 ```
@@ -133,3 +136,4 @@ docs/
 - `/audit-backlog`, `/sync-feature-journey`, `/sync-technical-spec`, `/sync-test-plan`, `/sync-phase-plan`, `/build-prototype`, `/build-tech-stack` — sync เอกสารแต่ละชั้น
 - `/run-requirements-phase`, `/run-technical-phase`, `/run-prototype-phase` — รวมหลายขั้นตอนในคำสั่งเดียว
 - `/audit-pipeline` — ตรวจทั้งสายตั้งแต่ spec ถึงปลายทาง
+- agent `tester` (sonnet, เรียกตรงได้) — ใช้ Playwright MCP ทดสอบตาม `test-cases/` ในเบราว์เซอร์จริงแล้วเขียนรายงานลง `02-test-result/` เท่านั้น ห้ามแก้โค้ด/เอกสารเพื่อให้เทสต์ผ่าน และไม่กรอกรหัสผ่านเอง — TC ที่ต้อง login บนเว็บจริงใช้โหมด "คนล็อกอินให้แล้ว" (ผู้ใช้ล็อกอินเองในหน้าต่าง Playwright ก่อน แล้วทำได้เฉพาะการกระทำแบบอ่านอย่างเดียว)
