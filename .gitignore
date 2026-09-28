@@ -39,3 +39,6 @@ build/
 #     record structure/HN/dates; keep local-only, never re-add) ---
 docs/02-design/02-technical/databese/
 docs/02-design/01-prototypes/20260922-01-firestore-demo/hospital-seed-data.js
+
+# Playwright MCP (snapshot/screenshot ที่ Claude สร้างระหว่างใช้เบราว์เซอร์)
+.playwright-mcp/
