@@ -7,18 +7,24 @@ operation เชิง logical ใน [[api-spec]], entity เชิง logical 
 เก็บจากผู้ใช้โดยตรงผ่านกระบวนการ intake (สรุปไว้ด้านล่าง) — **ไม่มีการเลือกเพราะความนิยม/ความชอบส่วนตัว
 โดยไม่มีเหตุผลรองรับ**
 
-อัปเดตล่าสุด: 2026-09-27 (**Sync แก้ไขข้อความให้ตรงกับการยกเลิก PatientAssignment** — ผู้ใช้ยกเลิกกลไก
-PatientAssignment ทั้งหมดไปแล้วตั้งแต่ 2026-09-25 (ดู [[ACL]]/[[api-spec]]/[[db-spec]] เป็นแหล่งความจริง
-หลัก) แต่ `technology-stack.md` ยังมีข้อความหลายจุดที่อธิบาย PatientAssignment/`patientAssignments`
-เป็นสถาปัตยกรรมที่ยังใช้งานอยู่จริง (ตรวจพบโดย `nfr-reviewer`) — รอบนี้แก้ไขเฉพาะจุดที่ได้รับผลกระทบ
-(decision area 3, 4, 7, 19, หัวข้อความเสี่ยง Security Rules, Deployment Diagram) ให้ตรงกับสถานะปัจจุบัน
-คือ **ทุกบทบาท (แพทย์/พยาบาล/admin) เห็นผู้ป่วยทุกรายในระบบเหมือนกัน หลังผ่านเงื่อนไข
-role/isActive/email_verified ระดับบัญชีเท่านั้น ไม่มีการกรองระดับรายผู้ป่วยอีกต่อไป** — ข้อความเดิมที่
-อธิบาย PatientAssignment คงไว้แบบ ~~ขีดฆ่า~~ พร้อมหมายเหตุแก้ไขกำกับเพื่อ traceability ไม่ได้ลบทิ้ง
-ทั้งหมด ไม่แตะ/ไม่ทบทวน decision area อื่นที่ไม่เกี่ยวข้อง — รอบก่อนหน้า 2026-09-26 เพิ่ม decision area
-20-22 สำหรับ FR-17/NFR-21 (AI) และแก้ไขชื่อโมเดลเป็น `gemini-3.5-flash-lite`, รอบ 2026-09-24 เพิ่มกลไก
-สำหรับฟีเจอร์ที่ 6 (Authentication) ไว้ที่ decision area 13-19, รอบ 2026-09-22 เพิ่มกลไกสำหรับ
-NFR-09/NFR-12/NFR-13/NFR-15 ไว้ที่ decision area 9-12)
+อัปเดตล่าสุด: 2026-09-27 (**ปรับปรุงรอบห้า — เพิ่มเติมเฉพาะ decision area ใหม่ (decision area 23)**
+สำหรับ FR-18 (ปุ่มสรุปจำนวนครั้งตรวจ HbA1c/ระยะห่างระหว่างการตรวจในปีงบประมาณต่อผู้ป่วยรายบุคคล บน
+การ์ดผู้ป่วยในหน้ารายชื่อ, ระดับกลาง) และ NFR-21 ที่ขยายเพิ่ม (จำกัดข้อมูลที่ส่งให้ AI เฉพาะตัวเลขสรุป
+ที่คำนวณแล้ว) ที่เพิ่งบันทึกใน [[20260917-01-patient-ncd-history-lab-complication-risk]]/
+[[20260921-01-pdpa-data-protection-compliance]] เมื่อ 2026-09-27 — reuse stack เดิมของ FR-17 ทั้งหมด
+(decision area 20-22) ไม่แตะ/ไม่ทบทวน decision area 1-22 เดิม ตามที่ผู้ใช้ยืนยันโหมด "เพิ่มเติมเฉพาะ
+decision area ใหม่" — รอบก่อนหน้าในวันเดียวกัน (ก่อนรอบนี้) เป็น **Sync แก้ไขข้อความให้ตรงกับการยกเลิก
+PatientAssignment** ผู้ใช้ยกเลิกกลไก PatientAssignment ทั้งหมดไปแล้วตั้งแต่ 2026-09-25 (ดู
+[[ACL]]/[[api-spec]]/[[db-spec]] เป็นแหล่งความจริงหลัก) แต่ `technology-stack.md` ยังมีข้อความหลายจุดที่
+อธิบาย PatientAssignment/`patientAssignments` เป็นสถาปัตยกรรมที่ยังใช้งานอยู่จริง (ตรวจพบโดย
+`nfr-reviewer`) — แก้ไขเฉพาะจุดที่ได้รับผลกระทบ (decision area 3, 4, 7, 19, หัวข้อความเสี่ยง Security
+Rules, Deployment Diagram) ให้ตรงกับสถานะปัจจุบันคือ **ทุกบทบาท (แพทย์/พยาบาล/admin) เห็นผู้ป่วยทุกราย
+ในระบบเหมือนกัน หลังผ่านเงื่อนไข role/isActive/email_verified ระดับบัญชีเท่านั้น ไม่มีการกรองระดับ
+รายผู้ป่วยอีกต่อไป** — ข้อความเดิมที่อธิบาย PatientAssignment คงไว้แบบ ~~ขีดฆ่า~~ พร้อมหมายเหตุแก้ไข
+กำกับเพื่อ traceability ไม่ได้ลบทิ้งทั้งหมด — รอบ 2026-09-26 เพิ่ม decision area 20-22 สำหรับ FR-17/
+NFR-21 (AI) และแก้ไขชื่อโมเดลเป็น `gemini-3.5-flash-lite`, รอบ 2026-09-24 เพิ่มกลไกสำหรับฟีเจอร์ที่ 6
+(Authentication) ไว้ที่ decision area 13-19, รอบ 2026-09-22 เพิ่มกลไกสำหรับ NFR-09/NFR-12/NFR-13/
+NFR-15 ไว้ที่ decision area 9-12)
 
 ## ภาพรวมบริบทที่ได้จาก Intake
 
@@ -29,8 +35,12 @@ Policy, NFR-18 Account Enumeration Prevention, เทมเพลตอีเม
 `users/{uid}`, การ sync role/isActive กับ custom claims, การตรวจ `emailVerified` ซ้ำฝั่งเซิร์ฟเวอร์ —
 ดู decision area 13-19; รอบสี่ 2026-09-26: decision area เพิ่มเติมอีก 3 ข้อสำหรับ FR-17/NFR-21 — AI
 ช่วยอธิบายผลการค้นหาผู้ป่วยด้วย HN และการจำกัดข้อมูลที่ส่งให้บริการ AI ภายนอก (App Check provider,
-กลไกเรียก AI ตอนกดค้นหา, จุดกำหนดชื่อโมเดล AI — ดู decision area 20-22) — ทุกรอบไม่มีคำถาม intake ใหม่
-เพราะบริบททีม/องค์กร/hosting ที่เก็บไว้ในรอบแรกยังคงใช้ได้และครอบคลุมเพียงพอ)
+กลไกเรียก AI ตอนกดค้นหา, จุดกำหนดชื่อโมเดล AI — ดู decision area 20-22; รอบห้า 2026-09-27: decision area
+เพิ่มเติมอีก 1 ข้อ (decision area 23) สำหรับ FR-18 — ปุ่มสรุปจำนวนครั้งตรวจ HbA1c/ระยะห่างระหว่างการตรวจ
+ในปีงบประมาณต่อผู้ป่วย ไม่มีการตัดสินใจ AI provider/โมเดลใหม่ เพราะ reuse stack เดิมของ FR-17 ทั้งหมด
+(decision area 20-22) มีเพียงประเด็นใหม่คือกลไกอ่าน `labResults`/เขียน collection ใหม่
+`hba1cVisitSummaries` ที่ต้องทำผ่าน Client โดยตรงชั่วคราว — ดูรายละเอียดที่ decision area 23) — ทุกรอบ
+ไม่มีคำถาม intake ใหม่เพราะบริบททีม/องค์กร/hosting ที่เก็บไว้ในรอบแรกยังคงใช้ได้และครอบคลุมเพียงพอ)
 
 **สรุปการตัดสินใจย่อยของรอบสี่ (2026-09-26 — ยืนยันแล้วผ่าน `NEEDS_USER_INPUT`/`AskUserQuestion` โดย
 orchestrator):** (1) ใช้ **Firebase AI Logic (Gemini Developer API backend)** เรียกจาก Client ตรงผ่าน
@@ -100,6 +110,9 @@ self-hosted) แทน Firebase ทั้งระบบ
 | Client — App Check สำหรับ AI Logic | **reCAPTCHA v3** (production) + **Debug Provider** (local dev) | Firebase บังคับเปิด App Check ให้ AI Logic อัตโนมัติตั้งแต่ ก.ค. 2026 — reCAPTCHA v3 ใช้งานได้บนแพ็กเกจ Spark โดยไม่ต้องเปิด billing ของ Google Cloud (ต่าง reCAPTCHA Enterprise) — ทดสอบสำเร็จจริงกับ Debug Provider ในการเรียก AI Logic (ดู decision area 21) |
 | Client — จุดกำหนดชื่อโมเดล AI | Constant เดียวใน `web/src/ai/config.ts` (`GEMINI_MODEL_NAME = "gemini-3.5-flash-lite"`) | เปลี่ยนชื่อโมเดลได้ที่จุดเดียวในโค้ดตามที่ผู้ใช้ระบุ — พิสูจน์คุณค่าของแนวทางนี้แล้วจริงเมื่อ Google ปิดให้บริการ `gemini-2.5-flash-lite` เร็วกว่าที่ประเมินไว้ (แก้ไขค่าที่จุดเดียวสำเร็จ ไม่ต้องไล่หาทั่วโค้ด) (ดู decision area 22) |
 | External AI Service | **Google Gemini Developer API** (ผ่าน Firebase AI Logic, ไม่ใช้ OpenRouter) | ผู้ใช้เลือกเพราะไม่ต้องมี API key ของผู้ให้บริการ AI ฝังใน bundle และใช้ได้บนแพ็กเกจ Spark — ข้อจำกัดของ NFR-21 (ห้ามส่งข้อมูลระบุตัวตน) บังคับใช้ที่ชั้น prompt construction ฝั่ง Client เท่านั้น (ดู decision area 20) |
+| Client — FR-18 คำนวณ visit/ระยะห่างวัน HbA1c ต่อปีงบประมาณ | **คำนวณในโค้ด Client (TypeScript)** ทั้งหมด — ไม่ใช้ AI สำหรับขั้นตอนนี้ | รองรับ FR-18 ข้อ 4 (ยืนยันแล้ว): เฉพาะการเขียนสรุปภาษาไทยเท่านั้นที่ใช้ AI ตรรกะคำนวณวันที่/นับจำนวน/ระยะห่างเป็น deterministic logic ที่ unit test ได้ตรงไปตรงมา (ดู decision area 23) |
+| Client — FR-18 อ่าน `labResults` + เขียน `hba1cVisitSummaries` | **Client อ่าน/เขียน Firestore ตรงผ่าน Firebase SDK** — **ชั่วคราวจนกว่าจะอยู่ Blaze** (เหมือน `clientAuthFlows.ts`/`accountApproval.ts`) | ไม่มี Cloud Function ให้ deploy ได้ในสถานะปัจจุบันของโปรเจกต์ — **ขัดกับสถาปัตยกรรมที่ออกแบบไว้ตาม NFR-06/decision area 3/5 โดยตรง** (ไม่มี audit log, Security Rules `labResults` ที่ตั้งใจไว้ต้อง `if false` แต่ถูกเลี่ยงด้วยกฎเปิดกว้างที่ root ปัจจุบัน) — ดู target design ใน decision area 23 สำหรับตอนอยู่ Blaze |
+| Firestore collection ใหม่ — `hba1cVisitSummaries/{patientId}_{fiscalYear}` | เก็บตัวเลขที่คำนวณแล้ว + ข้อความสรุปจาก AI + ชื่อโมเดล + เวลาที่สร้าง — เขียนทับด้วย `set()` เมื่อกดซ้ำ ไม่มี version history | รองรับ FR-18 ข้อ 8 (ยืนยันแล้ว) — เป็น**ข้อยกเว้นเดียว**ในกลุ่ม decision area 20-23 ที่บันทึกผลลัพธ์ AI ลง Firestore จริง (FR-17 ไม่บันทึก) — ดู decision area 20 หัวข้อ "ข้อยกเว้นที่ต้องบันทึกไว้" |
 
 ## รายละเอียดต่อ Decision Area
 
@@ -585,6 +598,13 @@ Technical Binding ของ Operation ร่วม Access Control ใน [[api-s
 อีกต่อไป** — หัวข้อความเสี่ยง "กลไก AI เรียกเฉพาะตอนกดค้นหา ขัดกับข้อความปัจจุบันของ FR-17" ด้านล่างจึง
 ถือว่า**แก้ไขเสร็จสมบูรณ์แล้ว** (คงข้อความเดิมไว้เพื่อ traceability พร้อมหมายเหตุสถานะล่าสุด)
 
+**ข้อยกเว้นที่ต้องบันทึกไว้ (เพิ่ม 2026-09-27 — FR-18):** โดยหลักการทั่วไปของ decision area นี้
+(รวมถึง FR-17) **ผลลัพธ์ที่ AI สร้างไม่ถูกบันทึกลง Firestore เลย** (แสดงผลชั่วคราวที่หน้าจอเท่านั้น
+ไม่มี state ฝั่งเซิร์ฟเวอร์) — **FR-18 เป็นข้อยกเว้นของหลักการนี้โดยเจตนา**: ผู้ใช้ยืนยันให้บันทึกทั้ง
+ตัวเลขสรุปที่คำนวณแล้วและข้อความที่ AI เขียนลง Firestore collection ใหม่ `hba1cVisitSummaries` (ดู
+decision area 23) เพราะ FR-18 ต้องการเก็บผลสรุปไว้เป็นหลักฐาน/อ้างอิงย้อนหลังต่อผู้ป่วยต่อปีงบประมาณ
+ไม่ใช่แค่แสดงผลชั่วคราวแบบ FR-17
+
 **เหตุผล:** ผู้ใช้พิจารณาทางเลือก "OpenRouter ผ่าน Cloud Function" (สถาปัตยกรรมที่สอดคล้องกับหลักการเดิม
 ของ decision area 3 มากกว่า เพราะมี Cloud Function คั่นกลางให้ตรวจสิทธิ์/บันทึก audit log ได้เหมือน
 Operation อื่น) แล้ว**ไม่เลือก** เพราะ**โปรเจกต์นี้ยังไม่อยู่แพ็กเกจ Blaze** — Cloud Functions ที่เรียก
@@ -681,6 +701,90 @@ deprecation ในอนาคตแทนการอิงกำหนดก�
   SDK, fetch/activate logic, cache TTL) เกินความจำเป็นสำหรับ MVP ขนาดเล็ก ผู้ใช้ยังคงเลือกไม่ใช้ในรอบนี้
   เพื่อความง่ายสูงสุด แม้จะเพิ่งประสบเหตุการณ์โมเดลถูกปิดกะทันหันมาแล้วครั้งหนึ่ง — **ควรพิจารณาใหม่จริงจัง
   ขึ้นถ้าเหตุการณ์ลักษณะนี้เกิดซ้ำอีก** (ดู "ประเด็นรอตัดสินใจ")
+
+### 23. FR-18 — สรุปจำนวนครั้งตรวจ HbA1c/ระยะห่างระหว่างการตรวจในปีงบประมาณ + บันทึกผลลง Firestore (Client-side compute + Firebase AI Logic เขียนสรุป + เขียน Firestore ตรงจาก Client — ชั่วคราวจนกว่าจะอยู่ Blaze)
+
+**เพิ่ม 2026-09-27** รองรับ [[backlog#กลาง|FR-18]] และส่วนขยายของ [[backlog#Non-Functional Requirements|NFR-21]]
+(ขยายเพิ่ม 2026-09-27) — reuse stack เดิมของ FR-17 ทั้งหมด (Firebase AI Logic/Gemini Developer API
+จาก decision area 20, App Check reCAPTCHA v3 จาก decision area 21, model name constant
+`GEMINI_MODEL_NAME` จาก decision area 22) ไม่มีการตัดสินใจ AI provider/โมเดลใหม่สำหรับ FR-18
+
+**เลือก:**
+
+1. **ขั้นที่ 1-2 (หาวันที่ตรวจ HbA1c ในปีงบประมาณ, นับจำนวน visit, คำนวณระยะห่างเป็นวันระหว่างการตรวจ
+   แต่ละคู่) คำนวณในโค้ด Client (TypeScript) ทั้งหมด ไม่ใช่ AI** ตามที่ผู้ใช้ยืนยัน — ปีงบประมาณไทยคำนวณ
+   จากช่วง 1 ตุลาคม–30 กันยายน (เช่น ปีงบประมาณ 2569 = 1 ต.ค. 2568–30 ก.ย. 2569) เป็น pure function ที่
+   unit test ได้ตรงไปตรงมา ไม่พึ่งพา AI สำหรับตรรกะที่ตรวจสอบความถูกต้องได้ (deterministic)
+2. **อ่าน `labResults` โดยตรงจาก Client ผ่าน Firebase SDK** ด้วย query
+   `where('patientId','==',patientId)`, `where('testType','==','HbA1c')`,
+   `where('dataSource','==','ข้อมูลจำลอง')` (ชื่อ field ตาม [[db-spec#ผลตรวจ lab (LabResult)|db-spec
+   LabResult]]) แล้วกรอง/เรียงตาม `testedAt` ในโค้ด Client — **ไม่ผ่าน Cloud Function**
+3. **ขั้นที่ 3 (เขียนสรุปเป็นภาษาไทยจากตัวเลขที่คำนวณแล้ว) เรียก Firebase AI Logic จาก Client โดยตรง**
+   (stack เดียวกับ decision area 20) — **ข้อมูลที่ส่งให้ AI จำกัดเฉพาะตัวเลขสรุปเท่านั้น**: จำนวน visit,
+   ระยะห่างเป็นวันของแต่ละคู่ (หรือค่า min/avg/max ที่คำนวณแล้ว) **ห้ามส่ง HN, ชื่อผู้ป่วย, วันที่ตรวจจริง
+   หรือค่าผล HbA1c ใดๆ เด็ดขาด** ตามที่ NFR-21 (ขยายเพิ่ม 2026-09-27) กำหนด — บังคับใช้ได้เฉพาะที่ชั้น
+   prompt construction ฝั่ง Client เท่านั้น (ข้อจำกัดเดียวกับ decision area 20 ข้อ 1)
+4. **เขียนผลลง Firestore collection ใหม่ `hba1cVisitSummaries/{patientId}_{fiscalYear}`** (composite
+   document ID ตามที่ผู้ใช้อนุมัติ) **โดยตรงจาก Client** (ไม่มี Cloud Function/Admin SDK คั่นกลาง) —
+   โครงสร้างเอกสารประกอบด้วย: ตัวเลขที่คำนวณแล้ว (`visitCount`, `intervalsDays: number[]`,
+   `intervalMinDays`, `intervalAvgDays`, `intervalMaxDays` — ค่า nullable เมื่อ `visitCount <= 1`),
+   ข้อความสรุปจาก AI (`summaryText`, nullable ถ้า AI ล้มเหลว), ชื่อ/รุ่นโมเดล AI ที่ใช้ ณ ขณะนั้น
+   (`aiModel` — อ่านค่าจาก `GEMINI_MODEL_NAME` constant เดียวกับ decision area 22 ไม่ hardcode ซ้ำ),
+   และเวลาที่สร้างผลสรุป (`createdAt`) — **กดปุ่มซ้ำ = เขียนทับเอกสารเดิมทั้งฉบับด้วย `set()` (ไม่ใช่
+   `update()` บางส่วน) ไม่มี version history** ตามที่ผู้ใช้ยืนยัน
+5. **กรณีไม่มีผลตรวจ HbA1c ในปีงบประมาณ:** ยังคงเขียนเอกสาร (`visitCount: 0`, `intervalsDays: []`,
+   `summaryText` จาก AI ที่บอกว่าไม่มีข้อมูล) ไม่ปิด/ซ่อนปุ่ม **กรณีตรวจครั้งเดียว:** `visitCount: 1`,
+   `intervalsDays: []`/`intervalMinDays`-`intervalMaxDays` เป็น `null` ทั้งหมด ส่งเฉพาะ `visitCount: 1`
+   ให้ AI เพื่อให้เขียนสรุปว่ายังไม่มีข้อมูลเพียงพอประเมินความสม่ำเสมอ ตามที่ผู้ใช้ยืนยัน
+6. **สิทธิ์กดปุ่ม:** แพทย์/พยาบาล/admin **ทุกคน** (ต่างจาก FR-16 ที่จำกัดเฉพาะแพทย์/พยาบาล) เพราะผู้ใช้
+   ยืนยันว่าเป็นการคำนวณสถิติ ไม่ใช่การวินิจฉัย/ตัดสินใจทางคลินิก — ไม่ต้องเพิ่ม role check ใหม่ในโค้ด
+   นอกเหนือจากเงื่อนไข role/isActive/email_verified มาตรฐานที่ Operation 0 ใช้อยู่แล้ว
+7. **ถ้า AI ล้มเหลว/timeout:** ยังคงบันทึกตัวเลขจากขั้นที่ 1-2 ลง `hba1cVisitSummaries` ได้ตามปกติ
+   (`summaryText: null` หรือค่าที่สื่อว่า "ไม่มีคำอธิบายเพิ่มเติม") ไม่บล็อกการบันทึกตัวเลข — รูปแบบ
+   เดียวกับที่ FR-17 ทำกับผลการค้นหาปกติ (decision area 20 ข้อ 3)
+
+**ข้อจำกัดสำคัญที่ต้องบันทึกไว้อย่างเด่นชัด (ผลกระทบต่อ NFR-06/NFR-20 — รุนแรงกว่า FR-17):**
+
+1. **ไม่มี Cloud Function ตัวกลาง จึงอ่าน `labResults` (ข้อมูลผลตรวจ lab รายบุคคลของผู้ป่วย) ตรงจาก
+   Client** — **ขัดกับสถาปัตยกรรมที่ออกแบบไว้โดยตรง** ตาม decision area 3 (Operation 1-6 ทั้งหมดต้องผ่าน
+   Cloud Functions เพื่อบังคับลำดับ "ตรวจสิทธิ์ → บันทึก audit log → อ่าน/แก้ไขข้อมูลจริง") และขัดกับ
+   เจตนาของ Security Rules ที่ [[db-spec]] ออกแบบไว้ว่า `labResults` ต้องเป็น `allow read, write: if
+   false` สำหรับ client ทั้งหมด (อ่านได้เฉพาะผ่าน Cloud Functions/Admin SDK) — **เกิดจากข้อจำกัดเดียวกับ
+   ที่ระบุใน `CLAUDE.md`: โปรเจกต์ยังไม่อยู่แพ็กเกจ Blaze จึง deploy Cloud Functions ไม่ได้** เป็น
+   temporary stand-in แบบเดียวกับ `web/src/auth/clientAuthFlows.ts`/`web/src/admin/accountApproval.ts`
+   ที่มีอยู่แล้วในโค้ดฐาน (เรียก Firebase/Firestore ตรงจาก Client ชั่วคราวระหว่างที่ยัง deploy Cloud
+   Functions ไม่ได้) — ปัจจุบัน `firestore.rules` ที่ root เป็นกฎแบบเปิดกว้าง (เข้าสู่ระบบแล้วอ่าน/เขียน
+   ได้ทุก document) ตามที่ผู้ใช้สั่งไว้ตั้งแต่ 2026-09-25 ทำให้การอ่าน/เขียนนี้ทำงานได้จริงในทางเทคนิค
+   แต่**ไม่ใช่กฎ production ที่ตั้งใจไว้**
+2. **ไม่มี audit log สำหรับการเข้าถึง `labResults` ผ่านเส้นทางนี้เลยในรอบนี้** — ขัดกับ NFR-06 (fail-safe
+   audit logging) และ NFR-20 (audit log แบบ fail-safe เพิ่มเติมสำหรับ admin) ที่ FR-18 ข้อ 11 ในหมายเหตุ
+   ของ spec ยืนยันไว้ชัดเจนว่า "การกดปุ่มนี้ถือเป็นการเข้าถึงข้อมูลผลตรวจ lab รายบุคคลของผู้ป่วย ต้อง
+   บันทึก audit log" — **ช่องว่างนี้รุนแรงกว่า FR-17** เพราะ FR-17 ไม่แตะข้อมูลผู้ป่วยรายบุคคลโดยตรง
+   (แค่ HN ที่พิมพ์ + สถานะพบ/ไม่พบ) ในขณะที่ FR-18 อ่านค่าผลตรวจ lab จริงของผู้ป่วยรายบุคคล (แม้จะไม่ส่ง
+   ค่าที่อ่านได้ไปให้ AI ก็ตาม) — **ต้องยกระดับเป็น mitigation ที่ต้องทำจริงก่อนใช้งานกับข้อมูลผู้ป่วยจริง**
+   (ดู "ประเด็นรอตัดสินใจ")
+3. **เขียน `hba1cVisitSummaries` ตรงจาก Client เช่นเดียวกัน** — ไม่มีการตรวจสอบ/กรองฝั่งเซิร์ฟเวอร์ว่า
+   ตัวเลขที่ Client คำนวณมาถูกต้องก่อนบันทึก (ต่างจาก Operation อื่นที่ Cloud Functions เป็นจุดเดียวที่
+   บังคับ validation ได้) — ยอมรับความเสี่ยงนี้ชั่วคราวเช่นเดียวกับข้อ 1-2
+
+**Target design เมื่อโปรเจกต์อัปเกรดเป็นแพ็กเกจ Blaze (บันทึกไว้เพื่อ implement ภายหลัง):** ย้ายขั้นที่
+1-4 ทั้งหมดไปเป็น **Cloud Function callable ใหม่** (เช่น `computeHba1cVisitSummary`) ที่ตรวจสิทธิ์
+(role/isActive/email_verified ตามรูปแบบ Operation 1-6 เดิม) → **บันทึก audit log แบบ fail-safe ก่อนเสมอ
+ตาม NFR-06/NFR-20** → อ่าน `labResults` ผ่าน Admin SDK (bypass Security Rules) → เรียก Firebase AI Logic
+(หรือย้ายไป OpenRouter/Vertex AI ถ้าเปลี่ยนตอนนั้น) → เขียนผลลง `hba1cVisitSummaries` ผ่าน Admin SDK
+เท่านั้น (ปรับ Security Rules ให้ `allow read, write: if false` สำหรับ client เหมือน collection ข้อมูล
+ผู้ป่วยอื่นๆ)
+
+**ทางเลือกอื่นที่พิจารณาแล้วไม่เลือก:**
+- **รอจนกว่าโปรเจกต์จะอัปเกรดเป็น Blaze ก่อนจึงพัฒนา FR-18** (ไม่พัฒนาแบบ client-side ชั่วคราวเลย) —
+  ปิดช่องว่าง NFR-06/NFR-20 ได้สมบูรณ์ตั้งแต่ต้น แต่ผู้ใช้เลือกพัฒนาตอนนี้แบบเดียวกับ FR-17/
+  `clientAuthFlows.ts`/`accountApproval.ts` เพื่อให้ได้ใช้งานฟีเจอร์นี้จริงก่อน ยอมรับความเสี่ยงชั่วคราว
+  ที่บันทึกไว้ข้างต้นแทน
+- **สร้าง audit log แบบ client-write เอง** (Client เขียนเอกสารลง `auditLogRecords` ตรงๆ ก่อนอ่าน
+  `labResults`) — ดูเหมือนปิดช่องว่างได้บางส่วน แต่**ขัดกับหลักการ fail-safe ของ decision area 5 โดยตรง**
+  (Client ที่ถูกดัดแปลง/บั๊กสามารถข้ามการเขียน audit log แล้วอ่านข้อมูลจริงได้เหมือนเดิม ไม่ต่างจากปัญหา
+  เดิมที่ decision area 3/5 อธิบายไว้แล้วว่าทำไมต้องผ่าน Cloud Functions) จึงไม่เลือกทางนี้ ยอมรับว่า
+  ไม่มี audit log เลยดีกว่ามี audit log ที่หลอกตัวเองว่าปลอดภัย
 
 ## ความเสี่ยงที่ต้องพิจารณาเพิ่มเติม (สำคัญ — ผู้ใช้รับทราบและยืนยันให้ดำเนินการต่อแล้ว)
 
@@ -818,7 +922,7 @@ flowchart LR
         Hosting["Firebase Hosting\nReact + TypeScript SPA"]
         Auth["Firebase Authentication\n(อัปเกรดเป็น Google Cloud Identity Platform บางส่วน\nสำหรับ password policy — Op.9 backstop, decision area 13)\nEmail Enumeration Protection เปิดใช้ (decision area 14)\nไม่เก็บ role/isActive ใน Custom Claims (decision area 18)"]
         Functions["Cloud Functions (2nd gen)\nNode.js + TypeScript\n- Op.1,2: Data Aggregation (ผู้ป่วยรายบุคคล)\n- Op.3: Risk Rule Engine\n- Op.4: Data Subject Rights\n- Op.5: Audit Trail Retrieval\n- Op.6: Retention Enforcement (scheduled)\n- Op.8: signUpUser (สร้าง Auth user + users/{uid} ในฟังก์ชันเดียว, rollback ถ้าล้มเหลว — decision area 17)\n- Op.9: requestPasswordReset\n- shared helper: ตรวจ role/isActive จาก Firestore + email_verified จาก token (decision area 19)\n- เขียน Audit Log ก่อน อ่าน/แก้ไขข้อมูลจริงเสมอ (fail-safe)"]
-        Firestore[("Cloud Firestore (Native mode)\nPrimary Data Store: users, patients,\nncdDiagnoses, labResults, complicationRiskThresholds,\ncomplicationRiskAssessments, riskFindings,\ndataSubjectRequests, retentionPolicies\n(patientAssignments ยกเลิกแล้ว 2026-09-25 — ทุกบทบาทเห็นผู้ป่วยทุกราย)\n(users/{uid} = source of truth เดียวของ role/isActive — decision area 18)\n\nAudit Log Store: auditLogRecords\n(client เขียนไม่ได้เลย — เฉพาะ Cloud Functions ผ่าน Admin SDK)")]
+        Firestore[("Cloud Firestore (Native mode)\nPrimary Data Store: users, patients,\nncdDiagnoses, labResults, complicationRiskThresholds,\ncomplicationRiskAssessments, riskFindings,\ndataSubjectRequests, retentionPolicies,\nhba1cVisitSummaries (ใหม่ FR-18 — เขียนตรงจาก Client ชั่วคราว)\n(patientAssignments ยกเลิกแล้ว 2026-09-25 — ทุกบทบาทเห็นผู้ป่วยทุกราย)\n(users/{uid} = source of truth เดียวของ role/isActive — decision area 18)\n\nAudit Log Store: auditLogRecords\n(client เขียนไม่ได้เลย — เฉพาะ Cloud Functions ผ่าน Admin SDK\nยกเว้น labResults/hba1cVisitSummaries ของ FR-18 ที่ยังไม่มี audit log จริง — decision area 23)")]
         AppCheck["Firebase App Check\nreCAPTCHA v3 (production) +\nDebug Provider (local dev)\nบังคับใช้กับ AI Logic — decision area 21"]
         AILogic["Firebase AI Logic\nbackend: Gemini Developer API\nโมเดล: gemini-3.5-flash-lite\n(แก้ไข 2026-09-26 จาก gemini-2.5-flash-lite\nชื่อโมเดลกำหนดที่จุดเดียว\nweb/src/ai/config.ts — decision area 22)"]
     end
@@ -837,6 +941,8 @@ flowchart LR
     Hosting -->|"firebase/ai SDK — เฉพาะตอนกดปุ่มค้นหา (FR-17)\nไม่เรียกตอน debounce หยุดพิมพ์ — ดูความเสี่ยงด้านล่าง"| AILogic
     Hosting -.->|"App Check token แนบทุกครั้งก่อนเรียก AI Logic"| AppCheck
     AILogic -->|"HTTPS (Google-managed)"| GeminiAPI
+    Hosting -->|"Firestore SDK ตรง (ชั่วคราวจนกว่าจะอยู่ Blaze) — FR-18\nอ่าน labResults (testType=HbA1c, dataSource=ข้อมูลจำลอง)\nเขียน hba1cVisitSummaries (set เขียนทับ)\nไม่มี audit log — ขัดกับ NFR-06/NFR-20 ชั่วคราว (decision area 23)"| Firestore
+    Hosting -->|"firebase/ai SDK — FR-18 เขียนสรุปจากตัวเลขที่คำนวณแล้วเท่านั้น\n(ไม่ส่ง HN/ชื่อ/วันที่จริง/ค่า HbA1c — NFR-21 ขยาย)"| AILogic
 ```
 
 **หมายเหตุเทคโนโลยีจริงเพิ่มเติม (NFR-09, NFR-12, NFR-13, NFR-15 — ไม่มี node ใหม่ในไดอะแกรม เพราะไม่มี
@@ -852,6 +958,11 @@ infrastructure ใหม่เพิ่มเข้ามา):**
 - **FR-17/NFR-21 (AI):** เพิ่ม node ใหม่ 2 จุด — "AppCheck" (reCAPTCHA v3 + Debug Provider, decision
   area 21) และ "AILogic" (Firebase AI Logic ต่อ Gemini Developer API ภายนอก, decision area 20) — ไม่มี
   Cloud Function ตัวกลาง (ต่างจาก Op.1-6 ทั้งหมด) จึงไม่มี audit log ฝั่งเซิร์ฟเวอร์สำหรับ path นี้
+- **FR-18/NFR-21 ขยาย (เพิ่ม 2026-09-27):** reuse node "AILogic"/"AppCheck" เดิม ไม่มี node ใหม่สำหรับ
+  ชั้น AI แต่เพิ่ม edge ใหม่ 2 เส้นจาก "Hosting" ไปยัง "Firestore" (อ่าน `labResults`/เขียน
+  `hba1cVisitSummaries` ตรงจาก Client — ชั่วคราวจนกว่าจะอยู่ Blaze) และไปยัง "AILogic" (ส่งเฉพาะตัวเลข
+  สรุปที่คำนวณแล้ว) — collection `hba1cVisitSummaries` เป็น**ข้อยกเว้นเดียว**ที่บันทึกผลลัพธ์ AI ลง
+  Firestore จริง (ดู decision area 20 หัวข้อ "ข้อยกเว้นที่ต้องบันทึกไว้" และ decision area 23)
 
 ## ประเด็นรอตัดสินใจ
 
@@ -925,6 +1036,22 @@ infrastructure ใหม่เพิ่มเข้ามา):**
 - **reCAPTCHA Enterprise สำหรับ App Check (ใหม่จาก FR-17)** — decision area 21 เลือก reCAPTCHA v3
   สำหรับ MVP นี้เพราะไม่ต้องเปิด billing ของ Google Cloud ควรพิจารณา reCAPTCHA Enterprise เมื่อโปรเจกต์
   อัปเกรดเป็น Blaze แล้วและต้องการความแม่นยำในการป้องกัน bot/abuse สูงขึ้น
+- **ย้าย FR-18 ไปเป็น Cloud Function callable เมื่อโปรเจกต์อยู่แพ็กเกจ Blaze (ใหม่จาก FR-18, 2026-09-27
+  — สำคัญกว่ารายการเดียวกันของ FR-17 เพราะแตะข้อมูล `labResults` รายบุคคลโดยตรง)** — decision area 23
+  เลือกให้ Client อ่าน `labResults`/เขียน `hba1cVisitSummaries` ตรงเพราะยังไม่อยู่ Blaze ทำให้**ไม่มี
+  audit log สำหรับการเข้าถึงผลตรวจ lab รายบุคคลของผู้ป่วยเลยในรอบนี้** ขัดกับ NFR-06/NFR-20 ที่ spec
+  ยืนยันไว้ชัดเจนว่าต้องบันทึก — **ควรยกระดับเป็น mitigation ที่ต้องทำจริงก่อนใช้งานกับข้อมูลผู้ป่วยจริง**
+  (ย้ายเป็น Cloud Function `computeHba1cVisitSummary` ตาม target design ที่ decision area 23 ระบุไว้)
+  เร่งด่วนกว่าการย้าย FR-17 เพราะ FR-17 ไม่แตะข้อมูลผู้ป่วยรายบุคคลโดยตรง
+- **Composite index สำหรับ query `labResults` ของ FR-18 (ใหม่จาก FR-18)** — query ที่ใช้ (equality บน
+  `patientId`, `testType`, `dataSource` พร้อมเรียง/กรองตาม `testedAt`) มีเงื่อนไข equality มากกว่า
+  composite index ที่ [[db-spec#ผลตรวจ lab (LabResult)|db-spec ระบุไว้เดิม]] 2 รายการ
+  (`(patientId, testedAt)`, `(patientId, testType, testedAt)`) รองรับอยู่แล้ว — ควรตรวจสอบและเพิ่ม
+  composite index ใหม่ (เช่น `(patientId ASC, testType ASC, dataSource ASC, testedAt ASC)`) ใน
+  `firestore.indexes.json` ในรอบ `sync-api-db`/`sync-detailed-design` ถัดไป ไม่ใช่ขอบเขตของเอกสารนี้
+- **Validation ตัวเลขที่ Client คำนวณก่อนเขียนลง `hba1cVisitSummaries` (ใหม่จาก FR-18)** — decision
+  area 23 ยอมรับว่าไม่มีการตรวจสอบฝั่งเซิร์ฟเวอร์ว่าตัวเลขที่ Client คำนวณถูกต้องก่อนบันทึกในรอบนี้
+  (เพราะเขียนตรงจาก Client) ควรเพิ่มการตรวจสอบใน Cloud Function เมื่อย้ายไปตาม target design ข้างต้น
 
 ## เอกสารที่เกี่ยวข้อง
 

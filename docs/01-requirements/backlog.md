@@ -30,6 +30,7 @@ Backlog รวม FR/NFR ทั้งหมดจากทุกเอกสา�
 | รหัส | หัวข้อ | เอกสารอ้างอิง | สถานะ |
 | --- | --- | --- | --- |
 | FR-17 | AI ช่วยอธิบายผลการค้นหาผู้ป่วยด้วย HN เป็นภาษาคน (เพิ่ม 2026-09-26) | [[20260917-01-patient-ncd-history-lab-complication-risk#ความต้องการเชิงฟังก์ชัน (Functional Requirements)\|FR-17]] | Backlog |
+| FR-18 | AI สรุปจำนวนครั้งตรวจ HbA1c และระยะห่างระหว่างการตรวจในปีงบประมาณ (รายผู้ป่วย, เพิ่ม 2026-09-27) | [[20260917-01-patient-ncd-history-lab-complication-risk#ความต้องการเชิงฟังก์ชัน (Functional Requirements)\|FR-18]] | Backlog |
 
 ## ต่ำ
 
@@ -59,4 +60,4 @@ _(ยังไม่มีรายการ)_
 | NFR-18 | Security / Account Enumeration Prevention (ไม่เปิดเผยว่าอีเมลมีบัญชีในระบบหรือไม่) — สูง | [[20260923-01-user-authentication-email-password#ความต้องการที่ไม่ใช่เชิงฟังก์ชัน (Non-Functional Requirements)\|NFR-18]] | Backlog |
 | NFR-19 | Security / Access Control (เดิมข้อยกเว้นสำหรับ Admin — ไม่ใช่ข้อยกเว้นอีกต่อไปตั้งแต่ 2026-09-25, คงไว้คือสิทธิ์อ่านอย่างเดียว) — สูง | [[20260924-01-admin-role-account-management#ความต้องการที่ไม่ใช่เชิงฟังก์ชัน (Non-Functional Requirements)\|NFR-19]] | Backlog |
 | NFR-20 | PDPA / บันทึกการเข้าถึงข้อมูล (Audit Log แบบ fail-safe สำหรับการเข้าถึงข้อมูลผู้ป่วยของ Admin) — สูง | [[20260924-01-admin-role-account-management#ความต้องการที่ไม่ใช่เชิงฟังก์ชัน (Non-Functional Requirements)\|NFR-20]] | Backlog |
-| NFR-21 | PDPA / จำกัดข้อมูลที่ส่งให้บริการ AI ภายนอก (Data Minimization for External AI Service, เพิ่ม 2026-09-26) — สูง | [[20260921-01-pdpa-data-protection-compliance#ความต้องการที่ไม่ใช่เชิงฟังก์ชัน (Non-Functional Requirements)\|NFR-21]] | Backlog |
+| NFR-21 | PDPA / จำกัดข้อมูลที่ส่งให้บริการ AI ภายนอก (Data Minimization for External AI Service, เพิ่ม 2026-09-26, ขยายเพิ่ม 2026-09-27 ครอบคลุม FR-18) — สูง | [[20260921-01-pdpa-data-protection-compliance#ความต้องการที่ไม่ใช่เชิงฟังก์ชัน (Non-Functional Requirements)\|NFR-21]] | Backlog |

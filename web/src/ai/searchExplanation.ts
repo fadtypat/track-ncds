@@ -3,10 +3,9 @@
 // NFR-21 — ส่งให้ AI ได้เฉพาะ HN ที่พิมพ์ + สถานะ/จำนวนที่พบ ห้ามส่งชื่อหรือข้อมูลระบุตัวตนใดๆ
 // ข้อจำกัด: บังคับ NFR-21 ได้แค่ฝั่ง Client และยังไม่มี audit log ฝั่งเซิร์ฟเวอร์จนกว่าจะอยู่แพ็กเกจ Blaze
 
-import {getAI, getGenerativeModel, GoogleAIBackend} from "firebase/ai";
+import type {GenerativeModel} from "firebase/ai";
 
-import {app} from "../firebase";
-import {GEMINI_MODEL_NAME} from "./config";
+import {createModel} from "./client";
 
 /** ข้อมูลทั้งหมดที่อนุญาตให้ออกไปยังบริการ AI — ไม่มี field ชื่อ/patientId โดยเจตนา */
 export interface SearchSummary {
@@ -30,13 +29,10 @@ export function buildSearchPrompt({hn, status, count}: SearchSummary): string {
   return `ผู้ใช้พิมพ์ HN: "${hn.slice(0, 20)}" (${hn.length} ตัวอักษร)\nผลการค้นหา: ${outcome}\nอธิบายผลนี้ให้ผู้ใช้เข้าใจ และบอกว่าควรทำอะไรต่อในหน้าค้นหา`;
 }
 
-let model: ReturnType<typeof getGenerativeModel> | null = null;
+let model: GenerativeModel | null = null;
 
 export async function explainHnSearch(summary: SearchSummary): Promise<string> {
-  model ??= getGenerativeModel(getAI(app, {backend: new GoogleAIBackend()}), {
-    model: GEMINI_MODEL_NAME,
-    systemInstruction: SYSTEM_INSTRUCTION,
-  });
+  model ??= createModel(SYSTEM_INSTRUCTION);
   const result = await model.generateContent(buildSearchPrompt(summary));
   return result.response.text().trim();
 }

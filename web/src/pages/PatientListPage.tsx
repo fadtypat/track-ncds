@@ -1,6 +1,8 @@
 import {useCallback, useEffect, useRef, useState, type FormEvent} from "react";
 
 import {explainHnSearch} from "../ai/searchExplanation";
+import {fiscalYearOf} from "../labs/hba1cStats";
+import {seedMockHba1c, summarizeHba1c, type Hba1cSummary} from "../labs/hba1cSummary";
 import {useAuth} from "../auth/AuthProvider";
 import {GENERIC_ERROR} from "../auth/errors";
 import {Callout} from "../components/AuthCard";
@@ -91,7 +93,9 @@ function SeedMockPatients({onDone}: {onDone: () => void}) {
     setBusy(true);
     try {
       const added = await seedMockPatients();
-      setMessage({tone: "tip", title: added ? `เพิ่มผู้ป่วยจำลอง ${added} รายแล้ว` : "มีผู้ป่วยจำลองครบแล้ว"});
+      const labs = await seedMockHba1c(await listPatients());
+      const parts = [added && `ผู้ป่วยจำลอง ${added} ราย`, labs && `ผล HbA1c จำลอง ${labs} รายการ`].filter(Boolean);
+      setMessage({tone: "tip", title: parts.length ? `เพิ่ม${parts.join(" และ ")}แล้ว` : "มีผู้ป่วยและผล HbA1c จำลองครบแล้ว"});
       onDone();
     } catch {
       setMessage({tone: "warn", title: GENERIC_ERROR});
@@ -227,7 +231,8 @@ function PatientGrid({patients}: {patients: Patient[]}) {
               <div className="patient-card-meta">HN {patient.hn}</div>
             </div>
           </div>
-          <div className="patient-card-action">
+          <div className="patient-card-action stack" style={{gap: 8}}>
+            <Hba1cSummaryButton patientId={patient.patientId} />
             {/* ประวัติวินิจฉัย/lab (Operation 1/2) และ audit log จะมาใน Phase 3 */}
             <button type="button" className="btn btn-primary btn-sm" disabled title="เปิดใช้ใน Phase 3">
               เปิดประวัติ (Phase 3)
@@ -235,6 +240,45 @@ function PatientGrid({patients}: {patients: Patient[]}) {
           </div>
         </article>
       ))}
+    </div>
+  );
+}
+
+// FR-18 — ทุกบทบาทกดได้ กดซ้ำ = คำนวณใหม่และเขียนทับผลเดิมของปีงบเดียวกัน
+function Hba1cSummaryButton({patientId}: {patientId: string}) {
+  const fiscalYear = fiscalYearOf(new Date()).year;
+  const [busy, setBusy] = useState(false);
+  const [summary, setSummary] = useState<Hba1cSummary | "error" | null>(null);
+
+  async function run() {
+    setBusy(true);
+    try {
+      setSummary(await summarizeHba1c(patientId));
+    } catch {
+      setSummary("error");
+    } finally {
+      setBusy(false);
+    }
+  }
+
+  return (
+    <div className="stack" style={{gap: 8}}>
+      <button type="button" className="btn btn-secondary btn-sm" onClick={() => void run()} disabled={busy}>
+        {busy ? "กำลังสรุป…" : `AI สรุปการตรวจ HbA1c ปีงบ ${fiscalYear}`}
+      </button>
+      {summary === "error" && <Callout tone="warn" title="สรุปไม่สำเร็จ">{GENERIC_ERROR}</Callout>}
+      {summary && summary !== "error" && (
+        <Callout tone="info" title={`ปีงบ ${summary.fiscalYear}: ตรวจ HbA1c ${summary.visitCount} ครั้ง`}>
+          {summary.intervalsDays.length > 0 && (
+            <>ระยะห่าง {summary.intervalsDays.join(", ")} วัน (เฉลี่ย {summary.intervalAvgDays} วัน)<br /></>
+          )}
+          {summary.summaryText ?? "AI ไม่พร้อมใช้งานในขณะนี้ — บันทึกเฉพาะตัวเลขแล้ว"}
+          <br />
+          <span className="type-caption">
+            บันทึกลงฐานข้อมูลแล้ว · ข้อความจาก AI ใช้ประกอบเท่านั้น ไม่ใช่คำแนะนำทางการแพทย์
+          </span>
+        </Callout>
+      )}
     </div>
   );
 }

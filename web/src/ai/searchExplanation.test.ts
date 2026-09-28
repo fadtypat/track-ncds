@@ -1,7 +1,7 @@
 import {describe, expect, it, vi} from "vitest";
 
 // ทดสอบเฉพาะการสร้าง prompt — ไม่เรียก AI จริง
-vi.mock("../firebase", () => ({app: {}}));
+vi.mock("./client", () => ({createModel: vi.fn()}));
 
 import {buildSearchPrompt} from "./searchExplanation";
 
