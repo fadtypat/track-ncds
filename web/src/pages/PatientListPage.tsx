@@ -1,6 +1,7 @@
 import {useCallback, useEffect, useRef, useState, type FormEvent} from "react";
 
 import {explainHnSearch} from "../ai/searchExplanation";
+import {seedMockHistory} from "../history/mockHistorySeed";
 import {fiscalYearOf} from "../labs/hba1cStats";
 import {seedMockHba1c, summarizeHba1c, type Hba1cSummary} from "../labs/hba1cSummary";
 import {useAuth} from "../auth/AuthProvider";
@@ -76,7 +77,12 @@ export function PatientListPage({displayName, role}: {displayName: string; role:
               {isAdmin ? "เพิ่มผู้ป่วยจำลองด้านล่างเพื่อใช้ทดสอบ" : "กรุณาติดต่อผู้ดูแลระบบ"}
             </Callout>
           )}
-          {isAdmin && patients !== null && <SeedMockPatients onDone={fetchPatients} />}
+          {isAdmin && patients !== null && (
+            <div className="stack" style={{gap: 8}}>
+              <SeedMockPatients onDone={fetchPatients} />
+              <SeedMockHistoryButton />
+            </div>
+          )}
           {patients && patients.length > 0 && <PatientGrid patients={patients} />}
         </section>
       </main>
@@ -109,6 +115,36 @@ function SeedMockPatients({onDone}: {onDone: () => void}) {
       <div>
         <button type="button" className="btn btn-secondary btn-sm" onClick={() => void seed()} disabled={busy}>
           เพิ่มผู้ป่วยจำลองสำหรับทดสอบ (HN 9900001–9900005)
+        </button>
+      </div>
+      {message && <Callout tone={message.tone} title={message.title} />}
+    </div>
+  );
+}
+
+// ข้อมูลจำลองประวัติวินิจฉัย/ผล lab (NFR-01) สำหรับผู้ป่วยจำลองที่ seed ไว้แล้ว — Admin เท่านั้น
+function SeedMockHistoryButton() {
+  const [busy, setBusy] = useState(false);
+  const [message, setMessage] = useState<{tone: "tip" | "warn"; title: string} | null>(null);
+
+  async function seed() {
+    setBusy(true);
+    try {
+      const {diagnoses, labResults} = await seedMockHistory();
+      const parts = [diagnoses && `ประวัติวินิจฉัย ${diagnoses} รายการ`, labResults && `ผลตรวจ lab ${labResults} รายการ`].filter(Boolean);
+      setMessage({tone: "tip", title: parts.length ? `เพิ่ม${parts.join(" และ ")}แล้ว` : "มีข้อมูลจำลองครบแล้ว"});
+    } catch {
+      setMessage({tone: "warn", title: GENERIC_ERROR});
+    } finally {
+      setBusy(false);
+    }
+  }
+
+  return (
+    <div className="stack" style={{gap: 8}}>
+      <div>
+        <button type="button" className="btn btn-secondary btn-sm" onClick={() => void seed()} disabled={busy}>
+          เพิ่มประวัติวินิจฉัย/ผล lab จำลอง (Phase 3)
         </button>
       </div>
       {message && <Callout tone={message.tone} title={message.title} />}
@@ -233,10 +269,10 @@ function PatientGrid({patients}: {patients: Patient[]}) {
           </div>
           <div className="patient-card-action stack" style={{gap: 8}}>
             <Hba1cSummaryButton patientId={patient.patientId} />
-            {/* ประวัติวินิจฉัย/lab (Operation 1/2) และ audit log จะมาใน Phase 3 */}
-            <button type="button" className="btn btn-primary btn-sm" disabled title="เปิดใช้ใน Phase 3">
-              เปิดประวัติ (Phase 3)
-            </button>
+            {/* ประวัติวินิจฉัย/lab (Operation 1/2, Phase 3) — ยังไม่มี audit log จนกว่าจะ deploy Cloud Functions ได้ */}
+            <Link to="/patient" query={{id: patient.patientId}} className="btn btn-primary btn-sm">
+              ดูประวัติ
+            </Link>
           </div>
         </article>
       ))}
